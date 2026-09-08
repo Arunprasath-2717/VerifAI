@@ -7,7 +7,7 @@ from app.factory import create_app
 # Instantiate standard application for ASGI servers (e.g. Uvicorn / Gunicorn)
 app = create_app()
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     settings = get_settings()
     uvicorn.run(
         "app.main:app",
@@ -16,3 +16,4 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_config=None,  # Handled by our structured logging setup
     )
+
