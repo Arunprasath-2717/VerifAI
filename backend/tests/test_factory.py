@@ -39,3 +39,12 @@ async def test_lifespan_lifecycle():
         # Startup completed
         assert hasattr(app.state, "settings")
     # Shutdown completed without raising exceptions
+
+
+def test_main_asgi_entrypoint():
+    """Verify app.main instantiates the ASGI application instance."""
+    from app.main import app as asgi_app
+
+    assert asgi_app is not None
+    assert asgi_app.title == "VerifAI API"
+

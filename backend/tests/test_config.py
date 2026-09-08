@@ -41,6 +41,17 @@ def test_production_safety_blocks_localhost_database():
         )
 
 
+def test_production_safety_blocks_missing_database():
+    """Verify production settings fail if DATABASE_URL is empty or missing."""
+    with pytest.raises(ValueError, match="Valid remote DATABASE_URL is required"):
+        Settings(
+            ENVIRONMENT="production",
+            DEBUG=False,
+            DATABASE_URL="",
+            CORS_ORIGINS=["https://verifai.app"],
+        )
+
+
 def test_production_safety_blocks_wildcard_cors():
     """Verify production settings reject wildcard CORS."""
     with pytest.raises(ValueError, match="Wildcard CORS"):
