@@ -803,14 +803,46 @@ async def test_repo_transition_status_raises_when_pool_none():
 
 
 @pytest.mark.asyncio
-async def test_processing_stub_returns_expected_shape(verification_id):
-    """_process_verification_core returns phase/message dict, no real verdict."""
-    result = await _process_verification_core(verification_id)
-    assert result["phase"] == "processing_stub"
-    assert "message" in result
-    assert "verdict" not in result
-    assert "trust_score" not in result
-    assert "evidence" not in result
+async def test_process_core_calls_engine_and_persists(verification_id):
+    """Phase 2D: _process_verification_core calls the real engine and update_verification.
+
+    The old 'phase: processing_stub' dict is no longer returned — the engine
+    returns an EngineResult and the result is persisted via update_verification.
+    """
+    from decimal import Decimal
+    from unittest.mock import AsyncMock, patch
+    from app.services.verification_processing_service import _process_verification_core
+
+    mock_repo = AsyncMock()
+    mock_repo.update_verification = AsyncMock(
+        return_value={
+            "id": verification_id,
+            "status": "processing",
+            "verdict": "UNKNOWN",
+            "trust_score": Decimal("0.5"),
+            "evidence": [],
+        }
+    )
+
+    mock_search = AsyncMock()
+    mock_search.search = AsyncMock(return_value=[])
+
+    from app.engine.engine import VerificationEngine
+    engine = VerificationEngine(llm=None, search_provider=mock_search)
+
+    with patch("app.services.verification_processing_service.verification_engine", engine):
+        result = await _process_verification_core(
+            verification_id=verification_id,
+            claim="The Earth orbits the Sun.",
+            repo=mock_repo,
+        )
+
+    mock_repo.update_verification.assert_awaited_once()
+    call_kwargs = mock_repo.update_verification.call_args.kwargs
+    # Engine result is persisted — verdict must be a real Verdict value
+    assert call_kwargs["verdict"] in ["SUPPORT", "CONTRADICT", "UNKNOWN"]
+    # No 'processing_stub' key — real engine output
+    assert "phase" not in (result or {})
 
 
 # ==============================================================================

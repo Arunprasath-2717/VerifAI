@@ -1,17 +1,11 @@
-"""Verification processing service — Phase 2C lifecycle orchestration.
+"""Verification processing service — Phase 2C/2D lifecycle orchestration.
 
 Responsibilities:
 - Enforce state-transition rules (pending → processing → completed/failed)
 - Delegate all database mutations to the repository's atomic transition_status
-- Run a deterministic processing stub that leaves verdict/trust_score/evidence null
+- Call the Phase 2D verification engine for real claim verification
+- Persist engine results via update_verification()
 - Never expose stack traces or internal errors to callers
-
-Intentionally NOT implemented here (deferred to later batches):
-- Claim extraction / classification
-- LLM judging / resampling
-- Evidence / source search
-- Trust-score and verdict calculation
-- Any external API calls (Gemini, Groq, Tavily, DuckDuckGo …)
 """
 
 import logging
@@ -23,6 +17,10 @@ from app.repositories.verification_repository import (
     verification_repository,
 )
 from app.schemas.verification import VerificationStatus
+
+# Import here (module level) so tests can patch
+# app.services.verification_processing_service.verification_engine
+from app.engine.engine import verification_engine as verification_engine  # noqa: F401
 
 logger = logging.getLogger("verifai.services.processing")
 
@@ -47,25 +45,50 @@ class InvalidStatusTransitionError(Exception):
 
 async def _process_verification_core(
     verification_id: uuid.UUID,
+    claim: str,
+    repo: VerificationRepository,
 ) -> Dict[str, Any]:
-    """Deterministic processing placeholder for Phase 2C.
+    """Run the real verification engine and persist results.
 
-    Returns minimal stub data.  Verdict, trust_score, and evidence are
-    intentionally left absent — those fields are populated by the real
-    verification engine in a later batch.
+    Phase 2D: replaces the deterministic stub with the actual pipeline:
+        extract → classify → search → score → judge → decide → persist
 
-    This function must NOT:
-    - call any external LLM or search API
-    - produce a verdict, trust score, or evidence list
-    - raise exceptions under normal execution
+    Args:
+        verification_id: UUID of the verification record.
+        claim:           The raw claim text from the database record.
+        repo:            Repository for persisting the result.
+
+    Returns:
+        The final persisted verification record dict.
+
+    Raises:
+        Any exception from the engine propagates to the caller
+        (VerificationProcessingService) which handles the failed transition.
     """
-    logger.info(
-        "Processing stub executing for verification %s", verification_id
+    logger.info("Engine starting for verification %s", verification_id)
+    engine_result = await verification_engine.verify(
+        claim_text=claim,
+        verification_id=verification_id,
     )
-    return {
-        "phase": "processing_stub",
-        "message": "Verification processing foundation completed",
-    }
+
+    logger.info(
+        "Engine completed verification %s: verdict=%s confidence=%s",
+        verification_id,
+        engine_result.verdict.value,
+        engine_result.trust_score,
+    )
+
+    # Persist result fields using the existing repository method.
+    # Status remains 'processing' — the caller's lifecycle management will
+    # transition to 'completed' via transition_status after this returns.
+    persisted = await repo.update_verification(
+        verification_id=verification_id,
+        status="processing",          # kept; CAS to completed happens next
+        verdict=engine_result.verdict.value,
+        trust_score=engine_result.trust_score,
+        evidence=engine_result.evidence,
+    )
+    return persisted if persisted is not None else {}
 
 
 # ---------------------------------------------------------------------------
@@ -130,9 +153,13 @@ class VerificationProcessingService:
                 f"(current status: {record['status']})"
             )
 
-        # ── 3. Run processing stub ─────────────────────────────────────────
+        # ── 3. Run real engine (Phase 2D) ──────────────────────────────────
         try:
-            await _process_verification_core(verification_id)
+            await _process_verification_core(
+                verification_id=verification_id,
+                claim=record["claim"],
+                repo=self._repo,
+            )
         except Exception as exc:
             # ── 5. processing → failed ─────────────────────────────────────
             logger.error(

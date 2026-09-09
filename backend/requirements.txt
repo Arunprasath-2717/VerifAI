@@ -4,6 +4,8 @@ pydantic==2.13.5
 pydantic-settings==2.15.0
 python-dotenv==1.2.3
 asyncpg==0.31.0
+google-generativeai==0.8.6
+ddgs==9.16.0
 pytest==9.1.1
 pytest-cov==7.1.0
 pytest-asyncio==1.4.0

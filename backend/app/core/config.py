@@ -41,6 +41,14 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str = "mock-supabase-anon-key"
     SUPABASE_SERVICE_ROLE_KEY: str = "mock-supabase-service-role-key"
 
+    # Verification engine configuration
+    # Set GEMINI_API_KEY to enable LLM-based extraction, classification, and judging.
+    # When absent or 'mock', the engine degrades gracefully (UNKNOWN verdicts).
+    GEMINI_API_KEY: str = ""
+    LLM_MODEL: str = "gemini-1.5-flash"
+    # Max web sources fetched per claim during search
+    ENGINE_MAX_SOURCES_PER_CLAIM: int = 5
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Union[List[str], str]) -> List[str]:
