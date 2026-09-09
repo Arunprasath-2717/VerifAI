@@ -11,6 +11,12 @@ from app.schemas.auth import (
     UserUpdateRequest,
 )
 from app.schemas.common import ErrorDetails, ErrorResponse, StandardResponse
+from app.schemas.verification import (
+    CreateVerificationRequest,
+    VerificationListResponse,
+    VerificationResponse,
+    VerificationStatus,
+)
 
 __all__ = [
     "StandardResponse",
@@ -24,5 +30,9 @@ __all__ = [
     "AuthTokens",
     "AuthResponseData",
     "MessageResponse",
+    # Verification schemas (Phase 2A)
+    "VerificationStatus",
+    "CreateVerificationRequest",
+    "VerificationResponse",
+    "VerificationListResponse",
 ]
-
