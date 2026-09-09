@@ -70,10 +70,38 @@ def test_production_valid_configuration():
         DEBUG=False,
         DATABASE_URL="postgresql://user:pass@remote.supabase.co:5432/verifai",
         CORS_ORIGINS=["https://verifai.app"],
+        SUPABASE_URL="https://real-project.supabase.co",
+        SUPABASE_ANON_KEY="real-production-anon-key-12345",
         LOG_LEVEL="INFO",
     )
     assert settings.ENVIRONMENT == "production"
     assert settings.DEBUG is False
+
+
+def test_production_safety_blocks_invalid_supabase_url():
+    """Verify production settings fail if SUPABASE_URL is missing or mock."""
+    with pytest.raises(ValueError, match="Valid SUPABASE_URL is required"):
+        Settings(
+            ENVIRONMENT="production",
+            DEBUG=False,
+            DATABASE_URL="postgresql://user:pass@remote.supabase.co:5432/verifai",
+            CORS_ORIGINS=["https://verifai.app"],
+            SUPABASE_URL="",
+            SUPABASE_ANON_KEY="valid-key",
+        )
+
+
+def test_production_safety_blocks_invalid_supabase_key():
+    """Verify production settings fail if SUPABASE_ANON_KEY is missing or mock."""
+    with pytest.raises(ValueError, match="Valid SUPABASE_ANON_KEY is required"):
+        Settings(
+            ENVIRONMENT="production",
+            DEBUG=False,
+            DATABASE_URL="postgresql://user:pass@remote.supabase.co:5432/verifai",
+            CORS_ORIGINS=["https://verifai.app"],
+            SUPABASE_URL="https://real-project.supabase.co",
+            SUPABASE_ANON_KEY="",
+        )
 
 
 def test_cors_origins_parsing():

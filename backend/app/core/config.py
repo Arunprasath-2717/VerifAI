@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     DB_POOL_MAX_SIZE: int = 5
     DB_TIMEOUT: float = 5.0
 
+    # Supabase Auth configuration
+    SUPABASE_URL: str = "https://mock-supabase-project.supabase.co"
+    SUPABASE_ANON_KEY: str = "mock-supabase-anon-key"
+    SUPABASE_SERVICE_ROLE_KEY: str = "mock-supabase-service-role-key"
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Union[List[str], str]) -> List[str]:
@@ -70,6 +75,14 @@ class Settings(BaseSettings):
             if "*" in self.CORS_ORIGINS:
                 raise ValueError(
                     "Production safety violation: Wildcard CORS ('*') is not allowed in production."
+                )
+            if not self.SUPABASE_URL or "mock" in self.SUPABASE_URL:
+                raise ValueError(
+                    "Production safety violation: Valid SUPABASE_URL is required in production."
+                )
+            if not self.SUPABASE_ANON_KEY or "mock" in self.SUPABASE_ANON_KEY:
+                raise ValueError(
+                    "Production safety violation: Valid SUPABASE_ANON_KEY is required in production."
                 )
         elif self.ENVIRONMENT == "testing":
             # Testing defaults

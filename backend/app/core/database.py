@@ -31,6 +31,13 @@ class DatabaseManager:
         """Access the underlying connection pool for future database modules."""
         return self._pool
 
+    async def acquire_connection(self):
+        """Acquire an active database connection context from the pool."""
+        if self._pool is None:
+            raise RuntimeError("Database connection pool is not initialized")
+        return self._pool.acquire()
+
+
     async def connect(
         self,
         database_url: str,
