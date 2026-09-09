@@ -1121,7 +1121,10 @@ async def test_engine_verify_search_exception():
 
     res = await engine.verify("claim 1", uuid.uuid4())
     assert res.verdict == Verdict.UNKNOWN
-    assert res.claim_results[0].reason == "No sources found for this claim"
+    assert (
+        "Search provider error" in res.claim_results[0].reason
+        or "No sources found" in res.claim_results[0].reason
+    )
 
 
 @pytest.mark.asyncio

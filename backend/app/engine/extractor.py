@@ -58,6 +58,13 @@ def _parse_llm_claims(raw: str, fallback_text: str) -> List[ExtractedClaim]:
     cleaned = re.sub(r"```(?:json)?", "", raw).strip()
     try:
         items = json.loads(cleaned)
+        if isinstance(items, dict) and "claims" in items:
+            raw_claims = items["claims"]
+            if isinstance(raw_claims, list):
+                items = [
+                    c if isinstance(c, dict) else {"text": c, "position": idx + 1}
+                    for idx, c in enumerate(raw_claims)
+                ]
         if not isinstance(items, list) or not items:
             raise ValueError("Expected a non-empty JSON array")
         claims = []
