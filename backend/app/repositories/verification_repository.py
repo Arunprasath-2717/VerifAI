@@ -1,4 +1,7 @@
-"""Verification repository: all database access for the verifications table."""
+"""Verification repository: all database access for the verifications table.
+
+Phase 2C addition: transition_status for atomic conditional state transitions.
+"""
 
 import json
 import logging
@@ -127,6 +130,54 @@ class VerificationRepository:
         async with pool.acquire() as conn:
             record = await conn.fetchrow(
                 query, vid, status, verdict, trust_score, evidence_json, error_message
+            )
+            return self._row_to_dict(record) if record else None
+
+    async def transition_status(
+        self,
+        verification_id: Union[str, uuid.UUID],
+        expected_status: str,
+        new_status: str,
+        error_message: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Atomically transition a verification from ``expected_status`` to ``new_status``.
+
+        The ``WHERE status = $expected_status`` predicate prevents:
+
+        - Invalid transitions (e.g. completed → processing)
+        - Race conditions between concurrent processing attempts
+
+        Returns:
+            The updated record dict if the transition succeeded.
+            ``None`` if the row was not found **or** the current status
+            did not match ``expected_status`` — callers must treat both
+            cases the same way to avoid leaking state information.
+
+        Raises:
+            RuntimeError: When the database pool is unavailable.
+        """
+        vid = (
+            uuid.UUID(str(verification_id))
+            if not isinstance(verification_id, uuid.UUID)
+            else verification_id
+        )
+        query = """
+            UPDATE verifications
+            SET
+                status        = $3::verification_status,
+                error_message = $4,
+                updated_at    = NOW()
+            WHERE id = $1
+              AND status = $2::verification_status
+            RETURNING
+                id, user_id, claim, status, verdict,
+                trust_score, evidence, error_message,
+                created_at, updated_at;
+        """
+        pool = self._get_pool()
+        async with pool.acquire() as conn:
+            record = await conn.fetchrow(
+                query, vid, expected_status, new_status, error_message
             )
             return self._row_to_dict(record) if record else None
 
