@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #A78BFA;
+  --color-secondary: #93C5FD;
+  --color-accent-peach: #FDBA9A;
+  --color-accent-mint: #A7E8D0;
+  --color-accent-rose: #F5B5C8;
+  --color-bg: #FAFAF7;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #252334;
+  --color-text-secondary: #666477;
+  --color-border: #E7E2F0;
+}
+
+.dark {
+  --color-primary: #B89EFF;
+  --color-secondary: #93C5FD;
+  --color-accent-peach: #FDBA9A;
+  --color-accent-mint: #A7E8D0;
+  --color-accent-rose: #F5B5C8;
+  --color-bg: #181724;
+  --color-surface: #221F33;
+  --color-text-primary: #F4F2FA;
+  --color-text-secondary: #A4A0BD;
+  --color-border: #363252;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Soft Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D9D2E9;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3B3654;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A78BFA;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Glass & Card Utilities */
+.pastel-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px -2px rgba(37, 35, 52, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pastel-card:hover {
+  border-color: #A78BFA;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px -4px rgba(167, 139, 250, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pastel-card:hover {
+    transform: none;
+  }
+}

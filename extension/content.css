@@ -1,0 +1,29 @@
+#verifai-floating-verify-btn {
+  position: absolute;
+  z-index: 999999;
+  background: #FFFFFF;
+  color: #8B5CF6;
+  border: 1px solid #DDD6FE;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(167, 139, 250, 0.2);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
+}
+
+#verifai-floating-verify-btn:hover {
+  background: #F5F2FD;
+  border-color: #A78BFA;
+  color: #6D28D9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.25);
+}
+
+.verifai-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

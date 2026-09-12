@@ -1,0 +1,364 @@
+/* Credence Companion Chrome Extension - Pastel Design System */
+:root {
+  --primary: #A78BFA;
+  --primary-hover: #906EE8;
+  --secondary: #93C5FD;
+  --mint: #A7E8D0;
+  --mint-bg: #ECFDF5;
+  --mint-text: #065F46;
+  --peach: #FDBA9A;
+  --peach-bg: #FFF7ED;
+  --peach-text: #9A3412;
+  --rose: #F5B5C8;
+  --rose-bg: #FFF1F2;
+  --rose-text: #9F1239;
+  --bg: #FAFAF7;
+  --surface: #FFFFFF;
+  --text-charcoal: #252334;
+  --text-slate: #666477;
+  --border: #E7E2F0;
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 360px;
+  min-height: 440px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-charcoal);
+  font-size: 12px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand .logo {
+  width: 28px;
+  height: 28px;
+  background-color: var(--primary);
+  color: white;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(167, 139, 250, 0.25);
+}
+
+.brand h1 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-charcoal);
+  line-height: 1.2;
+}
+
+.brand p {
+  font-size: 9px;
+  color: var(--text-slate);
+}
+
+.status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  background-color: var(--mint-bg);
+  color: var(--mint-text);
+  border: 1px solid #A7E8D0;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* Tabs */
+.nav-tabs {
+  display: flex;
+  background-color: #F3EFF9;
+  padding: 3px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-slate);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background-color: var(--surface);
+  color: var(--text-charcoal);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Tab Content */
+.tab-content {
+  display: none;
+  padding: 14px;
+  flex: 1;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Form Elements */
+.input-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-slate);
+  margin-bottom: 5px;
+}
+
+textarea, input[type="text"], select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--text-charcoal);
+  resize: none;
+  transition: border-color 0.2s;
+}
+
+textarea:focus, input[type="text"]:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.capture-source {
+  font-size: 9px;
+  color: var(--text-slate);
+  margin-top: 4px;
+}
+
+/* Buttons */
+.btn-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn.primary {
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(167, 139, 250, 0.25);
+}
+
+.btn.primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn.primary:active {
+  transform: scale(0.98);
+}
+
+.btn.secondary {
+  background-color: var(--surface);
+  color: var(--text-charcoal);
+  border: 1px solid var(--border);
+}
+
+.btn.secondary:hover {
+  background-color: #F8F6FC;
+  border-color: var(--primary);
+}
+
+/* Stream / Progress */
+.stream-box {
+  background: #FAF8FF;
+  border: 1px solid #DDD6FE;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #6D28D9;
+  margin-bottom: 12px;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #DDD6FE;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Result Card */
+.result-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.verdict-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--mint-bg);
+  color: var(--mint-text);
+  border: 1px solid #A7E8D0;
+}
+
+.verdict-tag.refuted {
+  background: var(--rose-bg);
+  color: var(--rose-text);
+  border-color: #FECDD3;
+}
+
+.verdict-tag.mixed {
+  background: var(--peach-bg);
+  color: var(--peach-text);
+  border-color: #FED7AA;
+}
+
+.trust-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-charcoal);
+}
+
+.verif-id {
+  font-size: 9px;
+  color: var(--text-slate);
+  font-family: monospace;
+  margin-bottom: 6px;
+}
+
+.summary {
+  font-size: 11px;
+  color: var(--text-charcoal);
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.section-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-slate);
+  margin-bottom: 4px;
+}
+
+.claims-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.claim-row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 10px;
+  color: var(--text-charcoal);
+}
+
+.action-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  text-align: right;
+}
+
+.full-analysis-link {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.full-analysis-link:hover {
+  text-decoration: underline;
+}
+
+/* Config & Report forms */
+.config-form .field, .report-form .field {
+  margin-bottom: 10px;
+}
+
+.help-text {
+  font-size: 10px;
+  color: var(--text-slate);
+  margin-bottom: 8px;
+}
+
+.status-msg {
+  font-size: 10px;
+  margin-top: 6px;
+  text-align: center;
+}
+
+.hidden {
+  display: none !important;
+}

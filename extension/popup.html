@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credence Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header with Product Logo & Status -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo">C</div>
+        <div>
+          <h1>Credence</h1>
+          <p>AI Verification Companion</p>
+        </div>
+      </div>
+      <span class="status-pill" id="engine-status">Ready</span>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" id="tab-verify-btn">Verify</button>
+      <button class="tab-btn" id="tab-config-btn">Settings</button>
+      <button class="tab-btn" id="tab-report-btn">Report</button>
+    </nav>
+
+    <!-- TAB 1: VERIFY -->
+    <section class="tab-content active" id="tab-verify">
+      <div class="input-group">
+        <label for="text-to-verify">Selected Content:</label>
+        <textarea id="text-to-verify" placeholder="Highlight text on page or paste AI statement here..." rows="3"></textarea>
+        <div class="capture-source" id="capture-source-info">Source: Active Web Page</div>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-verify" class="btn primary">Verify Selection</button>
+        <button id="btn-verify-stream" class="btn secondary">Stream Check</button>
+      </div>
+
+      <!-- Loading / Progress State -->
+      <div id="stream-progress" class="stream-box hidden">
+        <div class="spinner"></div>
+        <span id="stream-status-text">Segmenting claims & querying evidence...</span>
+      </div>
+
+      <!-- Result Card -->
+      <div id="result-card" class="result-card hidden">
+        <div class="result-header">
+          <span class="verdict-tag" id="res-verdict">Verified</span>
+          <span class="trust-badge" id="res-trust">92% Trust</span>
+        </div>
+        <div class="verif-id" id="res-id">ID: verif_1029</div>
+        <p class="summary" id="res-summary"></p>
+        
+        <div class="claims-section">
+          <span class="section-title">Corroborated Claims:</span>
+          <div id="claims-container" class="claims-container"></div>
+        </div>
+
+        <div class="action-footer">
+          <a href="http://localhost:3000/chat" target="_blank" class="full-analysis-link">
+            Open Full Analysis in Studio &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: CONFIG -->
+    <section class="tab-content" id="tab-config">
+      <div class="config-form">
+        <div class="field">
+          <label for="cfg-endpoint">Studio API Endpoint:</label>
+          <input type="text" id="cfg-endpoint" value="http://localhost:3000/api/v1/extension">
+        </div>
+        <div class="field">
+          <label for="cfg-version">Companion Version:</label>
+          <input type="text" id="cfg-version" value="2.4.0 (Pastel)" disabled>
+        </div>
+        <button id="btn-save-config" class="btn primary">Save Configuration</button>
+        <div id="config-status" class="status-msg"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: REPORT -->
+    <section class="tab-content" id="tab-report">
+      <div class="report-form">
+        <p class="help-text">Report capture or selector issues on this page:</p>
+        <div class="field">
+          <label for="rep-reason">Failure Reason:</label>
+          <select id="rep-reason">
+            <option value="Selector not found">AI Response selector not recognized</option>
+            <option value="Incomplete text extracted">Incomplete text extracted</option>
+            <option value="Unsupported Chat Interface">Unsupported Interface</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rep-note">Notes:</label>
+          <textarea id="rep-note" placeholder="Optional details..." rows="2"></textarea>
+        </div>
+        <button id="btn-send-report" class="btn primary">Submit Report</button>
+        <div id="report-status" class="status-msg"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
