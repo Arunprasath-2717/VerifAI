@@ -18,6 +18,10 @@ env/
 venv/
 .venv/
 ENV/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
 
 # Production build
 build/
