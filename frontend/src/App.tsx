@@ -10,6 +10,9 @@ import { ConfidenceChart } from './components/Dashboard/ConfidenceChart';
 import { DomainAnalyticsTable } from './components/Dashboard/DomainAnalyticsTable';
 import { LeaderboardView } from './components/Leaderboard/LeaderboardView';
 import { BenchmarkAnalyticsView } from './components/Benchmark/BenchmarkAnalyticsView';
+import HistoryPage from './pages/History/index';
+import AuditView from './pages/Audit/index';
+import ReportsView from './pages/Reports/index';
 
 import type {
   ActiveFilters,
@@ -35,7 +38,7 @@ import {
 } from './services/api';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'leaderboard' | 'benchmark'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'leaderboard' | 'benchmark' | 'history' | 'audit' | 'reports'>('dashboard');
 
   // Compositing filter state
   const [filters, setFilters] = useState<ActiveFilters>({
@@ -126,17 +129,21 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col text-slate-900 transition-colors duration-700 relative overflow-x-hidden">
+      
+      {/* Pure Bright Light Blue CSS Background */}
+      <div className="fixed inset-0 -z-20 bg-gradient-to-br from-sky-100 via-blue-200 to-cyan-100 animate-pulse duration-1000"></div>
+      <div className="fixed inset-0 -z-10 bg-white/20 mix-blend-overlay backdrop-blur-3xl"></div>
       
       {/* Top Navbar */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Container (Full Width) */}
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 transition-all duration-500">
         
         {/* Render Trust Dashboard */}
         {activeTab === 'dashboard' && (
-          <div>
+          <div className="space-y-6">
             {/* Filter Bar */}
             <FilterBar
               options={filterOptions}
@@ -162,19 +169,19 @@ export function App() {
             <OverviewCards overview={overview} loading={loading} error={error} />
 
             {/* Visual Charts Grid 1: Verdict Distribution & Trends */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 hover:shadow-xl transition-shadow duration-300 rounded-2xl">
               <VerdictDistributionChart stats={stats} loading={loading} />
               <TrendsChart trends={trends} loading={loading} />
             </div>
 
             {/* Visual Charts Grid 2: Signal Quality & Evidence Quality */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 hover:shadow-xl transition-shadow duration-300 rounded-2xl">
               <SignalQualityChart data={signalQuality} loading={loading} />
               <EvidenceQualityChart data={evidenceQuality} loading={loading} />
             </div>
 
             {/* Visual Charts Grid 3: Confidence Distribution */}
-            <div className="mb-6">
+            <div className="mb-6 hover:shadow-xl transition-shadow duration-300 rounded-2xl">
               <ConfidenceChart data={confidence} loading={loading} />
             </div>
 
@@ -193,11 +200,16 @@ export function App() {
           <BenchmarkAnalyticsView />
         )}
 
+        {/* Render Daranya Modules */}
+        {activeTab === 'history' && <HistoryPage />}
+        {activeTab === 'audit' && <AuditView />}
+        {activeTab === 'reports' && <ReportsView />}
+
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900/60 border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
-        VerifAI Read-Only Analytics Layer • Powered by FastAPI & React TypeScript Recharts • All metrics traceable to core verification tables
+      <footer className="bg-white/40 border-t border-white/60 py-6 text-center text-xs text-slate-600 font-medium mt-12 backdrop-blur-xl shadow-lg">
+        VerifAI Interactive UI Layer • Premium Violet Video Theme • All metrics are mocked
       </footer>
 
     </div>

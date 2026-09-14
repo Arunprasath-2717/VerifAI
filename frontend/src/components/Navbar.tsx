@@ -1,84 +1,80 @@
 import React from 'react';
-import { ShieldCheck, BarChart3, Trophy, LineChart, Sparkles } from 'lucide-react';
+import { ShieldCheck, BarChart3, Trophy, LineChart, Sparkles, History, ListChecks, FileText } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'dashboard' | 'leaderboard' | 'benchmark';
-  setActiveTab: (tab: 'dashboard' | 'leaderboard' | 'benchmark') => void;
+  activeTab: 'dashboard' | 'leaderboard' | 'benchmark' | 'history' | 'audit' | 'reports';
+  setActiveTab: (tab: 'dashboard' | 'leaderboard' | 'benchmark' | 'history' | 'audit' | 'reports') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+    { id: 'benchmark', label: 'Benchmarks', icon: LineChart },
+    { id: 'history', label: 'History', icon: History },
+    { id: 'audit', label: 'Audit', icon: ListChecks },
+    { id: 'reports', label: 'Reports', icon: FileText },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-indigo-900/40 shadow-[0_4px_30px_rgba(15,23,42,0.8)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 bg-white/40 backdrop-blur-2xl border-b border-white/60 shadow-lg shadow-sky-500/5 transition-colors duration-300">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo & Module Brand */}
-          <div className="flex items-center space-x-3.5">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-65 group-hover:opacity-100 transition duration-300"></div>
-              <div className="relative p-2.5 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-center">
-                <ShieldCheck className="h-7 w-7 text-indigo-400" />
+          {/* Logo & Brand */}
+          <div 
+            className="flex-shrink-0 flex items-center group cursor-pointer" 
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-sky-500 via-purple-500 to-blue-500 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+              <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30 group-hover:scale-105 transition-transform duration-300">
+                <ShieldCheck className="h-6 w-6 text-white" />
               </div>
             </div>
             
-            <div>
-              <div className="flex items-center space-x-2.5">
-                <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
-                  VerifAI
-                </span>
-                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-950 to-purple-950 text-indigo-300 border border-indigo-700/60 shadow-sm">
-                  Trust Analytics Layer
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 font-medium tracking-wide">
-                Core Verification Telemetry • Leaderboards • Benchmark Intelligence
-              </p>
+            <div className="ml-3.5 flex flex-col justify-center">
+              <span className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-900 to-blue-700">
+                VerifAI
+              </span>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-sky-500/70">
+                Premium Glass UI
+              </span>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="flex items-center space-x-2 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800/80 shadow-inner">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center space-x-2 px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 ${
-                activeTab === 'dashboard'
-                  ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]'
-                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
-              }`}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>Trust Dashboard</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('leaderboard')}
-              className={`flex items-center space-x-2 px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 ${
-                activeTab === 'leaderboard'
-                  ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]'
-                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
-              }`}
-            >
-              <Trophy className="h-4 w-4 text-amber-400" />
-              <span>Model Leaderboard</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('benchmark')}
-              className={`flex items-center space-x-2 px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 ${
-                activeTab === 'benchmark'
-                  ? 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]'
-                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
-              }`}
-            >
-              <LineChart className="h-4 w-4 text-sky-400" />
-              <span>Benchmark Analytics</span>
-            </button>
+          <nav className="flex items-center space-x-1.5 bg-white/30 backdrop-blur-md p-1.5 rounded-2xl border border-white/50 shadow-inner overflow-x-auto hide-scrollbar">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`
+                    flex items-center space-x-2 px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative
+                    ${isActive 
+                      ? 'text-white shadow-md shadow-sky-500/25 scale-105 group' 
+                      : 'text-slate-700 hover:bg-white/60 hover:text-sky-700 hover:shadow-sm'
+                    }
+                  `}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-500 rounded-xl -z-10 animate-in zoom-in-95 duration-300" />
+                  )}
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
           {/* Engine Status Badge */}
-          <div className="hidden lg:flex items-center space-x-2 text-xs font-mono bg-emerald-950/60 px-3.5 py-1.5 rounded-xl border border-emerald-800/60 text-emerald-300 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
-            <span className="font-semibold">Engine Synced</span>
+          <div className="hidden lg:flex items-center space-x-2 text-xs font-mono bg-sky-50/50 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-sky-200/50 text-sky-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+            <Sparkles className="h-3.5 w-3.5 text-sky-500 group-hover:animate-spin" />
+            <span className="font-bold">Mock Active</span>
           </div>
 
         </div>

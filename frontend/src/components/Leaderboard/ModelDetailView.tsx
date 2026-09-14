@@ -32,22 +32,22 @@ export const ModelDetailView: React.FC<ModelDetailViewProps> = ({ modelId, onClo
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-slate-900 border border-white/50 rounded-2xl max-w-4xl w-full p-6 shadow-xl shadow-sky-500/10 relative max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div className="flex items-center justify-between border-b border-white/50 pb-4 mb-6">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 bg-indigo-950 rounded-xl border border-indigo-800">
-              <Cpu className="h-6 w-6 text-indigo-400" />
+              <Cpu className="h-6 w-6 text-sky-700" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-100">{modelId} Analytics Deep Dive</h2>
-              <p className="text-xs text-slate-400">Detailed metric breakdown derived from stored verification logs</p>
+              <h2 className="text-xl font-bold text-slate-900">{modelId} Analytics Deep Dive</h2>
+              <p className="text-xs text-slate-600">Detailed metric breakdown derived from stored verification logs</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-1.5 rounded-lg bg-white/50 hover:bg-white/60 text-slate-600 hover:text-slate-800 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -66,45 +66,45 @@ export const ModelDetailView: React.FC<ModelDetailViewProps> = ({ modelId, onClo
             
             {/* KPI Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400 font-semibold block mb-1">Verification Accuracy</span>
-                <span className="text-2xl font-bold text-emerald-400">{(detail.accuracy * 100).toFixed(1)}%</span>
+              <div className="bg-slate-950 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 font-semibold block mb-1">Verification Accuracy</span>
+                <span className="text-2xl font-bold text-emerald-700">{(detail.accuracy * 100).toFixed(1)}%</span>
               </div>
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400 font-semibold block mb-1">Trust Score</span>
-                <span className="text-2xl font-bold text-indigo-400">{(detail.trust_score * 100).toFixed(1)}%</span>
+              <div className="bg-slate-950 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 font-semibold block mb-1">Trust Score</span>
+                <span className="text-2xl font-bold text-sky-700">{(detail.trust_score * 100).toFixed(1)}%</span>
               </div>
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400 font-semibold block mb-1">Hallucination Rate</span>
-                <span className="text-2xl font-bold text-rose-400">{(detail.hallucination_rate * 100).toFixed(1)}%</span>
+              <div className="bg-slate-950 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 font-semibold block mb-1">Hallucination Rate</span>
+                <span className="text-2xl font-bold text-rose-700">{(detail.hallucination_rate * 100).toFixed(1)}%</span>
               </div>
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400 font-semibold block mb-1">Consistency Signal</span>
-                <span className="text-2xl font-bold text-violet-400">{(detail.consistency * 100).toFixed(1)}%</span>
+              <div className="bg-slate-950 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 font-semibold block mb-1">Consistency Signal</span>
+                <span className="text-2xl font-bold text-blue-700">{(detail.consistency * 100).toFixed(1)}%</span>
               </div>
             </div>
 
             {/* Additional Telemetry */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                <span className="text-xs text-slate-400 block mb-1">Average Confidence</span>
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 block mb-1">Average Confidence</span>
                 <span className="text-lg font-bold text-sky-400">
                   {detail.confidence !== null ? `${(detail.confidence * 100).toFixed(1)}%` : 'No signal'}
                 </span>
               </div>
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                <span className="text-xs text-slate-400 block mb-1">Evidence Support</span>
-                <span className="text-lg font-bold text-teal-400">{(detail.evidence_support * 100).toFixed(1)}%</span>
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 block mb-1">Evidence Support</span>
+                <span className="text-lg font-bold text-teal-700">{(detail.evidence_support * 100).toFixed(1)}%</span>
               </div>
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                <span className="text-xs text-slate-400 block mb-1">Inconclusive Rate</span>
-                <span className="text-lg font-bold text-amber-400">{(detail.inconclusive_rate * 100).toFixed(1)}%</span>
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/50">
+                <span className="text-xs text-slate-600 block mb-1">Inconclusive Rate</span>
+                <span className="text-lg font-bold text-amber-700">{(detail.inconclusive_rate * 100).toFixed(1)}%</span>
               </div>
             </div>
 
             {/* Historical Trend Chart */}
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800">
-              <h3 className="text-sm font-bold text-slate-200 mb-3">Model Historical Trajectory</h3>
+            <div className="bg-slate-950 p-5 rounded-xl border border-white/50">
+              <h3 className="text-sm font-bold text-slate-800 mb-3">Model Historical Trajectory</h3>
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={detail.historical_performance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

@@ -58,19 +58,19 @@ export const LeaderboardView: React.FC = () => {
     <div className="space-y-8">
       
       {/* Leaderboard Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/80 border border-amber-500/30 rounded-2xl p-6 shadow-2xl backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white/30 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-xl shadow-sky-500/10 backdrop-blur-xl">
         <div className="flex items-center space-x-4">
           <div className="p-3 bg-gradient-to-tr from-amber-500 to-yellow-600 rounded-2xl shadow-lg shadow-amber-500/20 text-slate-950">
             <Trophy className="h-7 w-7" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h2 className="text-2xl font-extrabold text-slate-100">Model Leaderboard</h2>
+              <h2 className="text-2xl font-extrabold text-slate-900">Model Leaderboard</h2>
               <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700">
                 Empirical Evaluation
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-600 mt-1 font-medium">
               Models ranked dynamically across stored verification accuracy, trust score, hallucination rate, and signal strength.
             </p>
           </div>
@@ -89,7 +89,7 @@ export const LeaderboardView: React.FC = () => {
 
           <button
             onClick={loadLeaderboardData}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all duration-200"
+            className="p-2.5 rounded-xl bg-white/50 hover:bg-white/60 text-slate-700 border border-white/60 transition-all duration-200"
             title="Refresh Leaderboard"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -98,10 +98,10 @@ export const LeaderboardView: React.FC = () => {
       </div>
 
       {/* Sortable Leaderboard Table */}
-      <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden">
+      <div className="bg-white/30 backdrop-blur-md border border-white/50 rounded-2xl shadow-xl shadow-sky-500/10 backdrop-blur-xl overflow-hidden">
         {loading ? (
-          <div className="p-16 text-center text-slate-400 text-sm animate-pulse flex flex-col items-center justify-center space-y-3">
-            <Sparkles className="h-6 w-6 text-indigo-400 animate-spin" />
+          <div className="p-16 text-center text-slate-600 text-sm animate-pulse flex flex-col items-center justify-center space-y-3">
+            <Sparkles className="h-6 w-6 text-sky-700 animate-spin" />
             <span>Evaluating and ranking AI models across verification telemetry...</span>
           </div>
         ) : error ? (
@@ -110,70 +110,70 @@ export const LeaderboardView: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/90 text-slate-400 font-bold border-b border-slate-800 uppercase tracking-wider">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-white/40 backdrop-blur-md text-slate-600 font-bold border-b border-white/50 uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-4 w-12 text-center">Select</th>
                   <th className="px-5 py-4 w-20 text-center">Rank</th>
-                  <th className="px-5 py-4 font-extrabold text-slate-100">Model</th>
+                  <th className="px-5 py-4 font-extrabold text-slate-900">Model</th>
                   
                   <th
                     onClick={() => handleSort('verification_accuracy')}
-                    className="px-5 py-4 cursor-pointer hover:text-indigo-400 transition-colors"
+                    className="px-5 py-4 cursor-pointer hover:text-sky-700 transition-colors"
                   >
                     <div className="flex items-center space-x-1.5">
                       <span>Accuracy</span>
-                      <ArrowUpDown className="h-3.5 w-3.5 text-indigo-400" />
+                      <ArrowUpDown className="h-3.5 w-3.5 text-sky-700" />
                     </div>
                   </th>
 
                   <th
                     onClick={() => handleSort('trust_score')}
-                    className="px-5 py-4 cursor-pointer hover:text-emerald-400 transition-colors"
+                    className="px-5 py-4 cursor-pointer hover:text-emerald-700 transition-colors"
                   >
                     <div className="flex items-center space-x-1.5">
                       <span>Trust Score</span>
-                      <ArrowUpDown className="h-3.5 w-3.5 text-emerald-400" />
+                      <ArrowUpDown className="h-3.5 w-3.5 text-emerald-700" />
                     </div>
                   </th>
 
                   <th
                     onClick={() => handleSort('hallucination_rate')}
-                    className="px-5 py-4 cursor-pointer hover:text-rose-400 transition-colors"
+                    className="px-5 py-4 cursor-pointer hover:text-rose-700 transition-colors"
                   >
                     <div className="flex items-center space-x-1.5">
                       <span>Hallucination</span>
-                      <ArrowUpDown className="h-3.5 w-3.5 text-rose-400" />
+                      <ArrowUpDown className="h-3.5 w-3.5 text-rose-700" />
                     </div>
                   </th>
 
                   <th
                     onClick={() => handleSort('consistency')}
-                    className="px-5 py-4 cursor-pointer hover:text-violet-400 transition-colors"
+                    className="px-5 py-4 cursor-pointer hover:text-blue-700 transition-colors"
                   >
                     <div className="flex items-center space-x-1.5">
                       <span>Consistency</span>
-                      <ArrowUpDown className="h-3.5 w-3.5 text-violet-400" />
+                      <ArrowUpDown className="h-3.5 w-3.5 text-blue-700" />
                     </div>
                   </th>
 
                   <th
                     onClick={() => handleSort('evidence_supported_rate')}
-                    className="px-5 py-4 cursor-pointer hover:text-teal-400 transition-colors"
+                    className="px-5 py-4 cursor-pointer hover:text-teal-700 transition-colors"
                   >
                     <div className="flex items-center space-x-1.5">
                       <span>Evidence Sup.</span>
-                      <ArrowUpDown className="h-3.5 w-3.5 text-teal-400" />
+                      <ArrowUpDown className="h-3.5 w-3.5 text-teal-700" />
                     </div>
                   </th>
 
                   <th
                     onClick={() => handleSort('inconclusive_rate')}
-                    className="px-5 py-4 cursor-pointer hover:text-amber-400 transition-colors"
+                    className="px-5 py-4 cursor-pointer hover:text-amber-700 transition-colors"
                   >
                     <div className="flex items-center space-x-1.5">
                       <span>Inconclusive</span>
-                      <ArrowUpDown className="h-3.5 w-3.5 text-amber-400" />
+                      <ArrowUpDown className="h-3.5 w-3.5 text-amber-700" />
                     </div>
                   </th>
 
@@ -187,17 +187,17 @@ export const LeaderboardView: React.FC = () => {
                   return (
                     <tr
                       key={m.model_id}
-                      className={`hover:bg-indigo-950/20 transition-colors ${
-                        isSelected ? 'bg-indigo-950/40 border-l-4 border-l-indigo-500' : ''
+                      className={`hover:bg-sky-50/50 transition-colors ${
+                        isSelected ? 'bg-sky-100/50 border-l-4 border-l-sky-500' : ''
                       }`}
                     >
                       <td className="px-5 py-4 text-center">
                         <button
                           onClick={() => toggleSelectForComparison(m.model_id)}
-                          className="text-slate-400 hover:text-indigo-400 transition-colors"
+                          className="text-slate-600 hover:text-sky-700 transition-colors"
                         >
                           {isSelected ? (
-                            <CheckSquare className="h-5 w-5 text-indigo-400" />
+                            <CheckSquare className="h-5 w-5 text-sky-700" />
                           ) : (
                             <Square className="h-5 w-5" />
                           )}
@@ -218,44 +218,44 @@ export const LeaderboardView: React.FC = () => {
                             #3
                           </span>
                         ) : (
-                          <span className="text-slate-400">#{m.rank}</span>
+                          <span className="text-slate-600">#{m.rank}</span>
                         )}
                       </td>
 
-                      <td className="px-5 py-4 font-sans font-bold text-slate-100">
+                      <td className="px-5 py-4 font-sans font-bold text-slate-900">
                         <span className="text-sm">{m.model_id}</span>
                       </td>
 
-                      <td className="px-5 py-4 font-bold text-emerald-400 text-sm">
+                      <td className="px-5 py-4 font-bold text-emerald-700 text-sm">
                         {(m.verification_accuracy * 100).toFixed(1)}%
                       </td>
 
-                      <td className="px-5 py-4 text-indigo-300">
+                      <td className="px-5 py-4 text-sky-700">
                         {(m.trust_score * 100).toFixed(1)}%
                       </td>
 
-                      <td className="px-5 py-4 text-rose-400 font-bold">
+                      <td className="px-5 py-4 text-rose-700 font-bold">
                         {(m.hallucination_rate * 100).toFixed(1)}%
                       </td>
 
-                      <td className="px-5 py-4 text-violet-400">
+                      <td className="px-5 py-4 text-blue-700">
                         {(m.consistency * 100).toFixed(1)}%
                       </td>
 
-                      <td className="px-5 py-4 text-teal-400">
+                      <td className="px-5 py-4 text-teal-700">
                         {(m.evidence_supported_rate * 100).toFixed(1)}%
                       </td>
 
-                      <td className="px-5 py-4 text-amber-400">
+                      <td className="px-5 py-4 text-amber-700">
                         {(m.inconclusive_rate * 100).toFixed(1)}%
                       </td>
 
                       <td className="px-5 py-4 text-right font-sans">
                         <button
                           onClick={() => setSelectedModelId(m.model_id)}
-                          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 ml-auto transition-all duration-200"
+                          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/50 hover:bg-white/60 text-slate-800 text-xs font-bold border border-white/60 ml-auto transition-all duration-200"
                         >
-                          <Eye className="h-3.5 w-3.5 text-indigo-400" />
+                          <Eye className="h-3.5 w-3.5 text-sky-700" />
                           <span>Detail</span>
                         </button>
                       </td>

@@ -21,8 +21,22 @@ from app.schemas.verification import VerificationStatus
 # Import here (module level) so tests can patch
 # app.services.verification_processing_service.verification_engine
 from app.engine.engine import verification_engine as verification_engine  # noqa: F401
+from app.core.database import database_manager
 
 logger = logging.getLogger("verifai.services.processing")
+
+async def log_audit_event(verification_id: uuid.UUID, user_id: uuid.UUID, stage: str, status: str, metadata: dict = None):
+    try:
+        pool = database_manager.get_pool()
+        if pool:
+            import json
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "INSERT INTO audit_events (verification_id, user_id, stage, status, metadata) VALUES ($1, $2, $3, $4, $5::jsonb)",
+                    verification_id, user_id, stage, status, json.dumps(metadata) if metadata else None
+                )
+    except Exception as exc:
+        logger.warning("Failed to log audit event: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -139,6 +153,8 @@ class VerificationProcessingService:
             raise VerificationNotFoundError(
                 f"Verification {verification_id} not found for user {user_id}"
             )
+        
+        await log_audit_event(verification_id, user_id, "verification", "started", {"claim": record.get("claim", "")[:50]})
 
         # ── 2. pending → processing (atomic) ──────────────────────────────
         processing_record = await self._repo.transition_status(
@@ -154,18 +170,21 @@ class VerificationProcessingService:
             )
 
         # ── 3. Run real engine (Phase 2D) ──────────────────────────────────
+        await log_audit_event(verification_id, user_id, "engine_processing", "started")
         try:
             await _process_verification_core(
                 verification_id=verification_id,
                 claim=record["claim"],
                 repo=self._repo,
             )
+            await log_audit_event(verification_id, user_id, "engine_processing", "success")
         except Exception as exc:
             # ── 5. processing → failed ─────────────────────────────────────
             logger.error(
                 "Processing failed for verification %s: %s", verification_id, exc
             )
             safe_message = "Verification processing failed due to an internal error"
+            await log_audit_event(verification_id, user_id, "engine_processing", "error", {"error": safe_message, "detail": str(exc)})
             failed_record = await self._repo.transition_status(
                 verification_id=verification_id,
                 expected_status=VerificationStatus.PROCESSING.value,
@@ -184,6 +203,7 @@ class VerificationProcessingService:
         logger.info(
             "Verification %s processing completed successfully", verification_id
         )
+        await log_audit_event(verification_id, user_id, "verification", "completed")
         completed_record = await self._repo.transition_status(
             verification_id=verification_id,
             expected_status=VerificationStatus.PROCESSING.value,

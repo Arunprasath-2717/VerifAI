@@ -38,22 +38,22 @@ export const ModelComparisonView: React.FC<ModelComparisonViewProps> = ({ modelI
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-slate-900 border border-white/50 rounded-2xl max-w-5xl w-full p-6 shadow-xl shadow-sky-500/10 relative max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div className="flex items-center justify-between border-b border-white/50 pb-4 mb-6">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 bg-purple-950 rounded-xl border border-purple-800">
               <BarChart2 className="h-6 w-6 text-purple-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-100">Multi-Model Comparative Analytics</h2>
-              <p className="text-xs text-slate-400">Side-by-side empirical metric comparison for selected models</p>
+              <h2 className="text-xl font-bold text-slate-900">Multi-Model Comparative Analytics</h2>
+              <p className="text-xs text-slate-600">Side-by-side empirical metric comparison for selected models</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-1.5 rounded-lg bg-white/50 hover:bg-white/60 text-slate-600 hover:text-slate-800 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -71,11 +71,11 @@ export const ModelComparisonView: React.FC<ModelComparisonViewProps> = ({ modelI
           <div className="space-y-6">
             
             {/* Comparison Matrix Table */}
-            <div className="overflow-x-auto bg-slate-950 rounded-xl border border-slate-800">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-900 text-slate-400 font-semibold border-b border-slate-800">
+            <div className="overflow-x-auto bg-slate-950 rounded-xl border border-white/50">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-900 text-slate-600 font-semibold border-b border-white/50">
                   <tr>
-                    <th className="px-4 py-3 font-bold text-slate-200">Metric</th>
+                    <th className="px-4 py-3 font-bold text-slate-800">Metric</th>
                     {data.models.map((m, idx) => (
                       <th key={m.model_id} className="px-4 py-3 font-bold" style={{ color: MODEL_PALETTE[idx % MODEL_PALETTE.length] }}>
                         {m.model_id}
@@ -85,49 +85,49 @@ export const ModelComparisonView: React.FC<ModelComparisonViewProps> = ({ modelI
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono">
                   <tr>
-                    <td className="px-4 py-3 font-sans font-semibold text-slate-300">Verification Accuracy</td>
+                    <td className="px-4 py-3 font-sans font-semibold text-slate-700">Verification Accuracy</td>
                     {data.models.map(m => (
-                      <td key={m.model_id} className="px-4 py-3 text-emerald-400 font-bold">
+                      <td key={m.model_id} className="px-4 py-3 text-emerald-700 font-bold">
                         {(m.accuracy * 100).toFixed(1)}%
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-sans font-semibold text-slate-300">Trust Score</td>
+                    <td className="px-4 py-3 font-sans font-semibold text-slate-700">Trust Score</td>
                     {data.models.map(m => (
-                      <td key={m.model_id} className="px-4 py-3 text-indigo-400">
+                      <td key={m.model_id} className="px-4 py-3 text-sky-700">
                         {(m.trust_score * 100).toFixed(1)}%
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-sans font-semibold text-slate-300">Hallucination Rate</td>
+                    <td className="px-4 py-3 font-sans font-semibold text-slate-700">Hallucination Rate</td>
                     {data.models.map(m => (
-                      <td key={m.model_id} className="px-4 py-3 text-rose-400 font-bold">
+                      <td key={m.model_id} className="px-4 py-3 text-rose-700 font-bold">
                         {(m.hallucination_rate * 100).toFixed(1)}%
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-sans font-semibold text-slate-300">Consistency Signal</td>
+                    <td className="px-4 py-3 font-sans font-semibold text-slate-700">Consistency Signal</td>
                     {data.models.map(m => (
-                      <td key={m.model_id} className="px-4 py-3 text-violet-400">
+                      <td key={m.model_id} className="px-4 py-3 text-blue-700">
                         {(m.consistency * 100).toFixed(1)}%
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-sans font-semibold text-slate-300">Evidence Support Rate</td>
+                    <td className="px-4 py-3 font-sans font-semibold text-slate-700">Evidence Support Rate</td>
                     {data.models.map(m => (
-                      <td key={m.model_id} className="px-4 py-3 text-teal-400">
+                      <td key={m.model_id} className="px-4 py-3 text-teal-700">
                         {(m.evidence_support * 100).toFixed(1)}%
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-4 py-3 font-sans font-semibold text-slate-300">Inconclusive Rate</td>
+                    <td className="px-4 py-3 font-sans font-semibold text-slate-700">Inconclusive Rate</td>
                     {data.models.map(m => (
-                      <td key={m.model_id} className="px-4 py-3 text-amber-400">
+                      <td key={m.model_id} className="px-4 py-3 text-amber-700">
                         {(m.inconclusive_rate * 100).toFixed(1)}%
                       </td>
                     ))}
@@ -137,8 +137,8 @@ export const ModelComparisonView: React.FC<ModelComparisonViewProps> = ({ modelI
             </div>
 
             {/* Side-by-Side Visual Chart */}
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800">
-              <h3 className="text-sm font-bold text-slate-200 mb-3">Comparative Metrics Chart</h3>
+            <div className="bg-slate-950 p-5 rounded-xl border border-white/50">
+              <h3 className="text-sm font-bold text-slate-800 mb-3">Comparative Metrics Chart</h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
