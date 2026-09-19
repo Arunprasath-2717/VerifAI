@@ -6,24 +6,30 @@ from starlette.testclient import TestClient
 
 
 def test_versioned_health_check(client: TestClient) -> None:
-    """Verify liveness probe confirms application process is running."""
+    """Verify liveness probe confirms process is running and includes request ID."""
     response = client.get("/api/v1/health")
     assert response.status_code == 200
+    assert "x-request-id" in response.headers
     data = response.json()
     assert data["status"] == "live"
     assert data["service"] == "verifai-backend"
     assert "version" in data
+    assert "request_id" in data
+    assert data["request_id"] == response.headers["x-request-id"]
 
 
 def test_readiness_probe_returns_503_when_unready(client: TestClient) -> None:
-    """Verify readiness probe returns 503 when dependencies are unconfigured."""
+    """Verify readiness probe returns 503 and request ID when unconfigured."""
     response = client.get("/api/v1/ready")
     assert response.status_code == 503
+    assert "x-request-id" in response.headers
     data = response.json()
     assert data["status"] == "not_ready"
     assert data["ready"] is False
     assert data["process"] == "running"
     assert data["environment"] == "testing"
+    assert "request_id" in data
+    assert data["request_id"] == response.headers["x-request-id"]
     assert "dependencies" in data
     assert data["dependencies"]["database"]["configured"] is False
     assert data["dependencies"]["database"]["status"] == "unconfigured"
@@ -45,8 +51,10 @@ def test_readiness_probe_database_unavailable_mocked(client: TestClient) -> None
     ):
         response = client.get("/api/v1/ready")
         assert response.status_code == 503
+        assert "x-request-id" in response.headers
         data = response.json()
         assert data["ready"] is False
+        assert data["request_id"] == response.headers["x-request-id"]
         assert data["dependencies"]["database"] == {
             "configured": True,
             "status": "unavailable",
@@ -62,6 +70,7 @@ def test_readiness_probe_database_available_mocked(client: TestClient) -> None:
     ):
         response = client.get("/api/v1/ready")
         assert response.status_code == 503
+        assert "x-request-id" in response.headers
         data = response.json()
         assert data["dependencies"]["database"] == {
             "configured": True,

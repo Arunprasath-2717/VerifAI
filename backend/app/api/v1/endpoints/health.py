@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Response, status
 from app.core.config import Settings
 from app.core.database import check_database_connectivity
 from app.core.dependencies import get_current_settings
+from app.core.logging import get_current_request_id
 
 router = APIRouter()
 
@@ -25,6 +26,7 @@ async def get_health(
         "status": "live",
         "service": "verifai-backend",
         "version": settings.VERSION,
+        "request_id": get_current_request_id(),
     }
 
 
@@ -77,6 +79,7 @@ async def get_ready(
             "ready": False,
             "process": "running",
             "environment": settings.ENVIRONMENT,
+            "request_id": get_current_request_id(),
             "message": (
                 "Application process is alive, but critical dependencies are "
                 "unconfigured or unavailable."
@@ -89,6 +92,7 @@ async def get_ready(
         "ready": True,
         "process": "running",
         "environment": settings.ENVIRONMENT,
+        "request_id": get_current_request_id(),
         "message": "All dependencies configured and operational.",
         "dependencies": dependencies,
     }

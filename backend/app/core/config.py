@@ -19,12 +19,18 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # Environment & Debugging
-    ENVIRONMENT: Literal["development", "production", "testing"] = "development"
+    ENVIRONMENT: Literal["development", "test", "testing", "staging", "production"] = (
+        "development"
+    )
     DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
 
     # Server Configuration
     HOST: str = "127.0.0.1"
     PORT: int = 8000
+
+    # Request & Correlation Tracking
+    REQUEST_ID_HEADER: str = "X-Request-ID"
 
     # CORS Configuration
     # NOTE: Default origins are strictly for local development and must be
@@ -45,6 +51,18 @@ class Settings(BaseSettings):
     DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_POOL_TIMEOUT: int = 30
     DATABASE_CONNECT_TIMEOUT: float = 3.0
+
+    @field_validator("LOG_LEVEL", mode="after")
+    @classmethod
+    def validate_log_level(cls, v: str) -> str:
+        """Normalize and validate log level against standard Python levels."""
+        allowed = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        upper_v = v.strip().upper()
+        if upper_v not in allowed:
+            raise ValueError(
+                f"Invalid LOG_LEVEL '{v}'. Must be one of: {', '.join(sorted(allowed))}"
+            )
+        return upper_v
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="after")
     @classmethod
@@ -81,3 +99,8 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return cached application settings instance."""
     return Settings()
+
+
+def clear_settings_cache() -> None:
+    """Clear cached settings instance to enable deterministic test isolation."""
+    get_settings.cache_clear()
