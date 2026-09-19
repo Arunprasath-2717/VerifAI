@@ -1,0 +1,9 @@
+# VerifAI Core Backend Production Dependencies (Phase 1, Prompt 2)
+# Pinned for strict reproducibility on Python 3.14.7
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+sqlalchemy==2.0.54
+asyncpg==0.31.0
+greenlet==3.5.6
