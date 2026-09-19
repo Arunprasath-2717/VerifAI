@@ -1,0 +1,64 @@
+name: Backend CI & Hermetic Verification
+
+on:
+  push:
+    branches:
+      - Final
+  pull_request:
+    branches:
+      - Final
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Backend (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements-dev.txt
+
+      - name: Verify Dependency Graph Integrity
+        run: |
+          python -m pip check
+
+      - name: Run Ruff Linting
+        run: |
+          PYTHONPATH=backend ruff check backend scripts
+
+      - name: Run Ruff Formatting Verification
+        run: |
+          PYTHONPATH=backend ruff format --check backend scripts
+
+      - name: Run Mypy Static Type Checking
+        run: |
+          PYTHONPATH=backend mypy backend/app
+
+      - name: Run Deterministic Pytest Suite
+        run: |
+          PYTHONPATH=backend pytest backend/tests -v
+
+      - name: Run Automated Application Smoke Test
+        run: |
+          PYTHONPATH=backend python scripts/smoke_test.py
