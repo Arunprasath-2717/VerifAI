@@ -58,7 +58,18 @@
 - **Context:** Maintaining repository integrity and preventing untested regression.
 - **Decision:**
   - `Final` is the exclusive active development branch.
-  - `main` is the stable release branch.
-  - Unverified code is never pushed directly to `main`.
-  - Target maximum of 500 meaningful commits.
-- **Consequences:** Enforces strict gatekeeping and human sign-off before stable branch updates.
+  - Direct pushes to `main` are strictly forbidden.
+  - Commits require explicit human sign-off from Arun.
+- **Consequences:** Guarantees traceable, reviewed, and verifiable code progression.
+
+---
+
+## ADR-008: Centralized Configuration, Structured Logging & Standardized Error Handling
+- **Status:** Accepted (Locked)
+- **Context:** Backend observability, diagnostic tracing, and security require structured logging with correlation IDs and consistent error responses without credential leakage.
+- **Decision:**
+  - Configuration: Environment-driven via `pydantic-settings` with `SecretStr` credential masking.
+  - Request Tracking: Pure ASGI middleware injecting `X-Request-ID` into contextvars and response headers with strict input sanitization.
+  - Logging: Standard library logging with ISO 8601 UTC timestamps, correlation IDs, and automated secret/credential redaction.
+  - Error Handling: Standardized JSON error envelope (`error: {code, message, request_id, details}`) with client-safe status codes and sanitized validation details.
+- **Consequences:** Provides end-to-end request traceability, protects sensitive credentials across logs and responses, and establishes a uniform API contract for all downstream consumers.

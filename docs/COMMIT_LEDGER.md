@@ -16,11 +16,12 @@
 | 1 | `3e1c9c1` | `main` / `origin/Final` | `Initial commit: project folder architecture` | Initial | VERIFIED (Clean skeleton) |
 | 2 | `74324a6` | `Final` | `docs: establish Phase 0 baseline and project governance` | Phase 0 | VERIFIED & PUSHED |
 | 3 | `33ce288` | `Final` | `feat(backend): implement async PostgreSQL foundation` | Phase 1 (Prompt 2) | VERIFIED & PUSHED |
+| 4 | `f0e8255` | `Final` | `feat(backend): implement centralized configuration, structured logging, and error handling` | Phase 1 (Prompt 3) | VERIFIED & PUSHED |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 3
+- **Total Commits Recorded:** 4
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 497
+- **Remaining Commit Budget:** 496
