@@ -3,27 +3,35 @@
 ## Current Phase
 
 **Active Phase:** Phase 1 — Database & Authentication Foundation  
-**Active Sub-Scope:** Phase 1, Prompt 3 — APPROVED & COMMITTED (`f0e8255`)  
-**Status:** IN PROGRESS (Prompt 3 Approved & Committed; Prompt 4 Strictly Blocked Pending Next Explicit Instruction)  
+**Active Sub-Scope:** Phase 1 Complete (Prompts 1, 2, 3, Standalone Smoke Test, CI Pipeline & Hardening)  
+**Status:** COMPLETE — AWAITING ARUN’S SIGN-OFF  
 **Authorized Reviewer:** Arun (Single Source of Verification Truth)  
-**Next Step:** Phase 1, Prompt 4 (STRICTLY BLOCKED pending next explicit instruction)
+**Next Step:** Formal Phase 1 Human Sign-Off by Arun in `docs/SIGN_OFF_REGISTER.md`
 
 ---
 
-## Phase 1, Prompt 3 Implementation Verification Checklist
+## The Five Mandatory Completion Criteria Audit (Phase 1)
 
-| Requirement / Item | Implementation Check | Review Status | Notes |
+| Mandatory Criterion | Verification Summary | Status |
+|---|---|---|
+| **Criterion 1: Specification Compliance** | FastAPI foundation, async PostgreSQL engine & session lifecycle, centralized config, structured logging with ISO 8601 UTC timestamps, secret masking, pure ASGI request ID middleware, standardized JSON error envelope, honest health & readiness semantics. | **VERIFIED** |
+| **Criterion 2: Hermetic Test Coverage** | 45 deterministic automated tests executing in under 0.5s with zero external database, network, credential, or third-party service dependencies. All connection probes hermetically mocked. | **VERIFIED** |
+| **Criterion 3: Negative Control Audit** | Challenged with negative controls: root `/health` unmounted (404), method not allowed (405), invalid log level & environment rejected, unconfigured DB returns honest 503, malicious request IDs sanitized. | **VERIFIED** |
+| **Criterion 4: Documentation & Contract Integrity** | ADR-001 through ADR-008 recorded; root `README.md` and `backend/README.md` fully documented; API contracts and OpenAPI schemas 100% synchronized with active code. | **VERIFIED** |
+| **Criterion 5: Formal Human Sign-Off** | All implementation and automated validations complete; awaiting explicit human sign-off from Arun in `docs/SIGN_OFF_REGISTER.md`. | **AWAITING ARUN'S SIGN-OFF** |
+
+---
+
+## Phase 1 Deliverables & Verification Checklist
+
+| Sub-Scope / Component | Implementation Details | Verification Status | Commit / Artifact |
 |---|---|---|---|
-| **Centralized Configuration** | **VERIFIED** | **APPROVED BY ARUN** | Pydantic-settings model in `app/core/config.py` with `LOG_LEVEL`, `REQUEST_ID_HEADER`, environment isolation. |
-| **Structured Logging** | **VERIFIED** | **APPROVED BY ARUN** | Standard-library logging with ISO 8601 UTC timestamps, `[request_id=...]`, and secret masking filter. |
-| **Request ID Middleware** | **VERIFIED** | **APPROVED BY ARUN** | Pure ASGI middleware with safe input sanitization, contextvar propagation, and response header injection. |
-| **Consistent Error Handling** | **VERIFIED** | **APPROVED BY ARUN** | Standard JSON envelope `{error: {code, message, request_id, details}}`, sanitized 422, and safe generic 500. |
-| **Health & Readiness Compatibility** | **VERIFIED** | **APPROVED BY ARUN** | Liveness returns 200; Readiness returns 503 when unready; request ID attached to headers and JSON bodies. |
-| **Handler Idempotency** | **VERIFIED** | **APPROVED BY ARUN** | Calling `setup_logging` repeatedly clears existing handlers to prevent duplicate emission. |
-| **Hermetic & Mocked Tests** | **VERIFIED** | **APPROVED BY ARUN** | 45 deterministic tests passing with zero network or external database dependencies. |
-| **Live Uvicorn Smoke Test** | **VERIFIED** | **APPROVED BY ARUN** | Live server tested on 127.0.0.1:8000: 200 health, 503 ready, 404 error, request ID header, clean shutdown. |
-| **Code Quality Tools** | **VERIFIED** | **APPROVED BY ARUN** | `ruff check`, `ruff format --check`, `mypy backend/app`, and `pip check` pass with zero errors. |
-| **Developer Documentation** | **VERIFIED** | **APPROVED BY ARUN** | `backend/README.md` and `backend/.env.example` updated with configuration, logging, and error contracts. |
+| **Prompt 1: Backend Foundation** | FastAPI factory, modular monolith layout, `/api/v1` prefix, CORS middleware, basic config. | **VERIFIED** | Commit `3e1c9c1` baseline |
+| **Prompt 2: Async PostgreSQL** | SQLAlchemy 2.x, asyncpg, lazy engine initialization, session lifecycle dependency, safe connectivity check. | **VERIFIED** | Commit `33ce288` |
+| **Prompt 3: Config, Logging & Errors** | `pydantic-settings`, secret masking, `RequestIDMiddleware`, standardized JSON error envelope, ADR-008. | **VERIFIED** | Commit `f0e8255` & `7a9be18` |
+| **Automated Smoke Test Suite** | Standalone script `scripts/smoke_test.py` covering 8 checkpoints (health, readiness, errors, malicious ID sanitization, OpenAPI, shutdown). | **VERIFIED** | `scripts/smoke_test.py` |
+| **CI Automation Pipeline** | GitHub Actions workflow `.github/workflows/backend-ci.yml` testing Python 3.11 and 3.12 matrices. | **VERIFIED** | `.github/workflows/backend-ci.yml` |
+| **Repository Documentation** | Root `README.md` overhaul covering architecture, quickstart, verification commands, and API contracts. | **VERIFIED** | `README.md` |
 
 ---
 
@@ -31,12 +39,12 @@
 
 | Phase | Description | Status | Sign-Off Date |
 |---|---|---|---|
-| **Phase 0** | Repository Baseline & Governance | **COMPLETE** | 2026-09-19 |
-| **Phase 1** | Database & Authentication Foundation | **IN PROGRESS** (Prompt 3 Approved) | Sub-scope approved 2026-09-19 (Commit `f0e8255`) |
-| **Phase 2** | Backend Core & Verification Engine | **BLOCKED** | — |
-| **Phase 3** | Ingestion & Browser Extension | **BLOCKED** | — |
-| **Phase 4** | Benchmark & Evaluation Suite | **BLOCKED** | — |
-| **Phase 5** | Hardening, Integration & Delivery | **BLOCKED** | — |
+| **Phase 0** | Repository Baseline & Governance | **COMPLETE** | 2026-09-19 (Commit `74324a6`) |
+| **Phase 1** | Database & Authentication Foundation | **COMPLETE — AWAITING ARUN’S SIGN-OFF** | Pending Arun Review |
+| **Phase 2** | Backend Core & Verification Engine | **LOCKED** | Requires Phase 1 sign-off |
+| **Phase 3** | Ingestion & Browser Extension | **LOCKED** | Requires Phase 2 sign-off |
+| **Phase 4** | Benchmark & Evaluation Suite | **LOCKED** | Requires Phase 3 sign-off |
+| **Phase 5** | Hardening, Integration & Delivery | **LOCKED** | Requires Phase 4 sign-off |
 
 ---
 
@@ -47,9 +55,8 @@
 
 ---
 
-## Known Limitations & Deferred Items (Phase 1, Prompt 3)
-- Domain tables, ORM models, and business schemas remain deferred to subsequent prompts.
+## Known Limitations & Deferred Items (Phase 1 Final)
+- Domain tables, ORM models, and business schemas remain deferred to Phase 2.
 - Supabase Auth JWT verification remains deferred per project governance addendum.
 - Verification orchestration and LLM execution are strictly locked to subsequent phases.
 - Logging infrastructure relies purely on standard-library Python logging; external log aggregators (e.g. Datadog, ELK) are deferred.
-

@@ -33,8 +33,8 @@
 
 | Phase       | Title                                  | Focus Area                                                                      | Status               |
 | ----------- | -------------------------------------- | ------------------------------------------------------------------------------- | -------------------- |
-| **Phase 0** | **Repository Baseline & Governance**   | Repository audit, environment verification, governance documentation            | **READY FOR REVIEW** |
-| **Phase 1** | **Database & Auth Foundation**         | Supabase PostgreSQL schema, asyncpg migrations, Supabase Auth integration       | Planned              |
+| **Phase 0** | **Repository Baseline & Governance**   | Repository audit, environment verification, governance documentation            | **COMPLETE** |
+| **Phase 1** | **Database & Auth Foundation**         | Async PostgreSQL foundation, centralized config, structured logging, errors, CI | **COMPLETE — AWAITING ARUN’S SIGN-OFF** |
 | **Phase 2** | **Backend Core & Verification Engine** | Modular monolith services, verification orchestration, local open-source models | Planned              |
 | **Phase 3** | **Ingestion & Browser Extension**      | Payload ingestion API, Chrome extension integration                             | Planned              |
 | **Phase 4** | **Benchmark & Evaluation Suite**       | Consistency hallucination benchmark datasets, evaluation runners                | Planned              |
