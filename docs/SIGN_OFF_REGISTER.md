@@ -1,0 +1,25 @@
+# VerifAI — Sign-Off Register
+
+## 1. Sign-Off Protocol
+
+- **Single Source of Truth:** Arun is the sole authorized reviewer and source of verification truth.
+- **Strict Gate Check:** No subsequent phase may begin until the preceding phase receives an explicit sign-off in this register.
+- **Criteria for Sign-Off:**
+  1. All phase requirements verified against explicit metrics.
+  2. All automated tests pass with negative controls confirmed.
+  3. Documentation and architecture decisions updated.
+  4. Blast radius measured and verified.
+  5. Commits cleanly structured and verified on `Final`.
+
+---
+
+## 2. Phase Sign-Off Log
+
+| Phase | Phase Name | Reviewer | Sign-Off Date | Commit SHA | Status | Notes |
+|---|---|---|---|---|---|---|
+| **Phase 0** | Repository Baseline & Governance | Arun | 2026-09-19 | *Pending Commit* | **APPROVED** | Baseline audited; 5 governance docs established; formally approved by Arun. |
+| **Phase 1** | Database & Authentication Foundation | Arun | — | — | **LOCKED** | Strictly blocked pending authorization to begin Phase 1. |
+| **Phase 2** | Backend Core & Verification Engine | Arun | — | — | **LOCKED** | Requires Phase 1 sign-off. |
+| **Phase 3** | Ingestion & Browser Extension | Arun | — | — | **LOCKED** | Requires Phase 2 sign-off. |
+| **Phase 4** | Benchmark & Evaluation Suite | Arun | — | — | **LOCKED** | Requires Phase 3 sign-off. |
+| **Phase 5** | Hardening, Integration & Delivery | Arun | — | — | **LOCKED** | Requires Phase 4 sign-off. |
