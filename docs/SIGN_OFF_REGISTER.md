@@ -17,8 +17,8 @@
 
 | Phase | Phase Name | Reviewer | Sign-Off Date | Commit SHA | Status | Notes |
 |---|---|---|---|---|---|---|
-| **Phase 0** | Repository Baseline & Governance | Arun | 2026-09-19 | *Pending Commit* | **APPROVED** | Baseline audited; 5 governance docs established; formally approved by Arun. |
-| **Phase 1** | Database & Authentication Foundation | Arun | — | — | **LOCKED** | Strictly blocked pending authorization to begin Phase 1. |
+| **Phase 0** | Repository Baseline & Governance | Arun | 2026-09-19 | `74324a6` | **APPROVED** | Baseline audited; 5 governance docs established; formally approved by Arun. |
+| **Phase 1** | Database & Authentication Foundation | Arun | 2026-09-19 | `33ce288` | **IN PROGRESS** | Prompt 2 approved; Prompt 3 strictly blocked pending next explicit instruction. |
 | **Phase 2** | Backend Core & Verification Engine | Arun | — | — | **LOCKED** | Requires Phase 1 sign-off. |
 | **Phase 3** | Ingestion & Browser Extension | Arun | — | — | **LOCKED** | Requires Phase 2 sign-off. |
 | **Phase 4** | Benchmark & Evaluation Suite | Arun | — | — | **LOCKED** | Requires Phase 3 sign-off. |

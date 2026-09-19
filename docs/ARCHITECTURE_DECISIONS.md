@@ -15,15 +15,17 @@
   - Database: Supabase PostgreSQL
   - Database Driver & ORM: SQLAlchemy + asyncpg (fully asynchronous)
   - Object Storage: Supabase Storage
-- **Consequences:** Ensures ACID compliance, async I/O performance, and unified cloud storage for verification payloads.
+  - Vector Search: `pgvector` extension is a required future prerequisite to be verified before Phase 4 knowledge-base ingestion.
+- **Consequences:** Ensures ACID compliance, async I/O performance, unified cloud storage for verification payloads, and vector similarity search readiness.
 
 ---
 
-## ADR-003: Authentication Layer
+## ADR-003: Authentication Layer & Deferral Addendum
 - **Status:** Accepted (Locked)
 - **Context:** System endpoints and operations require identity control and tenant isolation.
 - **Decision:** Supabase Auth with JWT verification at the FastAPI middleware/dependency layer.
-- **Consequences:** Secure authentication without self-hosting auth infrastructure.
+- **Addendum (Scope & Timing):** Active implementation of user authentication is explicitly deferred to Future Enhancements following core verification engine stabilization. It is not part of the initial MVP bootstrap.
+- **Consequences:** Keeps initial engineering laser-focused on the core verification engine and consistency evaluation pipeline while preserving an architectural slot for future JWT middleware.
 
 ---
 
