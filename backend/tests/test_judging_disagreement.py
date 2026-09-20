@@ -58,6 +58,7 @@ async def test_deterministic_rule_judge_numeric_contradiction() -> None:
     ]
     result = await judge.evaluate(claim, evidence)
     assert result.judgment == JudgeDecision.CONTRADICTED
+    assert result.rationale is not None
     has_mismatch = (
         "numeric" in result.rationale.lower() or "mismatch" in result.rationale.lower()
     )
@@ -105,10 +106,12 @@ async def test_open_source_model_judge_offline_honest_reporting() -> None:
     result = await judge.evaluate("Test claim.", evidence)
     assert result.judgment == JudgeDecision.UNAVAILABLE
     assert result.confidence is None
+    assert result.rationale is not None
+    rationale_lower = result.rationale.lower()
     assert (
-        "not configured" in result.rationale.lower()
-        or "offline" in result.rationale.lower()
-        or "unavailable" in result.rationale.lower()
+        "not configured" in rationale_lower
+        or "offline" in rationale_lower
+        or "unavailable" in rationale_lower
     )
 
 
@@ -163,6 +166,7 @@ def test_disagreement_engine_contradiction_priority() -> None:
     res = engine.arbitrate(evals)
     assert res.consensus_verdict == VerdictType.CONTRADICTED
     assert res.has_disagreement is True
+    assert res.disagreement_details is not None
     assert "Conflict detected" in res.disagreement_details
 
 

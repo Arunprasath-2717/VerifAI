@@ -52,10 +52,37 @@ class ContentClassifier:
         re.IGNORECASE,
     )
 
-    # Lexical markers for imperative commands and instruction
+    # Lexical markers for imperative commands and instruction (technical and
+    # natural-language forms).  Two complementary patterns are used:
+    #
+    # INSTRUCTION_MARKERS: imperative sentences whose first content word is an
+    #   action verb — both narrow technical verbs (install, run, click …) and
+    #   broader natural-language imperatives (write, explain, describe, list …).
+    #   The pattern matches from the start of the stripped text so that ordinary
+    #   factual statements that happen to contain these words are not mis-routed
+    #   (e.g. "Scientists list nitrogen as…" starts with "Scientists", not
+    #   "list", so it falls through to FACTUAL).
+    #
+    # HOW_TO_MARKERS: interrogative instruction forms — "How do I …",
+    #   "How can I …", "How should I …", "How to …".
     INSTRUCTION_MARKERS = re.compile(
-        r"^(?:please\s+)?(?:install|run|click|type|download|open|enter|press|"
-        r"execute|navigate\s+to|configure|copy|paste)\b",
+        r"^(?:please\s+)?(?:"
+        # Technical / procedural action verbs
+        r"install|run|click|type|download|open|enter|press|execute|"
+        r"navigate\s+to|configure|copy|paste|"
+        # Natural-language imperative verbs
+        r"write|create|generate|compose|draft|"
+        r"explain|describe|summarize|summarise|outline|"
+        r"list|enumerate|show|tell|give|provide|find|"
+        r"help\s+me|translate|convert|calculate|compute|"
+        r"draw|make|build|design|develop"
+        r")\b",
+        re.IGNORECASE,
+    )
+
+    # Interrogative how-to instruction forms
+    HOW_TO_MARKERS = re.compile(
+        r"^\s*how\s+(?:do|can|should|would|to)\b",
         re.IGNORECASE,
     )
 
@@ -78,8 +105,9 @@ class ContentClassifier:
                 ),
             )
 
-        # 2. Check for imperative instruction/how-to
-        if self.INSTRUCTION_MARKERS.search(text):
+        # 2. Check for imperative instruction/how-to (covers both command-form
+        #    and interrogative how-to forms)
+        if self.INSTRUCTION_MARKERS.search(text) or self.HOW_TO_MARKERS.search(text):
             return ClassificationResult(
                 content_type=ContentType.INSTRUCTION,
                 verdict=VerdictType.INCONCLUSIVE,

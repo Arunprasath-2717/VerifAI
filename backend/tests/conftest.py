@@ -1,6 +1,9 @@
 """Test configuration and fixtures for VerifAI backend."""
 
+from collections.abc import Generator
+
 import pytest
+from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from app.core.config import Settings, get_settings
@@ -19,7 +22,7 @@ def test_settings() -> Settings:
 
 
 @pytest.fixture
-def app(test_settings: Settings):
+def app(test_settings: Settings) -> Generator[FastAPI, None, None]:
     """Fixture providing a fresh FastAPI application instance with test settings."""
     application = create_app(settings=test_settings)
     application.dependency_overrides[get_settings] = lambda: test_settings
@@ -28,7 +31,7 @@ def app(test_settings: Settings):
 
 
 @pytest.fixture
-def client(app) -> TestClient:
+def client(app: FastAPI) -> Generator[TestClient, None, None]:
     """Fixture providing a synchronous TestClient for hermetic API testing."""
     with TestClient(app) as test_client:
         yield test_client

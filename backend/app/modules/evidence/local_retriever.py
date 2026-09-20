@@ -23,10 +23,27 @@ class KnowledgePassage:
 
 
 class LocalPassageRetriever(BaseEvidenceRetriever):
-    """Hermetic, deterministic in-memory evidence retriever.
+    """Deterministic in-memory evidence retriever — DEVELOPMENT / TESTING ONLY.
 
-    Uses lexical token-overlap similarity to find relevant passages
-    without performing external network operations.
+    This retriever operates entirely in-process against a small curated set of
+    reference passages (≈6 entries by default).  It performs no external network
+    requests and produces fully reproducible, hermetic results suitable for unit
+    tests and local demonstrations.
+
+    KNOWN LIMITATIONS (not suitable for production):
+    - The passage index is intentionally sparse.  Claims about topics not covered
+      by an indexed passage will receive INSUFFICIENT_EVIDENCE or may trigger
+      spurious numeric-discrepancy detection when unrelated numbers co-occur.
+    - Relevance scoring is lexical token-overlap (Jaccard-like); it is not
+      semantic or embedding-based.
+    - Evidence sourced from this retriever is labelled ``retriever_name =
+      "LOCAL_PASSAGE_INDEX"`` in every response so that consumers can
+      distinguish it from live web or database evidence.
+    - Do NOT present LOCAL_PASSAGE_INDEX results as authoritative live evidence
+      in any user-facing context outside of development demonstrations.
+
+    For production evidence retrieval, configure :class:`SafeWebRetriever` with
+    a valid Wikipedia API endpoint, or a future vector-store retriever (Phase 4).
     """
 
     def __init__(self, passages: list[dict[str, str]] | None = None) -> None:

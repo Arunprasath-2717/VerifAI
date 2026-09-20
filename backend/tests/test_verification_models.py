@@ -118,6 +118,7 @@ def test_judge_verdict_instantiation() -> None:
     assert verdict.judge_name == "deterministic_rule_judge"
     assert verdict.judgment == "SUPPORTED"
     assert verdict.confidence == 1.0
+    assert verdict.evaluation_metadata is not None
     assert verdict.evaluation_metadata["matched_entities"] == ["water", "H2O"]
     assert verdict.evaluation_metadata["latency_ms"] == 1.5
 

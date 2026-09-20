@@ -83,3 +83,79 @@ def test_classify_empty_string(classifier: ContentClassifier) -> None:
     result = classifier.classify("")
     assert result.content_type == ContentType.FACTUAL
     assert result.is_verifiable is True
+
+
+# ---------------------------------------------------------------------------
+# Regression tests: natural-language instruction detection (Phase 3 fix)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Write a poem about the sky.",
+        "Explain how this process works.",
+        "Describe the steps required to complete this task.",
+        "List the main ingredients for making bread.",
+        "Summarize the key findings of the report.",
+        "Create a table of the planets in the solar system.",
+        "Please install the Python dependencies using pip.",
+        "Generate a short story about a robot.",
+        "Tell me about the history of Rome.",
+        "Show how the algorithm handles edge cases.",
+    ],
+)
+def test_classify_natural_language_instruction(
+    classifier: ContentClassifier, text: str
+) -> None:
+    """Verify natural-language imperative sentences are classified INSTRUCTION."""
+    result = classifier.classify(text)
+    assert result.content_type == ContentType.INSTRUCTION, (
+        f"Expected INSTRUCTION for {text!r}, got {result.content_type}"
+    )
+    assert result.is_verifiable is False
+    assert result.verdict == VerdictType.INCONCLUSIVE
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "How do I install Python on Ubuntu?",
+        "How can I improve my writing skills?",
+        "How should I configure the database connection?",
+        "How to create a virtual environment in Python?",
+    ],
+)
+def test_classify_interrogative_how_to(
+    classifier: ContentClassifier, text: str
+) -> None:
+    """Verify interrogative how-to questions are classified INSTRUCTION."""
+    result = classifier.classify(text)
+    assert result.content_type == ContentType.INSTRUCTION, (
+        f"Expected INSTRUCTION for {text!r}, got {result.content_type}"
+    )
+    assert result.is_verifiable is False
+    assert result.verdict == VerdictType.INCONCLUSIVE
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # These sentences contain instruction-adjacent words but are factual
+        # assertions, not imperatives — they must NOT be mis-classified.
+        "Scientists list nitrogen as the most abundant atmospheric gas.",
+        "The manual describes the steps for installation.",
+        "Researchers explain the mechanism of photosynthesis in detail.",
+        "The Eiffel Tower was designed by Gustave Eiffel.",
+        "Water boils at 100 degrees Celsius at sea level.",
+    ],
+)
+def test_instruction_markers_do_not_misclassify_factual(
+    classifier: ContentClassifier, text: str
+) -> None:
+    """Verify factual statements are not mis-routed as INSTRUCTION."""
+    result = classifier.classify(text)
+    assert result.content_type == ContentType.FACTUAL, (
+        f"Expected FACTUAL for {text!r}, got {result.content_type}"
+    )
+    assert result.is_verifiable is True
