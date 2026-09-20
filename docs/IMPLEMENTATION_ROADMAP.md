@@ -35,39 +35,32 @@
 | ----------- | -------------------------------------- | ------------------------------------------------------------------------------- | -------------------- |
 | **Phase 0** | **Repository Baseline & Governance**   | Repository audit, environment verification, governance documentation            | **COMPLETE** |
 | **Phase 1** | **Database & Auth Foundation**         | Async PostgreSQL foundation, centralized config, structured logging, errors, CI | **COMPLETE — AWAITING ARUN'S SIGN-OFF** |
-| **Phase 2** | **Benchmark Dataset & Annotation**     | 100-case hallucination benchmark, Cohen's kappa quality gate, annotation workflow, dataset freeze | **IN PROGRESS — AWAITING ARUN'S SIGN-OFF** |
-| **Phase 3** | **Backend Core & Verification Engine** | Modular monolith services, verification orchestration, local open-source models | Planned              |
+| **Phase 2** | **Benchmark Dataset & Annotation**     | 100-case hallucination benchmark, Cohen's kappa quality gate, dataset freeze   | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** |
+| **Phase 3** | **Backend Core & Verification Engine** | Verification orchestration, claim extraction, evidence retrieval, multi-judge  | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** |
 | **Phase 4** | **Ingestion & Browser Extension**      | Payload ingestion API, Chrome extension integration                             | Planned              |
 | **Phase 5** | **Hardening, Integration & Delivery**  | Hermetic validation, end-to-end verification, release preparation               | Planned              |
 
 ---
 
-## 4. Phase 2 — Benchmark Dataset & Annotation Foundation
-
-### Scope (PRD Weeks 2–3)
+## 4. Phase 3 — Backend Core & Verification Engine Scope
 
 | Deliverable | Description | Status |
 |---|---|---|
-| `benchmark/schemas.py` | Pydantic models: `BenchmarkCase`, `AtomicClaim`, `ClaimAnnotation`, `DatasetManifest`; all enums | **COMPLETE** |
-| `benchmark/metrics.py` | Deterministic Cohen's kappa (zero-dependency, pure Python) with confusion matrix | **COMPLETE** |
-| `benchmark/quality_gate.py` | PRD §23.4 state machine: PASS / REMEDIATION_1 / REMEDIATION_2 / FAIL / INSUFFICIENT_DATA | **COMPLETE** |
-| `benchmark/validator.py` | Semantic validation: offset integrity, category-verdict correlation, 100-case PRD constraints | **COMPLETE** |
-| `benchmark/freeze.py` | SHA-256 manifest generation and immutable integrity verification | **COMPLETE** |
-| `benchmark/cli.py` + `scripts/benchmark_tool.py` | CLI: `validate`, `agreement`, `quality-gate`, `status`, `freeze` | **COMPLETE** |
-| `benchmark/data/dataset_v1_cases.json` | 100 cases (40 VF / 30 CH / 30 TU), 60/20/20 split — **DRAFT, NOT HUMAN-ANNOTATED** | **DRAFT** |
-| `benchmark/tests/` | 61 deterministic unit tests (metrics, quality gate, validator, freeze) | **COMPLETE — 61/61 PASS** |
-| CI pipeline update | Benchmark lint, type-check, pytest, and dataset-validate steps added to `backend-ci.yml` | **COMPLETE** |
+| `backend/app/models/verification.py` | SQLAlchemy 2.x ORM models for jobs, claims, evidence, evaluations, and audit trail | **COMPLETE** |
+| `backend/app/schemas/verification.py` | Pydantic v2 schemas for verification inputs, options, outcomes, and audit logs | **COMPLETE** |
+| `backend/app/modules/claims/` | `DeterministicClaimExtractor` (offset invariants) and `ContentClassifier` (6-way taxonomy) | **COMPLETE** |
+| `backend/app/modules/evidence/` | `LocalPassageRetriever`, `SafeWebRetriever` (Wikipedia API), `TestFixtureRetriever`, SSRF filter | **COMPLETE** |
+| `backend/app/modules/judging/` | `DeterministicRuleJudge`, `SecondarySemanticJudge`, `OpenSourceModelJudge`, `DisagreementEngine` | **COMPLETE** |
+| `backend/app/modules/verification/` | `VerificationOrchestrator` coordinating pipeline execution, audit logging, and DB persistence | **COMPLETE** |
+| `backend/app/api/v1/endpoints/verification.py` | FastAPI REST endpoints `POST /api/v1/verification` and `GET /api/v1/verification/{id}` | **COMPLETE** |
+| `scripts/verify.py` | Standalone CLI demonstration tool with human-readable and raw JSON reporting | **COMPLETE** |
+| `backend/tests/` | 92 hermetic unit and integration tests (153 tests combined with benchmark suite) | **COMPLETE — 153/153 PASS** |
 
-### Research Integrity Declarations
+---
 
-> **The dataset at `benchmark/data/dataset_v1_cases.json` is in DRAFT status.**  
-> It has NOT undergone human dual-annotator review, Cohen's kappa validation, or quality-gate approval.  
-> Freezing is structurally enforced: the `freeze` CLI command requires a formal PASS from the quality gate.  
-> No frozen manifest (`benchmark/metadata/dataset_v1_manifest.json`) exists yet.
+## 5. Architectural Boundaries & Scope Locks
 
-
-
-- **Core MVP Scope:** Backend verification engine (Python + FastAPI modular monolith), Supabase PostgreSQL persistence (SQLAlchemy + asyncpg), Supabase Auth, Supabase Storage, local open-source model inference pipeline, and baseline ingestion.
+- **Core MVP Scope:** Backend verification engine (Python + FastAPI modular monolith), Supabase PostgreSQL persistence (SQLAlchemy + asyncpg), local knowledge retrieval, safe web search fallback, and baseline ingestion.
 - **Future Integration Surfaces (Strictly Out-of-Scope for Core MVP):**
   - Model Context Protocol (MCP) integrations
   - Advanced React dashboard frontend

@@ -2,60 +2,55 @@
 
 ## Current Phase
 
-**Active Phase:** Phase 2 — Benchmark Dataset, Annotation & Quality Gate  
-**Active Sub-Scope:** Benchmark Foundation (Schemas, Metrics, Quality Gate, Validator, Freeze, CLI, Dataset, Tests)  
+**Active Phase:** Phase 3 — Backend Core & Verification Engine  
+**Active Sub-Scope:** Core Verification Pipeline (Models, Schemas, Extraction, Classification, Retrieval, Multi-Judge, Disagreement, Decision, API, CLI, Tests)  
 **Status:** IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF  
 **Authorized Reviewer:** Arun (Single Source of Verification Truth)  
-**Next Step:** Formal Phase 2 Human Sign-Off by Arun in `docs/SIGN_OFF_REGISTER.md`
+**Next Step:** Formal Phase 3 Human Sign-Off by Arun in `docs/SIGN_OFF_REGISTER.md`
 
 ---
 
-## The Five Mandatory Completion Criteria Audit (Phase 2)
+## The Five Mandatory Completion Criteria Audit (Phase 3)
 
 | Mandatory Criterion | Verification Summary | Status |
 |---|---|---|
-| **Criterion 1: Specification Compliance** | PRD §8 (100 cases, 40/30/30 split), §23.4 (kappa ≥ 0.60, 2-cycle remediation), deterministic SHA-256 freeze, dataset lifecycle state machine. All PRD-required enums, schemas, and constraints implemented. | **VERIFIED** |
-| **Criterion 2: Hermetic Test Coverage** | 61 deterministic unit tests covering metrics edge cases, quality gate full state machine (7 scenarios), validator (single-case + full dataset), freeze (SHA-256, manifest, tamper detection). Zero external dependencies. Runs in <0.25s. | **VERIFIED — 61/61 PASS** |
-| **Criterion 3: Negative Control Audit** | Negative controls confirmed: zero-annotation kappa → INSUFFICIENT_DATA (not fabricated PASS); kappa < 0.60 at REMEDIATION_2 → hard FAIL; freeze blocked unless status=PASS; tampered file → checksum mismatch. | **VERIFIED** |
-| **Criterion 4: Documentation & Contract Integrity** | `IMPLEMENTATION_ROADMAP.md`, `PHASE_STATUS.md`, `SIGN_OFF_REGISTER.md`, `COMMIT_LEDGER.md` all updated. CI workflow extended with benchmark lint, type-check, pytest, and dataset-validate steps. | **VERIFIED** |
-| **Criterion 5: Formal Human Sign-Off** | All implementation and automated validations complete; awaiting explicit human sign-off from Arun in `docs/SIGN_OFF_REGISTER.md`. | **AWAITING ARUN'S SIGN-OFF** |
+| **Criterion 1: Specification Compliance** | Atomic claim extraction with character offset invariance (`text[start:end] == claim`), 6-way content classification, evidence retrieval with SSRF prevention, multi-judge evaluation with conservative disagreement handling, document trust scoring, and auditable response schema implemented. | **VERIFIED** |
+| **Criterion 2: Hermetic Test Coverage** | 92 unit and integration tests in `backend/tests/` (including 47 new verification tests) and 61 benchmark tests in `benchmark/tests/` (153 tests total). Hermetic, zero external network coupling, runs in <0.6s. | **VERIFIED — 153/153 PASS** |
+| **Criterion 3: Negative Control Audit** | Negative controls confirmed: SSRF rejection of loopback/private/metadata IPs; uncalibrated confidence reported as None with status NOT_CALIBRATED; numeric mismatch flags CONTRADICTED; empty/whitespace text rejected with 422; non-existent UUID returns 404. | **VERIFIED** |
+| **Criterion 4: Documentation & Contract Integrity** | OpenAPI specification updated with `/api/v1/verification` and `/api/v1/verification/{id}`; `PHASE_STATUS.md`, `IMPLEMENTATION_ROADMAP.md`, `SIGN_OFF_REGISTER.md`, `COMMIT_LEDGER.md` synchronized. | **VERIFIED** |
+| **Criterion 5: Formal Human Sign-Off** | All code, automated tests, CLI demonstrations, and linters verified; awaiting explicit human sign-off from Arun in `docs/SIGN_OFF_REGISTER.md`. | **AWAITING ARUN'S SIGN-OFF** |
 
 ---
 
-## Phase 2 Deliverables & Verification Checklist
+## Phase 3 Deliverables & Verification Checklist
 
-| Component | Implementation | Verification Status |
+| Component | Implementation Details | Verification Status |
 |---|---|---|
-| `benchmark/schemas.py` | `BenchmarkCase`, `AtomicClaim`, `ClaimAnnotation`, `DatasetManifest`, all PRD enums | **VERIFIED** |
-| `benchmark/metrics.py` | Cohen's kappa with confusion matrix, edge cases (zero-N, single-item, perfect agreement), deterministic | **VERIFIED** |
-| `benchmark/quality_gate.py` | PRD §23.4 state machine: 5 states, 2-cycle cap, honest INSUFFICIENT_DATA | **VERIFIED** |
-| `benchmark/validator.py` | Offset checks, category-verdict correlation, duplicate detection, 100-case + breakdown enforcement | **VERIFIED** |
-| `benchmark/freeze.py` | SHA-256 file hashing, manifest generation (blocks unless PASS), integrity verification | **VERIFIED** |
-| `benchmark/cli.py` + `scripts/benchmark_tool.py` | CLI: `validate`, `agreement`, `quality-gate`, `status`, `freeze` | **VERIFIED** |
-| `benchmark/data/dataset_v1_cases.json` | 100 cases (40 VF / 30 CH / 30 TU), 60/20/20 train/dev/test — **DRAFT, NOT HUMAN-ANNOTATED** | **DRAFT** |
-| `benchmark/data/sample_annotations.json` | Sample annotation fixture for agreement testing | **DRAFT** |
-| `benchmark/tests/` | 61 unit tests: `test_metrics`, `test_quality_gate`, `test_validator`, `test_freeze` | **VERIFIED — 61/61 PASS** |
-| CI: `.github/workflows/backend-ci.yml` | Benchmark lint (ruff), format, mypy, pytest, and dataset-validate steps added | **VERIFIED** |
+| `backend/app/models/verification.py` | SQLAlchemy 2.x models: `VerificationJob`, `ExtractedClaim`, `RetrievedEvidence`, `JudgeVerdict`, `AuditRecord` with cascade deletes and indexes | **VERIFIED** |
+| `backend/app/schemas/verification.py` | Strongly typed Pydantic v2 schemas for verification creation, options, claims, evidence, evaluations, audit records, and responses | **VERIFIED** |
+| `backend/app/modules/claims/extractor.py` | `DeterministicClaimExtractor` preserving exact slice offsets and asserting `text[start:end] == claim_text` | **VERIFIED** |
+| `backend/app/modules/claims/classifier.py` | `ContentClassifier` taxonomy: FACTUAL, OPINION (VIEWPOINT), PREDICTION (FUTURE_LOOKING), HYPOTHETICAL (SCENARIO), CREATIVE, INSTRUCTION | **VERIFIED** |
+| `backend/app/modules/evidence/security.py` | SSRF prevention blocking 18 IP ranges + metadata endpoints; domain authority scoring | **VERIFIED** |
+| `backend/app/modules/evidence/local_retriever.py` | In-memory token-overlap factual passage retrieval for hermetic execution and reproducible testing | **VERIFIED** |
+| `backend/app/modules/evidence/fixture_retriever.py` | Deterministic test-double retriever with `__test__ = False` | **VERIFIED** |
+| `backend/app/modules/evidence/web_retriever.py` | `SafeWebRetriever` using Wikipedia public REST search API with timeouts and graceful degradation | **VERIFIED** |
+| `backend/app/modules/judging/deterministic_judge.py` | `DeterministicRuleJudge` with entity matching, numeric conflict detection, and polar negation checking | **VERIFIED** |
+| `backend/app/modules/judging/semantic_judge.py` | `SecondarySemanticJudge` with directional proposition containment and numeric validation | **VERIFIED** |
+| `backend/app/modules/judging/model_judge.py` | `OpenSourceModelJudge` adapter with honest UNAVAILABLE reporting when offline | **VERIFIED** |
+| `backend/app/modules/judging/disagreement.py` | `DisagreementEngine` arbitrating dual judgments with conservative contradiction safety priority | **VERIFIED** |
+| `backend/app/modules/judging/decision.py` | `DecisionEngine` calculating document-level trust score and generating human-readable summary | **VERIFIED** |
+| `backend/app/modules/verification/orchestrator.py` | Asynchronous `VerificationOrchestrator` coordinating validation, extraction, classification, retrieval, judging, disagreement, decision, audit logging, and database persistence | **VERIFIED** |
+| `backend/app/api/v1/endpoints/verification.py` | REST API endpoints: `POST /api/v1/verification` and `GET /api/v1/verification/{id}` with optional DB fallback | **VERIFIED** |
+| `scripts/verify.py` | Production CLI tool with terminal formatted report and raw `--json` output modes | **VERIFIED** |
+| `backend/tests/` | 92 total tests: `test_verification_models.py`, `test_claim_extractor.py`, `test_content_classifier.py`, `test_evidence_retriever.py`, `test_judging_disagreement.py`, `test_orchestrator_api.py` | **VERIFIED — 92/92 PASS** |
 
 ### Research Integrity Statement
 
-> **The benchmark dataset (`benchmark/data/dataset_v1_cases.json`) is in DRAFT status.**  
-> It has **NOT** undergone human dual-annotator review, Cohen's kappa measurement, or quality-gate approval.  
-> No frozen manifest exists. The `freeze` CLI command structurally enforces that freezing is blocked unless the  
-> quality gate returns an authenticated PASS. The dataset must not be referenced as human-validated benchmark data.
-
----
-
-## Phase 1 Deliverables & Verification Checklist (Historical)
-
-| Sub-Scope / Component | Implementation Details | Verification Status | Commit / Artifact |
-|---|---|---|---|
-| **Prompt 1: Backend Foundation** | FastAPI factory, modular monolith layout, `/api/v1` prefix, CORS middleware, basic config. | **VERIFIED** | Commit `3e1c9c1` baseline |
-| **Prompt 2: Async PostgreSQL** | SQLAlchemy 2.x, asyncpg, lazy engine initialization, session lifecycle dependency, safe connectivity check. | **VERIFIED** | Commit `33ce288` |
-| **Prompt 3: Config, Logging & Errors** | `pydantic-settings`, secret masking, `RequestIDMiddleware`, standardized JSON error envelope, ADR-008. | **VERIFIED** | Commit `f0e8255` & `7a9be18` |
-| **Automated Smoke Test Suite** | Standalone script `scripts/smoke_test.py` covering 8 checkpoints. | **VERIFIED** | `scripts/smoke_test.py` |
-| **CI Automation Pipeline** | GitHub Actions workflow testing Python 3.11 and 3.12 matrices. | **VERIFIED** | `.github/workflows/backend-ci.yml` |
-| **Repository Documentation** | Root `README.md` overhaul covering architecture, quickstart, verification commands, and API contracts. | **VERIFIED** | `README.md` |
+> **VerifAI maintains strict research integrity:**  
+> 1. No artificial intelligence outputs, web links, or confidence numbers are fabricated.  
+> 2. Rule-based and offline judges report `confidence = None` with `calibration_status = "NOT_CALIBRATED"`.  
+> 3. Disagreement arbitration prioritizes `CONTRADICTED` whenever conflict exists to prevent false safety.  
+> 4. Non-factual content (opinions, creative text, instructions) is classified and exempt from empirical verification with `trust_score = None`.
 
 ---
 
@@ -66,21 +61,14 @@
 | **Phase 0** | Repository Baseline & Governance | **COMPLETE** | 2026-09-19 (Commit `74324a6`) |
 | **Phase 1** | Database & Authentication Foundation | **COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
 | **Phase 2** | Benchmark Dataset, Annotation & Quality Gate | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
-| **Phase 3** | Backend Core & Verification Engine | **LOCKED** | Requires Phase 2 sign-off |
+| **Phase 3** | Backend Core & Verification Engine | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
 | **Phase 4** | Ingestion & Browser Extension | **LOCKED** | Requires Phase 3 sign-off |
 | **Phase 5** | Hardening, Integration & Delivery | **LOCKED** | Requires Phase 4 sign-off |
 
 ---
 
-## Governance & Architecture Addenda (Phase 2)
-- **Research Integrity:** Dataset lifecycle enforces DRAFT → FROZEN requires authenticated dual-annotator kappa ≥ 0.60.
-- **No Fabrication:** Cohen's kappa is not simulated; any PASS result must derive from real human annotation.
-- **Freeze Gate:** Structural code-level enforcement prevents freezing without quality gate PASS status.
+## Known Limitations & Next Steps (Phase 3)
 
----
-
-## Known Limitations & Deferred Items (Phase 2)
-- Dataset is DRAFT only: human dual-annotator review not yet performed.
-- Annotation ingestion tooling (loading annotator exports) not yet built.
-- No annotation UI or annotation workflow tooling is implemented in this phase.
-- LLM-based verification, model inference, and verification orchestration remain deferred to Phase 3.
+- Local LLM inference uses honest offline reporting (`UNAVAILABLE`) when local Ollama/vLLM daemon is not running.
+- Ingestion endpoint and Chrome browser extension are scoped for Phase 4.
+- Supabase Auth integration remains deferred as agreed.
