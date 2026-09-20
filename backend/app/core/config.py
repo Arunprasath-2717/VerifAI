@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     DATABASE_POOL_TIMEOUT: int = 30
     DATABASE_CONNECT_TIMEOUT: float = 3.0
 
+    # Verification Engine Configuration
+    VERIFICATION_MAX_INPUT_CHARS: int = 20000
+    VERIFICATION_MAX_CLAIMS: int = 20
+    RETRIEVAL_TIMEOUT_SECONDS: float = 5.0
+    ENABLE_LIVE_SEARCH: bool = False
+
     @field_validator("LOG_LEVEL", mode="after")
     @classmethod
     def validate_log_level(cls, v: str) -> str:

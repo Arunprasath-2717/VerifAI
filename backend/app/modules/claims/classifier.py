@@ -1,0 +1,150 @@
+"""Content classification service for claim taxonomy and routing."""
+
+import re
+from dataclasses import dataclass
+
+from app.schemas.verification import ContentType, VerdictType
+
+
+@dataclass(frozen=True)
+class ClassificationResult:
+    """Outcome of content classification for a single claim."""
+
+    content_type: ContentType
+    verdict: VerdictType | None
+    is_verifiable: bool
+    confidence: float | None
+    is_calibrated: bool
+    calibration_status: str
+    explanation: str
+
+
+class ContentClassifier:
+    """Classifies claims into PRD content types and determines verification routing."""
+
+    # Lexical markers for opinion and subjective viewpoint
+    OPINION_MARKERS = re.compile(
+        r"\b(?:i\s+think|i\s+feel|i\s+believe|in\s+my\s+view|in\s+my\s+opinion|"
+        r"best|worst|greatest|terrible|wonderful|superior|inferior|should|ought|"
+        r"tastiest|underrated|overrated|beautiful|ugly)\b",
+        re.IGNORECASE,
+    )
+
+    # Lexical markers for predictions and future-looking assertions
+    PREDICTION_MARKERS = re.compile(
+        r"\b(?:will\s+(?:be|occur|happen|increase|decrease|reach|drop|exceed)|"
+        r"predicted\s+to|forecasted\s+to|projected\s+to|by\s+20[3-9]\d|in\s+20[3-9]\d|"
+        r"in\s+the\s+future|next\s+(?:decade|century|year|month))\b",
+        re.IGNORECASE,
+    )
+
+    # Lexical markers for hypothetical and scenario conditional statements
+    HYPOTHETICAL_MARKERS = re.compile(
+        r"\b(?:if|suppose|supposing|assuming\s+that|were\s+to|what\s+if|"
+        r"hypothetically|in\s+the\s+event\s+that|would\s+have\s+been)\b",
+        re.IGNORECASE,
+    )
+
+    # Lexical markers for creative, mythical, or fictional expressions
+    CREATIVE_MARKERS = re.compile(
+        r"\b(?:once\s+upon\s+a\s+time|dragon|wizard|unicorn|magic\s+wand|"
+        r"fictional|fairytale|legend\s+tells\s+of|in\s+a\s+galaxy\s+far\s+away)\b",
+        re.IGNORECASE,
+    )
+
+    # Lexical markers for imperative commands and instruction
+    INSTRUCTION_MARKERS = re.compile(
+        r"^(?:please\s+)?(?:install|run|click|type|download|open|enter|press|"
+        r"execute|navigate\s+to|configure|copy|paste)\b",
+        re.IGNORECASE,
+    )
+
+    def classify(self, claim_text: str) -> ClassificationResult:
+        """Classify a single claim and return its verification routing disposition."""
+        text = claim_text.strip()
+
+        # 1. Check for creative/fictional markers
+        if self.CREATIVE_MARKERS.search(text):
+            return ClassificationResult(
+                content_type=ContentType.CREATIVE,
+                verdict=VerdictType.CREATIVE,
+                is_verifiable=False,
+                confidence=None,
+                is_calibrated=False,
+                calibration_status="NOT_CALIBRATED",
+                explanation=(
+                    "Claim classified as creative/fictional narrative; "
+                    "exempt from empirical verification."
+                ),
+            )
+
+        # 2. Check for imperative instruction/how-to
+        if self.INSTRUCTION_MARKERS.search(text):
+            return ClassificationResult(
+                content_type=ContentType.INSTRUCTION,
+                verdict=VerdictType.INCONCLUSIVE,
+                is_verifiable=False,
+                confidence=None,
+                is_calibrated=False,
+                calibration_status="NOT_CALIBRATED",
+                explanation=(
+                    "Claim classified as procedural instruction; requires "
+                    "execution/sandbox check rather than factual verification."
+                ),
+            )
+
+        # 3. Check for hypothetical/conditional scenario
+        if self.HYPOTHETICAL_MARKERS.search(text):
+            return ClassificationResult(
+                content_type=ContentType.HYPOTHETICAL,
+                verdict=VerdictType.SCENARIO,
+                is_verifiable=False,
+                confidence=None,
+                is_calibrated=False,
+                calibration_status="NOT_CALIBRATED",
+                explanation=(
+                    "Claim classified as hypothetical conditional; evaluated "
+                    "as scenario without empirical truth value."
+                ),
+            )
+
+        # 4. Check for future predictions
+        if self.PREDICTION_MARKERS.search(text):
+            return ClassificationResult(
+                content_type=ContentType.PREDICTION,
+                verdict=VerdictType.FUTURE_LOOKING,
+                is_verifiable=False,
+                confidence=None,
+                is_calibrated=False,
+                calibration_status="NOT_CALIBRATED",
+                explanation=(
+                    "Claim classified as future-looking prediction; empirical "
+                    "truth cannot be verified at present."
+                ),
+            )
+
+        # 5. Check for subjective opinion
+        if self.OPINION_MARKERS.search(text):
+            return ClassificationResult(
+                content_type=ContentType.OPINION,
+                verdict=VerdictType.VIEWPOINT,
+                is_verifiable=False,
+                confidence=None,
+                is_calibrated=False,
+                calibration_status="NOT_CALIBRATED",
+                explanation=(
+                    "Claim classified as subjective opinion/viewpoint; "
+                    "non-verifiable as an empirical fact."
+                ),
+            )
+
+        # 6. Default: Factual statement
+        return ClassificationResult(
+            content_type=ContentType.FACTUAL,
+            verdict=None,  # Verdict determined downstream via retrieval & judging
+            is_verifiable=True,
+            confidence=None,
+            is_calibrated=False,
+            calibration_status="NOT_CALIBRATED",
+            explanation="Claim asserts empirical, verifiable propositional facts.",
+        )
