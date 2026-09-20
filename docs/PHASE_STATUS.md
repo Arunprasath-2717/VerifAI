@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-**Active Phase:** Phase 3 — Backend Core & Verification Engine  
-**Active Sub-Scope:** Phase 3 Cleanup — MyPy type safety, instruction classification coverage, research-integrity labeling  
-**Status:** CLEANUP COMPLETE — READY FOR ARUN'S FORMAL SIGN-OFF  
+**Active Phase:** Phase 3 — Backend Core & Verification Engine (APPROVED & SIGNED OFF)  
+**Status:** **APPROVED & SIGNED OFF BY ARUN**  
 **Authorized Reviewer:** Arun (Single Source of Verification Truth)  
-**Next Step:** Formal Phase 3 Human Sign-Off by Arun in `docs/SIGN_OFF_REGISTER.md`
+**Sign-Off Date:** 2026-09-20  
+**Next Step:** Phase 4 Initialization (Ingestion & Browser Extension)
 
 ---
 
@@ -18,7 +18,7 @@
 | **Criterion 2: Hermetic Test Coverage** | 111 unit and integration tests in `backend/tests/` (92 core + 19 new instruction-classifier regression tests) and 61 benchmark tests in `benchmark/tests/` (172 tests total). Hermetic, zero external network coupling, runs in <0.6s. | **VERIFIED — 172/172 PASS** |
 | **Criterion 3: Negative Control Audit** | Negative controls confirmed: SSRF rejection of loopback/private/metadata IPs; uncalibrated confidence reported as None with status NOT_CALIBRATED; numeric mismatch flags CONTRADICTED; empty/whitespace text rejected with 422; non-existent UUID returns 404. | **VERIFIED** |
 | **Criterion 4: Documentation & Contract Integrity** | OpenAPI specification updated with `/api/v1/verification` and `/api/v1/verification/{id}`; `PHASE_STATUS.md`, `IMPLEMENTATION_ROADMAP.md`, `SIGN_OFF_REGISTER.md`, `COMMIT_LEDGER.md` synchronized. | **VERIFIED** |
-| **Criterion 5: Formal Human Sign-Off** | All code, automated tests, CLI demonstrations, and linters verified; awaiting explicit human sign-off from Arun in `docs/SIGN_OFF_REGISTER.md`. | **AWAITING ARUN'S SIGN-OFF** |
+| **Criterion 5: Formal Human Sign-Off** | All code, automated tests, CLI demonstrations, and linters verified; formally approved and signed off by Arun on 2026-09-20 in `docs/SIGN_OFF_REGISTER.md`. | **APPROVED BY ARUN** |
 
 ---
 
@@ -63,8 +63,8 @@
 | **Phase 0** | Repository Baseline & Governance | **COMPLETE** | 2026-09-19 (Commit `74324a6`) |
 | **Phase 1** | Database & Authentication Foundation | **COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
 | **Phase 2** | Benchmark Dataset, Annotation & Quality Gate | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
-| **Phase 3** | Backend Core & Verification Engine | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
-| **Phase 4** | Ingestion & Browser Extension | **LOCKED** | Requires Phase 3 sign-off |
+| **Phase 3** | Backend Core & Verification Engine | **APPROVED** | 2026-09-20 (Signed off by Arun) |
+| **Phase 4** | Ingestion & Browser Extension | **UNLOCKED — READY FOR INITIALIZATION** | Phase 3 sign-off satisfied |
 | **Phase 5** | Hardening, Integration & Delivery | **LOCKED** | Requires Phase 4 sign-off |
 
 ---

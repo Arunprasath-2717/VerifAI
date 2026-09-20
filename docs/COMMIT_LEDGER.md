@@ -35,12 +35,14 @@
 | 20 | `fbe10f0` | `Final` | `fix(backend): close Phase 3 validation and classification gaps` | Phase 3 (Cleanup) | VERIFIED & PUSHED |
 | 21 | `d529c5b` | `Final` | `docs: record Phase 3 cleanup commit SHA in ledger (fbe10f0)` | Phase 3 (Cleanup) | VERIFIED & PUSHED |
 | 22 | `7c8e477` | `Final` | `docs: formally accept sparse-index numeric-collision as dev-only constraint` | Phase 3 (Governance) | VERIFIED & PUSHED |
+| 23 | `27b1c95` | `Final` | `docs: record constraint acceptance commit SHA in ledger (7c8e477)` | Phase 3 (Governance) | VERIFIED & PUSHED |
+| 24 | Pending | `Final` | `docs: record Arun's formal Phase 3 sign-off and unlock Phase 4` | Phase 3 (Sign-Off) | VERIFIED (Pending Push) |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 22 (22 pushed)
+- **Total Commits Recorded:** 24 (23 pushed + 1 pending)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 478
+- **Remaining Commit Budget:** 476
 

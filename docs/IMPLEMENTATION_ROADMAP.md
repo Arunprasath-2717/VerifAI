@@ -36,8 +36,8 @@
 | **Phase 0** | **Repository Baseline & Governance**   | Repository audit, environment verification, governance documentation            | **COMPLETE** |
 | **Phase 1** | **Database & Auth Foundation**         | Async PostgreSQL foundation, centralized config, structured logging, errors, CI | **COMPLETE — AWAITING ARUN'S SIGN-OFF** |
 | **Phase 2** | **Benchmark Dataset & Annotation**     | 100-case hallucination benchmark, Cohen's kappa quality gate, dataset freeze   | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** |
-| **Phase 3** | **Backend Core & Verification Engine** | Verification orchestration, claim extraction, evidence retrieval, multi-judge  | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** |
-| **Phase 4** | **Ingestion & Browser Extension**      | Payload ingestion API, Chrome extension integration                             | Planned              |
+| **Phase 3** | **Backend Core & Verification Engine** | Verification orchestration, claim extraction, evidence retrieval, multi-judge  | **COMPLETE & APPROVED** |
+| **Phase 4** | **Ingestion & Browser Extension**      | Payload ingestion API, Chrome extension integration                             | **UNLOCKED**         |
 | **Phase 5** | **Hardening, Integration & Delivery**  | Hermetic validation, end-to-end verification, release preparation               | Planned              |
 
 ---

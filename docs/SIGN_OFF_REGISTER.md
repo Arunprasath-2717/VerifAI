@@ -20,8 +20,8 @@
 | **Phase 0** | Repository Baseline & Governance | Arun | 2026-09-19 | `74324a6` | **APPROVED** | Baseline audited; 5 governance docs established; formally approved by Arun. |
 | **Phase 1** | Database & Authentication Foundation | Arun | Pending | Pending | **COMPLETE — AWAITING ARUN'S SIGN-OFF** | Foundation, async DB, config, logging, errors, CI workflow, and smoke tests verified. Ready for Arun's final sign-off. |
 | **Phase 2** | Benchmark Dataset, Annotation & Quality Gate | Arun | Pending | Pending | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | 100-case draft dataset, Cohen's kappa engine, quality gate state machine, SHA-256 freeze, 61 tests passing. Dataset is DRAFT — human annotation review pending. |
-| **Phase 3** | Backend Core & Verification Engine | Arun | Pending | Pending | **CLEANUP COMPLETE — READY FOR ARUN'S FORMAL SIGN-OFF** | Full verification pipeline verified. Cleanup commit adds: MyPy fully clean (0 errors across 57 files), instruction classifier expanded (19 new regression tests), `LocalPassageRetriever` labeled as development-only. Sparse-index numeric collision formally accepted as a dev-only constraint. 172/172 tests pass. All linters clean. |
-| **Phase 4** | Ingestion & Browser Extension | Arun | — | — | **LOCKED** | Requires Phase 3 sign-off. |
+| **Phase 3** | Backend Core & Verification Engine | Arun | 2026-09-20 | `27b1c95` | **APPROVED** | Formally approved and signed off by Arun. Full backend verification pipeline verified (claims, classification, evidence, judges, disagreement, decision, audit trail, orchestrator, REST API, CLI). 172/172 tests passing hermetically. 0 MyPy/Ruff errors. Dev-only sparse index constraint formally accepted. |
+| **Phase 4** | Ingestion & Browser Extension | Arun | — | — | **UNLOCKED** | Phase 3 sign-off satisfied. Ready for Phase 4 initialization. |
 | **Phase 5** | Hardening, Integration & Delivery | Arun | — | — | **LOCKED** | Requires Phase 4 sign-off. |
 
 ---
