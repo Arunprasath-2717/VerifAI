@@ -27,17 +27,20 @@
 | 12 | `77c54c5` | `Final` | `ci: extend backend-ci.yml with benchmark lint, type-check, pytest, and dataset-validate steps` | Phase 2 | VERIFIED & PUSHED |
 | 13 | `37e1013` | `Final` | `docs: record Phase 2 benchmark foundation in governance registers` | Phase 2 | VERIFIED & PUSHED |
 | 14 | `35f941b` | `Final` | `fix(benchmark): refine linting, format conformity, and root test configuration` | Phase 2 | VERIFIED & PUSHED |
-| 15 | `d096fea` | `Final` | `feat(backend): implement Phase 3 verification models, schemas, and claim extraction engine` | Phase 3 | VERIFIED (Local) |
-| 16 | `e28721a` | `Final` | `feat(backend): implement evidence retrieval with SSRF safety and multi-judge consensus engine` | Phase 3 | VERIFIED (Local) |
-| 17 | `41d4a29` | `Final` | `feat(backend): implement verification orchestrator, REST API, and CLI demonstration tool` | Phase 3 | VERIFIED (Local) |
-| 18 | `b3b5cbe` | `Final` | `test(backend): add 47 unit and integration tests for Phase 3 verification pipeline` | Phase 3 | VERIFIED (Local) |
+| 15 | `d096fea` | `Final` | `feat(backend): implement Phase 3 verification models, schemas, and claim extraction engine` | Phase 3 | VERIFIED & PUSHED |
+| 16 | `e28721a` | `Final` | `feat(backend): implement evidence retrieval with SSRF safety and multi-judge consensus engine` | Phase 3 | VERIFIED & PUSHED |
+| 17 | `41d4a29` | `Final` | `feat(backend): implement verification orchestrator, REST API, and CLI demonstration tool` | Phase 3 | VERIFIED & PUSHED |
+| 18 | `b3b5cbe` | `Final` | `test(backend): add 47 unit and integration tests for Phase 3 verification pipeline` | Phase 3 | VERIFIED & PUSHED |
 | 19 | `c85ff39` | `Final` | `docs: record Phase 3 verification engine completion in governance registers` | Phase 3 | VERIFIED & PUSHED |
 | 20 | `fbe10f0` | `Final` | `fix(backend): close Phase 3 validation and classification gaps` | Phase 3 (Cleanup) | VERIFIED & PUSHED |
+| 21 | `d529c5b` | `Final` | `docs: record Phase 3 cleanup commit SHA in ledger (fbe10f0)` | Phase 3 (Cleanup) | VERIFIED & PUSHED |
+| 22 | Pending | `Final` | `docs: formally accept sparse-index numeric-collision as dev-only constraint` | Phase 3 (Governance) | VERIFIED (Pending Push) |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 20 (19 pushed + 1 pending for Phase 3 cleanup)
+- **Total Commits Recorded:** 22 (21 pushed + 1 pending)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 480
+- **Remaining Commit Budget:** 478
+

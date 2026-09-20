@@ -54,7 +54,7 @@
 | `backend/app/modules/verification/` | `VerificationOrchestrator` coordinating pipeline execution, audit logging, and DB persistence | **COMPLETE** |
 | `backend/app/api/v1/endpoints/verification.py` | FastAPI REST endpoints `POST /api/v1/verification` and `GET /api/v1/verification/{id}` | **COMPLETE** |
 | `scripts/verify.py` | Standalone CLI demonstration tool with human-readable and raw JSON reporting | **COMPLETE** |
-| `backend/tests/` | 92 hermetic unit and integration tests (153 tests combined with benchmark suite) | **COMPLETE — 153/153 PASS** |
+| `backend/tests/` | 111 hermetic unit and integration tests (172 tests combined with benchmark suite) | **COMPLETE — 172/172 PASS** |
 
 ---
 

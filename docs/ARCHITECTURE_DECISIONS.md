@@ -73,3 +73,16 @@
   - Logging: Standard library logging with ISO 8601 UTC timestamps, correlation IDs, and automated secret/credential redaction.
   - Error Handling: Standardized JSON error envelope (`error: {code, message, request_id, details}`) with client-safe status codes and sanitized validation details.
 - **Consequences:** Provides end-to-end request traceability, protects sensitive credentials across logs and responses, and establishes a uniform API contract for all downstream consumers.
+
+---
+
+## ADR-009: In-Memory Evidence Retriever as Hermetic Development Harness
+- **Status:** Accepted (Locked)
+- **Context:** Phase 3 verification pipeline requires hermetic, deterministic execution without external network dependencies or live vector databases. `LocalPassageRetriever` supplies in-memory passages for unit tests, CI, and local CLI demonstrations.
+- **Decision:** `LocalPassageRetriever` is designated strictly as a development and testing harness. Its known behavior—including sparse coverage and false-contradiction outcomes when unrelated numeric values co-occur across matching lexical tokens—is formally accepted as a development-only constraint.
+- **Consequences:** 
+  - All outputs from this retriever are marked with `retriever_name = "LOCAL_PASSAGE_INDEX"`.
+  - The deterministic rule judge strictly enforces numeric consistency without fabricating agreement.
+  - Production retrieval using vector embeddings, full knowledge corpus ingestion, and live web retrieval is strictly governed under Phase 4 and Phase 5.
+  - Phase 3 backend verification core is unblocked for formal human sign-off.
+
