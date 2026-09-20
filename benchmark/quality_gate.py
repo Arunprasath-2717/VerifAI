@@ -100,7 +100,8 @@ def evaluate_quality_gate(
         next_status = QualityGateStatus.FAIL
         summary = (
             f"Quality gate FAILED: Remediation cap exhausted (2 cycles). "
-            f"Final kappa={kappa:.4f} < {threshold:.2f} with shortfall of {shortfall:.4f}."
+            f"Final kappa={kappa:.4f} < {threshold:.2f}, "
+            f"shortfall={shortfall:.4f}."
         )
 
     return QualityGateEvaluation(

@@ -21,6 +21,7 @@ Or against a running Uvicorn instance:
 
 import argparse
 import asyncio
+import pathlib
 import re
 import sys
 from typing import Any
@@ -42,10 +43,18 @@ async def run_smoke_tests(base_url: str | None = None) -> bool:
     try:
         from app.core.config import get_settings
         from app.main import app
-    except ImportError as exc:
-        print(f"[FAIL] Could not import application modules: {exc}")
-        print("Ensure PYTHONPATH=backend is set when executing this script.")
-        return False
+    except ImportError:
+        # Fallback: add backend to sys.path if run from repository root
+        backend_dir = str(pathlib.Path(__file__).resolve().parent.parent / "backend")
+        if backend_dir not in sys.path:
+            sys.path.insert(0, backend_dir)
+        try:
+            from app.core.config import get_settings
+            from app.main import app
+        except ImportError as exc:
+            print(f"[FAIL] Could not import application modules: {exc}")
+            print("Ensure PYTHONPATH=backend is set when executing this script.")
+            return False
 
     settings = get_settings()
     failures: list[str] = []

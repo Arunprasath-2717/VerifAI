@@ -122,7 +122,8 @@ def validate_benchmark_dataset(
             actual_count = report.category_counts.get(cat, 0)
             if actual_count != expected_count:
                 report.errors.append(
-                    f"Category '{cat}' requires {expected_count} cases, found {actual_count}."
+                    f"Category '{cat}' requires {expected_count} cases, "
+                    f"found {actual_count}."
                 )
 
     report.is_valid = len(report.errors) == 0

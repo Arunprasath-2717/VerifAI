@@ -56,9 +56,9 @@ class TestEdgeCases:
         assert result.is_valid is True
         assert result.n_items == 1
         assert result.agreement_count == 0
-        # Single item: annotator 1 uses only SUPPORTED, annotator 2 uses only CONTRADICTED.
-        # Marginals: p(SUPPORTED|A1)=1, p(SUPPORTED|A2)=0  → P_e = 0
-        # P_o = 0, P_e = 0  → kappa = (0 - 0) / (1 - 0) = 0.0
+        # Single item: A1=SUPPORTED, A2=CONTRADICTED.
+        # Marginals: p(SUPPORTED|A1)=1, p(SUPPORTED|A2)=0 → P_e = 0
+        # P_o = 0, P_e = 0 → kappa = (0 - 0) / (1 - 0) = 0.0
         assert result.kappa is not None
         assert abs(result.kappa - 0.0) < 1e-3
 
@@ -86,7 +86,7 @@ class TestPerfectAgreement:
         assert result.disagreement_count == 0
 
     def test_perfect_agreement_one_category(self):
-        """When both annotators use only one category, kappa = 1.0 (denominator edge case)."""
+        """When both annotators use one category only, kappa = 1.0 (edge case)."""
         pairs = [
             ("c1", "SUPPORTED", "SUPPORTED"),
             ("c2", "SUPPORTED", "SUPPORTED"),

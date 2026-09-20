@@ -60,7 +60,7 @@ def compute_cohens_kappa(
 
     # Initialize confusion matrix: row = annotator 1, col = annotator 2
     matrix: dict[str, dict[str, int]] = {
-        cat1: {cat2: 0 for cat2 in all_categories} for cat1 in all_categories
+        cat1: dict.fromkeys(all_categories, 0) for cat1 in all_categories
     }
 
     agreement_count = 0
@@ -73,8 +73,8 @@ def compute_cohens_kappa(
     p_o = agreement_count / n_items
 
     # Marginal totals
-    marginals_1: dict[str, int] = {cat: 0 for cat in all_categories}
-    marginals_2: dict[str, int] = {cat: 0 for cat in all_categories}
+    marginals_1: dict[str, int] = dict.fromkeys(all_categories, 0)
+    marginals_2: dict[str, int] = dict.fromkeys(all_categories, 0)
 
     for cat in all_categories:
         marginals_1[cat] = sum(matrix[cat][c2] for c2 in all_categories)

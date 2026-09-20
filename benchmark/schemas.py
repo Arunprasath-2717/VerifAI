@@ -1,12 +1,12 @@
 """Pydantic data models and enums for the VerifAI Benchmark Suite."""
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class BenchmarkCategory(str, Enum):
+class BenchmarkCategory(StrEnum):
     """PRD Section 8 benchmark categories."""
 
     VERIFIED_FACT = "VERIFIED_FACT"
@@ -14,7 +14,7 @@ class BenchmarkCategory(str, Enum):
     TRUE_UNKNOWN = "TRUE_UNKNOWN"
 
 
-class ContentType(str, Enum):
+class ContentType(StrEnum):
     """PRD Section 6 claim and content classifications."""
 
     FACTUAL = "FACTUAL"
@@ -26,7 +26,7 @@ class ContentType(str, Enum):
     MIXED = "MIXED"
 
 
-class VerdictType(str, Enum):
+class VerdictType(StrEnum):
     """PRD Section 6 & Section 10 verdict types."""
 
     SUPPORTED = "SUPPORTED"
@@ -40,7 +40,7 @@ class VerdictType(str, Enum):
     INCONCLUSIVE = "INCONCLUSIVE"
 
 
-class UnknownReason(str, Enum):
+class UnknownReason(StrEnum):
     """PRD Section 4 & Section 10 explicit UNKNOWN reason categories."""
 
     CONTEXT_UNKNOWN = "CONTEXT_UNKNOWN"
@@ -49,7 +49,7 @@ class UnknownReason(str, Enum):
     CONFLICTING_EVIDENCE = "CONFLICTING_EVIDENCE"
 
 
-class ClaimLabel(str, Enum):
+class ClaimLabel(StrEnum):
     """Gold and annotation labels for individual atomic claims."""
 
     SUPPORTED = "SUPPORTED"
@@ -57,7 +57,7 @@ class ClaimLabel(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class DatasetSplit(str, Enum):
+class DatasetSplit(StrEnum):
     """Dataset partition splits for reproducible benchmarking."""
 
     TRAIN = "train"
@@ -65,7 +65,7 @@ class DatasetSplit(str, Enum):
     TEST = "test"
 
 
-class DatasetStatus(str, Enum):
+class DatasetStatus(StrEnum):
     """Lifecycle state of the benchmark dataset."""
 
     DRAFT = "DRAFT"
@@ -74,7 +74,7 @@ class DatasetStatus(str, Enum):
     FROZEN = "FROZEN"
 
 
-class AnnotationPass(str, Enum):
+class AnnotationPass(StrEnum):
     """Review cycle pass for annotation."""
 
     FIRST_PASS = "FIRST_PASS"
@@ -83,7 +83,7 @@ class AnnotationPass(str, Enum):
     REMEDIATION_2 = "REMEDIATION_2"
 
 
-class QualityGateStatus(str, Enum):
+class QualityGateStatus(StrEnum):
     """PRD Section 23.4 quality gate statuses."""
 
     INITIAL_REVIEW = "INITIAL_REVIEW"
@@ -117,7 +117,7 @@ class BenchmarkCase(BaseModel):
     query: str = Field(description="Original user prompt or task.")
     response: str = Field(description="AI-generated text evaluated for hallucinations.")
     category: BenchmarkCategory = Field(
-        description="Benchmark category (VERIFIED_FACT, CONTROLLED_HALLUCINATION, TRUE_UNKNOWN)."
+        description="Benchmark category (VERIFIED_FACT, CONTROLLED_HALLUCINATION, TRUE_UNKNOWN).",  # noqa: E501
     )
     content_type: ContentType = Field(
         default=ContentType.FACTUAL,
