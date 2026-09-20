@@ -45,20 +45,28 @@ jobs:
 
       - name: Run Ruff Linting
         run: |
-          PYTHONPATH=backend ruff check backend scripts
+          PYTHONPATH=. ruff check backend scripts benchmark
 
       - name: Run Ruff Formatting Verification
         run: |
-          PYTHONPATH=backend ruff format --check backend scripts
+          PYTHONPATH=. ruff format --check backend scripts benchmark
 
       - name: Run Mypy Static Type Checking
         run: |
-          PYTHONPATH=backend mypy backend/app
+          PYTHONPATH=. mypy backend/app benchmark
 
-      - name: Run Deterministic Pytest Suite
+      - name: Run Backend Pytest Suite
         run: |
-          PYTHONPATH=backend pytest backend/tests -v
+          PYTHONPATH=. pytest backend/tests -v
+
+      - name: Run Benchmark Pytest Suite
+        run: |
+          PYTHONPATH=. pytest benchmark/tests -v
 
       - name: Run Automated Application Smoke Test
         run: |
-          PYTHONPATH=backend python scripts/smoke_test.py
+          PYTHONPATH=. python scripts/smoke_test.py
+
+      - name: Run Benchmark Dataset Validation
+        run: |
+          PYTHONPATH=. python scripts/benchmark_tool.py validate
