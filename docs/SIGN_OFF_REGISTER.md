@@ -18,8 +18,8 @@
 | Phase | Phase Name | Reviewer | Sign-Off Date | Commit SHA | Status | Notes |
 |---|---|---|---|---|---|---|
 | **Phase 0** | Repository Baseline & Governance | Arun | 2026-09-19 | `74324a6` | **APPROVED** | Baseline audited; 5 governance docs established; formally approved by Arun. |
-| **Phase 1** | Database & Authentication Foundation | Arun | Pending | Pending | **COMPLETE — AWAITING ARUN’S SIGN-OFF** | Foundation, async DB, config, logging, errors, CI workflow, and smoke tests verified. Ready for Arun's final sign-off. |
-| **Phase 2** | Backend Core & Verification Engine | Arun | — | — | **LOCKED** | Requires Phase 1 sign-off. |
-| **Phase 3** | Ingestion & Browser Extension | Arun | — | — | **LOCKED** | Requires Phase 2 sign-off. |
-| **Phase 4** | Benchmark & Evaluation Suite | Arun | — | — | **LOCKED** | Requires Phase 3 sign-off. |
+| **Phase 1** | Database & Authentication Foundation | Arun | Pending | Pending | **COMPLETE — AWAITING ARUN'S SIGN-OFF** | Foundation, async DB, config, logging, errors, CI workflow, and smoke tests verified. Ready for Arun's final sign-off. |
+| **Phase 2** | Benchmark Dataset, Annotation & Quality Gate | Arun | Pending | Pending | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | 100-case draft dataset, Cohen's kappa engine, quality gate state machine, SHA-256 freeze, 61 tests passing. Dataset is DRAFT — human annotation review pending. |
+| **Phase 3** | Backend Core & Verification Engine | Arun | — | — | **LOCKED** | Requires Phase 2 sign-off. |
+| **Phase 4** | Ingestion & Browser Extension | Arun | — | — | **LOCKED** | Requires Phase 3 sign-off. |
 | **Phase 5** | Hardening, Integration & Delivery | Arun | — | — | **LOCKED** | Requires Phase 4 sign-off. |
