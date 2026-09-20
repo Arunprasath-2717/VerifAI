@@ -1,0 +1,2742 @@
+[
+  {
+    "case_id": "CASE-001",
+    "query": "What is the speed of light in a vacuum?",
+    "response": "The speed of light in a vacuum is 299,792,458 meters per second.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-001-1",
+        "claim_text": "The speed of light in a vacuum is 299,792,458 meters per second.",
+        "start_offset": 0,
+        "end_offset": 64,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NIST fundamental physical constants"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in physics."
+  },
+  {
+    "case_id": "CASE-002",
+    "query": "What is the chemical formula for water?",
+    "response": "Water consists of two hydrogen atoms bonded to one oxygen atom.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-002-1",
+        "claim_text": "Water consists of two hydrogen atoms bonded to one oxygen atom.",
+        "start_offset": 0,
+        "end_offset": 63,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "IUPAC Chemical Nomenclature"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in chemistry."
+  },
+  {
+    "case_id": "CASE-003",
+    "query": "Who wrote the play Hamlet?",
+    "response": "The tragedy Hamlet was written by William Shakespeare around 1600.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-003-1",
+        "claim_text": "The tragedy Hamlet was written by William Shakespeare around 1600.",
+        "start_offset": 0,
+        "end_offset": 66,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Folger Shakespeare Library Catalog"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "literature",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in literature."
+  },
+  {
+    "case_id": "CASE-004",
+    "query": "What is the capital of France?",
+    "response": "Paris is the official capital and largest city of France.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-004-1",
+        "claim_text": "Paris is the official capital and largest city of France.",
+        "start_offset": 0,
+        "end_offset": 57,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "French National Institute of Statistics and Economic Studies"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-005",
+    "query": "When was the Apollo 11 Moon landing?",
+    "response": "Apollo 11 landed humans on the Moon on July 20, 1969.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-005-1",
+        "claim_text": "Apollo 11 landed humans on the Moon on July 20, 1969.",
+        "start_offset": 0,
+        "end_offset": 53,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NASA Apollo 11 Mission Log"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in history."
+  },
+  {
+    "case_id": "CASE-006",
+    "query": "What is photosynthesis?",
+    "response": "Photosynthesis converts solar energy into chemical energy in plants.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-006-1",
+        "claim_text": "Photosynthesis converts solar energy into chemical energy in plants.",
+        "start_offset": 0,
+        "end_offset": 68,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Campbell Biology, 11th Edition"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in biology."
+  },
+  {
+    "case_id": "CASE-007",
+    "query": "What is the official currency of Japan?",
+    "response": "The legal tender and official currency of Japan is the yen.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-007-1",
+        "claim_text": "The legal tender and official currency of Japan is the yen.",
+        "start_offset": 0,
+        "end_offset": 59,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Bank of Japan Currency Reference"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "economics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in economics."
+  },
+  {
+    "case_id": "CASE-008",
+    "query": "What is the largest planet in our solar system?",
+    "response": "Jupiter is the largest planet in our solar system by mass and diameter.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-008-1",
+        "claim_text": "Jupiter is the largest planet in our solar system by mass and diameter.",
+        "start_offset": 0,
+        "end_offset": 71,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NASA Planetary Fact Sheet"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in astronomy."
+  },
+  {
+    "case_id": "CASE-009",
+    "query": "When was Albert Einstein's general relativity published?",
+    "response": "Albert Einstein published his theory of general relativity in 1915.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-009-1",
+        "claim_text": "Albert Einstein published his theory of general relativity in 1915.",
+        "start_offset": 0,
+        "end_offset": 67,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Annalen der Physik, 1915"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in physics."
+  },
+  {
+    "case_id": "CASE-010",
+    "query": "What produces ATP in eukaryotic cells?",
+    "response": "Mitochondria produce the majority of cellular ATP through respiration.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-010-1",
+        "claim_text": "Mitochondria produce the majority of cellular ATP through respiration.",
+        "start_offset": 0,
+        "end_offset": 70,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Molecular Biology of the Cell"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in biology."
+  },
+  {
+    "case_id": "CASE-011",
+    "query": "Who discovered the double-helix structure of DNA?",
+    "response": "Watson and Crick published the double-helix structure of DNA in 1953.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-011-1",
+        "claim_text": "Watson and Crick published the double-helix structure of DNA in 1953.",
+        "start_offset": 0,
+        "end_offset": 69,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Nature, April 1953"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in biology."
+  },
+  {
+    "case_id": "CASE-012",
+    "query": "Who discovered penicillin?",
+    "response": "Alexander Fleming discovered penicillin in London in 1928.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-012-1",
+        "claim_text": "Alexander Fleming discovered penicillin in London in 1928.",
+        "start_offset": 0,
+        "end_offset": 58,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "British Journal of Experimental Pathology, 1929"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "medicine",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in medicine."
+  },
+  {
+    "case_id": "CASE-013",
+    "query": "What is the largest ocean on Earth?",
+    "response": "The Pacific Ocean is the largest and deepest ocean on Earth.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-013-1",
+        "claim_text": "The Pacific Ocean is the largest and deepest ocean on Earth.",
+        "start_offset": 0,
+        "end_offset": 60,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NOAA National Ocean Service"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-014",
+    "query": "What is the highest mountain above sea level?",
+    "response": "Mount Everest is the highest mountain above sea level on Earth.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-014-1",
+        "claim_text": "Mount Everest is the highest mountain above sea level on Earth.",
+        "start_offset": 0,
+        "end_offset": 63,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Survey of Nepal & Survey of India"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-015",
+    "query": "What element makes up diamond?",
+    "response": "Diamond is a crystalline allotrope of carbon with cubic structure.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-015-1",
+        "claim_text": "Diamond is a crystalline allotrope of carbon with cubic structure.",
+        "start_offset": 0,
+        "end_offset": 66,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Mineralogical Society of America"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in chemistry."
+  },
+  {
+    "case_id": "CASE-016",
+    "query": "Who formulated the periodic table?",
+    "response": "Dmitri Mendeleev formulated the periodic law of chemical elements in 1869.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-016-1",
+        "claim_text": "Dmitri Mendeleev formulated the periodic law of chemical elements in 1869.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Russian Chemical Society Journal, 1869"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in chemistry."
+  },
+  {
+    "case_id": "CASE-017",
+    "query": "What is the largest hot desert on Earth?",
+    "response": "The Sahara Desert is the largest hot subtropical desert on Earth.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-017-1",
+        "claim_text": "The Sahara Desert is the largest hot subtropical desert on Earth.",
+        "start_offset": 0,
+        "end_offset": 65,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "USGS Desert Landforms Report"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-018",
+    "query": "Who designed the Python programming language?",
+    "response": "Guido van Rossum developed Python and released it in 1991.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-018-1",
+        "claim_text": "Guido van Rossum developed Python and released it in 1991.",
+        "start_offset": 0,
+        "end_offset": 58,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Python Software Foundation History"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "computer_science",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in computer_science."
+  },
+  {
+    "case_id": "CASE-019",
+    "query": "When did World War II end?",
+    "response": "World War II ended with the formal surrender of Japan in 1945.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-019-1",
+        "claim_text": "World War II ended with the formal surrender of Japan in 1945.",
+        "start_offset": 0,
+        "end_offset": 62,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "National WWII Museum Historical Archives"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in history."
+  },
+  {
+    "case_id": "CASE-020",
+    "query": "How many base pairs are in the human genome?",
+    "response": "The human haploid genome contains approximately 3 billion base pairs.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-020-1",
+        "claim_text": "The human haploid genome contains approximately 3 billion base pairs.",
+        "start_offset": 0,
+        "end_offset": 69,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Human Genome Project Completion Report"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "genetics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in genetics."
+  },
+  {
+    "case_id": "CASE-021",
+    "query": "What is the atomic number of oxygen?",
+    "response": "The atomic number of oxygen in the periodic table is 8.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-021-1",
+        "claim_text": "The atomic number of oxygen in the periodic table is 8.",
+        "start_offset": 0,
+        "end_offset": 55,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NIST Atomic Spectra Database"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in chemistry."
+  },
+  {
+    "case_id": "CASE-022",
+    "query": "What are the moons of Mars?",
+    "response": "Mars has two small natural satellites named Phobos and Deimos.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-022-1",
+        "claim_text": "Mars has two small natural satellites named Phobos and Deimos.",
+        "start_offset": 0,
+        "end_offset": 62,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NASA Mars Exploration Program"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in astronomy."
+  },
+  {
+    "case_id": "CASE-023",
+    "query": "What river has the largest discharge volume?",
+    "response": "The Amazon River has the greatest water discharge volume in the world.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-023-1",
+        "claim_text": "The Amazon River has the greatest water discharge volume in the world.",
+        "start_offset": 0,
+        "end_offset": 70,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Hydrological Sciences Journal"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-024",
+    "query": "When was the Magna Carta sealed?",
+    "response": "King John of England sealed the Magna Carta in June 1215.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-024-1",
+        "claim_text": "King John of England sealed the Magna Carta in June 1215.",
+        "start_offset": 0,
+        "end_offset": 57,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "British Library Magna Carta Collection"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in history."
+  },
+  {
+    "case_id": "CASE-025",
+    "query": "What is the speed of sound in air at 20 degrees Celsius?",
+    "response": "The speed of sound in dry air at 20 degrees Celsius is 343 meters per second.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-025-1",
+        "claim_text": "The speed of sound in dry air at 20 degrees Celsius is 343 meters per second.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Engineering Toolbox Acoustic Tables"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in physics."
+  },
+  {
+    "case_id": "CASE-026",
+    "query": "What is the boiling point of pure water at 1 atm?",
+    "response": "Pure water boils at exactly 100 degrees Celsius at standard atmospheric pressure.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-026-1",
+        "claim_text": "Pure water boils at exactly 100 degrees Celsius at standard atmospheric pressure.",
+        "start_offset": 0,
+        "end_offset": 81,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "CRC Handbook of Chemistry and Physics"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in chemistry."
+  },
+  {
+    "case_id": "CASE-027",
+    "query": "Who painted the Mona Lisa?",
+    "response": "Leonardo da Vinci painted the Mona Lisa portrait in the early 16th century.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-027-1",
+        "claim_text": "Leonardo da Vinci painted the Mona Lisa portrait in the early 16th century.",
+        "start_offset": 0,
+        "end_offset": 75,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Mus\u00e9e du Louvre Curatorial Notes"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "art_history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in art_history."
+  },
+  {
+    "case_id": "CASE-028",
+    "query": "Who formulated the laws of classical motion?",
+    "response": "Isaac Newton formulated the three universal laws of motion in 1687.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-028-1",
+        "claim_text": "Isaac Newton formulated the three universal laws of motion in 1687.",
+        "start_offset": 0,
+        "end_offset": 67,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Philosophiae Naturalis Principia Mathematica"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in physics."
+  },
+  {
+    "case_id": "CASE-029",
+    "query": "Where is the Great Barrier Reef located?",
+    "response": "The Great Barrier Reef is located off the northeastern coast of Australia.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-029-1",
+        "claim_text": "The Great Barrier Reef is located off the northeastern coast of Australia.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Great Barrier Reef Marine Park Authority"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-030",
+    "query": "What is the chemical symbol for gold?",
+    "response": "The international chemical symbol for the element gold is Au.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-030-1",
+        "claim_text": "The international chemical symbol for the element gold is Au.",
+        "start_offset": 0,
+        "end_offset": 61,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "IUPAC Periodic Table of the Elements"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in chemistry."
+  },
+  {
+    "case_id": "CASE-031",
+    "query": "When were the first modern Olympic Games held?",
+    "response": "The first modern Olympic Games were celebrated in Athens in 1896.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-031-1",
+        "claim_text": "The first modern Olympic Games were celebrated in Athens in 1896.",
+        "start_offset": 0,
+        "end_offset": 65,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "International Olympic Committee Archives"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in history."
+  },
+  {
+    "case_id": "CASE-032",
+    "query": "What gas is released as a byproduct of photosynthesis?",
+    "response": "Photosynthesis by green plants releases molecular oxygen into the atmosphere.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-032-1",
+        "claim_text": "Photosynthesis by green plants releases molecular oxygen into the atmosphere.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Biochemistry, Berg and Tymoczko"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in biology."
+  },
+  {
+    "case_id": "CASE-033",
+    "query": "What is the mean distance from Earth to the Sun?",
+    "response": "Earth orbits the Sun at an astronomical unit distance of 149.6 million kilometers.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-033-1",
+        "claim_text": "Earth orbits the Sun at an astronomical unit distance of 149.6 million kilometers.",
+        "start_offset": 0,
+        "end_offset": 82,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "IAU Resolution on the Astronomical Unit"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in astronomy."
+  },
+  {
+    "case_id": "CASE-034",
+    "query": "What is the second most abundant element in the universe?",
+    "response": "Helium is the second most abundant element in the observable universe.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-034-1",
+        "claim_text": "Helium is the second most abundant element in the observable universe.",
+        "start_offset": 0,
+        "end_offset": 70,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "NASA Cosmic Abundances Data"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astrophysics",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in astrophysics."
+  },
+  {
+    "case_id": "CASE-035",
+    "query": "In which two scientific fields did Marie Curie win Nobel Prizes?",
+    "response": "Marie Curie was awarded Nobel Prizes in Physics and Chemistry.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-035-1",
+        "claim_text": "Marie Curie was awarded Nobel Prizes in Physics and Chemistry.",
+        "start_offset": 0,
+        "end_offset": 62,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Nobel Prize Official Biographical Archive"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in history."
+  },
+  {
+    "case_id": "CASE-036",
+    "query": "Which direction does the Nile River flow?",
+    "response": "The Nile River flows northward through eleven countries in eastern Africa.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-036-1",
+        "claim_text": "The Nile River flows northward through eleven countries in eastern Africa.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "UN Water Resource Assessment"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in geography."
+  },
+  {
+    "case_id": "CASE-037",
+    "query": "Who developed the TCP/IP protocol suite?",
+    "response": "Vint Cerf and Bob Kahn designed the TCP/IP protocol architecture in the 1970s.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-037-1",
+        "claim_text": "Vint Cerf and Bob Kahn designed the TCP/IP protocol architecture in the 1970s.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "IEEE Communications History"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "computer_science",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in computer_science."
+  },
+  {
+    "case_id": "CASE-038",
+    "query": "Do mitochondria contain their own DNA?",
+    "response": "Mitochondria contain independent circular double-stranded DNA genomes.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-038-1",
+        "claim_text": "Mitochondria contain independent circular double-stranded DNA genomes.",
+        "start_offset": 0,
+        "end_offset": 70,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Nature Reviews Genetics"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in biology."
+  },
+  {
+    "case_id": "CASE-039",
+    "query": "When was the United Nations established?",
+    "response": "The United Nations was officially founded in October 1945 after World War II.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-039-1",
+        "claim_text": "The United Nations was officially founded in October 1945 after World War II.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "United Nations Charter Historical Records"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in history."
+  },
+  {
+    "case_id": "CASE-040",
+    "query": "What do plants absorb from air for photosynthesis?",
+    "response": "Plants absorb carbon dioxide from the surrounding atmosphere through stomata.",
+    "category": "VERIFIED_FACT",
+    "content_type": "FACTUAL",
+    "expected_verdict": "SUPPORTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-040-1",
+        "claim_text": "Plants absorb carbon dioxide from the surrounding atmosphere through stomata.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "SUPPORTED",
+        "expected_evidence": [
+          "Physiology and Development of Plants"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "source_type": "curated_reference_fact"
+    },
+    "notes": "Curated verified fact in biology."
+  },
+  {
+    "case_id": "CASE-041",
+    "query": "When did Apollo 11 land on the Moon?",
+    "response": "The Apollo 11 mission landed on Mars in November 1975.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-041-1",
+        "claim_text": "The Apollo 11 mission landed on Mars in November 1975.",
+        "start_offset": 0,
+        "end_offset": 54,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "NASA records show Apollo 11 landed on the Moon in July 1969, not Mars"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in history."
+  },
+  {
+    "case_id": "CASE-042",
+    "query": "Who invented the telephone?",
+    "response": "Albert Einstein invented the first commercial telephone in 1876.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-042-1",
+        "claim_text": "Albert Einstein invented the first commercial telephone in 1876.",
+        "start_offset": 0,
+        "end_offset": 64,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Alexander Graham Bell was awarded the telephone patent, not Einstein"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "technology",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in technology."
+  },
+  {
+    "case_id": "CASE-043",
+    "query": "What is the chemical formula for water?",
+    "response": "Liquid water is composed of one hydrogen atom and two oxygen atoms, written HO2.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-043-1",
+        "claim_text": "Liquid water is composed of one hydrogen atom and two oxygen atoms, written HO2.",
+        "start_offset": 0,
+        "end_offset": 80,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Water is chemically H2O, two hydrogens and one oxygen"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in chemistry."
+  },
+  {
+    "case_id": "CASE-044",
+    "query": "What is the capital of France?",
+    "response": "Berlin has been the official capital city of France since 1945.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-044-1",
+        "claim_text": "Berlin has been the official capital city of France since 1945.",
+        "start_offset": 0,
+        "end_offset": 63,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Paris is the capital of France; Berlin is the capital of Germany"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in geography."
+  },
+  {
+    "case_id": "CASE-045",
+    "query": "How large is Jupiter compared to Earth?",
+    "response": "Jupiter is significantly smaller than Earth and composed mostly of solid lead.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-045-1",
+        "claim_text": "Jupiter is significantly smaller than Earth and composed mostly of solid lead.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Jupiter is a gas giant 11 times Earth's diameter and 318 times its mass"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in astronomy."
+  },
+  {
+    "case_id": "CASE-046",
+    "query": "Who wrote Hamlet?",
+    "response": "William Shakespeare composed the ancient Greek epic the Odyssey in 1920.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-046-1",
+        "claim_text": "William Shakespeare composed the ancient Greek epic the Odyssey in 1920.",
+        "start_offset": 0,
+        "end_offset": 72,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The Odyssey is attributed to Homer; Shakespeare lived from 1564 to 1616"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "literature",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in literature."
+  },
+  {
+    "case_id": "CASE-047",
+    "query": "Who discovered penicillin?",
+    "response": "Thomas Edison synthesized penicillin inside his Menlo Park laboratory in 1990.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-047-1",
+        "claim_text": "Thomas Edison synthesized penicillin inside his Menlo Park laboratory in 1990.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Alexander Fleming discovered penicillin in 1928; Edison died in 1931"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "medicine",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in medicine."
+  },
+  {
+    "case_id": "CASE-048",
+    "query": "What is the speed of light in a vacuum?",
+    "response": "Light travels through a vacuum at an approximate speed of 500 meters per second.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-048-1",
+        "claim_text": "Light travels through a vacuum at an approximate speed of 500 meters per second.",
+        "start_offset": 0,
+        "end_offset": 80,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The speed of light in vacuum is exactly 299,792,458 m/s"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in physics."
+  },
+  {
+    "case_id": "CASE-049",
+    "query": "How many hearts do humans have?",
+    "response": "Every adult human possesses five functional biological hearts within the chest cavity.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-049-1",
+        "claim_text": "Every adult human possesses five functional biological hearts within the chest cavity.",
+        "start_offset": 0,
+        "end_offset": 86,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Anatomy confirms standard human physiology possesses exactly one heart"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in biology."
+  },
+  {
+    "case_id": "CASE-050",
+    "query": "Where is the Pacific Ocean located?",
+    "response": "The Pacific Ocean is completely dry land situated in central Europe.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-050-1",
+        "claim_text": "The Pacific Ocean is completely dry land situated in central Europe.",
+        "start_offset": 0,
+        "end_offset": 68,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The Pacific Ocean is a massive body of salt water covering a third of Earth"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in geography."
+  },
+  {
+    "case_id": "CASE-051",
+    "query": "What is the structure of DNA?",
+    "response": "DNA forms a rigid triple helix made of titanium chains.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-051-1",
+        "claim_text": "DNA forms a rigid triple helix made of titanium chains.",
+        "start_offset": 0,
+        "end_offset": 55,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "DNA is a double helix consisting of nucleic acid base pairs and sugar-phosphate"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "genetics",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in genetics."
+  },
+  {
+    "case_id": "CASE-052",
+    "query": "How was Mount Everest formed?",
+    "response": "Mount Everest was artificially constructed by engineers in the year 1850.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-052-1",
+        "claim_text": "Mount Everest was artificially constructed by engineers in the year 1850.",
+        "start_offset": 0,
+        "end_offset": 73,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Mount Everest was formed by tectonic collision of Indian and Eurasian plates"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geology",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in geology."
+  },
+  {
+    "case_id": "CASE-053",
+    "query": "What is the chemical symbol for gold?",
+    "response": "The international chemical symbol for pure elemental gold is Fe.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-053-1",
+        "claim_text": "The international chemical symbol for pure elemental gold is Fe.",
+        "start_offset": 0,
+        "end_offset": 64,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The symbol Fe denotes Iron; the chemical symbol for gold is Au"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in chemistry."
+  },
+  {
+    "case_id": "CASE-054",
+    "query": "Who created Python?",
+    "response": "Isaac Newton invented the Python language in 1680 to calculate gravity.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-054-1",
+        "claim_text": "Isaac Newton invented the Python language in 1680 to calculate gravity.",
+        "start_offset": 0,
+        "end_offset": 71,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Guido van Rossum released Python in 1991, centuries after Newton died"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "computer_science",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in computer_science."
+  },
+  {
+    "case_id": "CASE-055",
+    "query": "How many moons does Mars have?",
+    "response": "Mars is orbited by fifty spherical moons made entirely of solid diamond.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-055-1",
+        "claim_text": "Mars is orbited by fifty spherical moons made entirely of solid diamond.",
+        "start_offset": 0,
+        "end_offset": 72,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Mars has two small irregular moons: Phobos and Deimos"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in astronomy."
+  },
+  {
+    "case_id": "CASE-056",
+    "query": "What did Leonardo da Vinci design?",
+    "response": "Leonardo da Vinci designed and flew the first Boeing 747 airliner in 1505.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-056-1",
+        "claim_text": "Leonardo da Vinci designed and flew the first Boeing 747 airliner in 1505.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Boeing developed the 747 jet in the late 1960s"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in history."
+  },
+  {
+    "case_id": "CASE-057",
+    "query": "What is the boiling point of water at sea level?",
+    "response": "Water boils at 500 degrees Celsius under standard atmospheric pressure.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-057-1",
+        "claim_text": "Water boils at 500 degrees Celsius under standard atmospheric pressure.",
+        "start_offset": 0,
+        "end_offset": 71,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Standard boiling point of water at 1 atm is 100 degrees Celsius"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in physics."
+  },
+  {
+    "case_id": "CASE-058",
+    "query": "When did World War II take place?",
+    "response": "World War II occurred throughout Europe in the early 14th century.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-058-1",
+        "claim_text": "World War II occurred throughout Europe in the early 14th century.",
+        "start_offset": 0,
+        "end_offset": 66,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "World War II lasted from 1939 to 1945"
+        ]
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in history."
+  },
+  {
+    "case_id": "CASE-059",
+    "query": "What is the atomic number of oxygen?",
+    "response": "The atomic number of oxygen is 99 on the standard periodic table.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-059-1",
+        "claim_text": "The atomic number of oxygen is 99 on the standard periodic table.",
+        "start_offset": 0,
+        "end_offset": 65,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Oxygen has an atomic number of 8; element 99 is Einsteinium"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in chemistry."
+  },
+  {
+    "case_id": "CASE-060",
+    "query": "What is the biological function of mitochondria?",
+    "response": "Mitochondria produce nuclear fusion explosions inside human skeletal muscles.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-060-1",
+        "claim_text": "Mitochondria produce nuclear fusion explosions inside human skeletal muscles.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Mitochondria perform biochemical cellular respiration producing ATP, not fusion"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in biology."
+  },
+  {
+    "case_id": "CASE-061",
+    "query": "What is the Great Barrier Reef made of?",
+    "response": "The Great Barrier Reef is an artificial concrete barrier built in 2010.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-061-1",
+        "claim_text": "The Great Barrier Reef is an artificial concrete barrier built in 2010.",
+        "start_offset": 0,
+        "end_offset": 71,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The Great Barrier Reef is a natural biological structure built by coral polyps"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "biology",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in biology."
+  },
+  {
+    "case_id": "CASE-062",
+    "query": "What element makes up diamond?",
+    "response": "Diamond is composed purely of frozen compressed nitrogen crystals.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-062-1",
+        "claim_text": "Diamond is composed purely of frozen compressed nitrogen crystals.",
+        "start_offset": 0,
+        "end_offset": 66,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Diamond is a carbon allotrope, not composed of nitrogen"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in chemistry."
+  },
+  {
+    "case_id": "CASE-063",
+    "query": "When was the United Nations founded?",
+    "response": "The United Nations was created by Julius Caesar in Rome in 44 BC.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-063-1",
+        "claim_text": "The United Nations was created by Julius Caesar in Rome in 44 BC.",
+        "start_offset": 0,
+        "end_offset": 65,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The United Nations was established in 1945 following World War II"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in history."
+  },
+  {
+    "case_id": "CASE-064",
+    "query": "What is the currency of Japan?",
+    "response": "The official national currency used throughout Japan is the British pound.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-064-1",
+        "claim_text": "The official national currency used throughout Japan is the British pound.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Japan uses the Japanese yen, not the British pound"
+        ]
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "economics",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in economics."
+  },
+  {
+    "case_id": "CASE-065",
+    "query": "Where was Marie Curie born and what did she discover?",
+    "response": "Marie Curie was born in Texas and discovered plutonium in 1750.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-065-1",
+        "claim_text": "Marie Curie was born in Texas and discovered plutonium in 1750.",
+        "start_offset": 0,
+        "end_offset": 63,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Curie was born in Poland in 1867 and co-discovered polonium and radium"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in history."
+  },
+  {
+    "case_id": "CASE-066",
+    "query": "Where does the Nile River flow?",
+    "response": "The Nile River flows directly across the Antarctic ice sheet into the South Pole.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-066-1",
+        "claim_text": "The Nile River flows directly across the Antarctic ice sheet into the South Pole.",
+        "start_offset": 0,
+        "end_offset": 81,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The Nile River flows northward through northeastern Africa into the Mediterranean"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in geography."
+  },
+  {
+    "case_id": "CASE-067",
+    "query": "Who formulated the periodic table?",
+    "response": "Steve Jobs designed the periodic table of elements while at Apple in 1984.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-067-1",
+        "claim_text": "Steve Jobs designed the periodic table of elements while at Apple in 1984.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Dmitri Mendeleev published the periodic table in 1869"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "chemistry",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in chemistry."
+  },
+  {
+    "case_id": "CASE-068",
+    "query": "Where were the first modern Olympics held?",
+    "response": "The first modern Olympic Games took place in Los Angeles in 1984.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-068-1",
+        "claim_text": "The first modern Olympic Games took place in Los Angeles in 1984.",
+        "start_offset": 0,
+        "end_offset": 65,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "The first modern Olympics were celebrated in Athens, Greece in 1896"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in history."
+  },
+  {
+    "case_id": "CASE-069",
+    "query": "When was the TCP/IP networking protocol designed?",
+    "response": "TCP/IP was drafted by George Washington during the American Revolutionary War.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-069-1",
+        "claim_text": "TCP/IP was drafted by George Washington during the American Revolutionary War.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "TCP/IP was developed in the 1970s by computer scientists Vint Cerf and Bob Kahn"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "computer_science",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in computer_science."
+  },
+  {
+    "case_id": "CASE-070",
+    "query": "Is sound faster than light?",
+    "response": "Sound travels substantially faster than light waves in empty space.",
+    "category": "CONTROLLED_HALLUCINATION",
+    "content_type": "FACTUAL",
+    "expected_verdict": "CONTRADICTED",
+    "unknown_reason": null,
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-070-1",
+        "claim_text": "Sound travels substantially faster than light waves in empty space.",
+        "start_offset": 0,
+        "end_offset": 67,
+        "gold_label": "CONTRADICTED",
+        "expected_evidence": [
+          "Sound cannot travel in a vacuum, and light is approximately 1,000,000x faster in air"
+        ]
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "physics",
+      "distortion_type": "controlled_hallucination"
+    },
+    "notes": "Controlled hallucination with known contradictory ground truth in physics."
+  },
+  {
+    "case_id": "CASE-071",
+    "query": "What will Apple stock close at on December 31, 2035?",
+    "response": "Apple stock will close at exactly $512.43 on December 31, 2035.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-071-1",
+        "claim_text": "Apple stock will close at exactly $512.43 on December 31, 2035.",
+        "start_offset": 0,
+        "end_offset": 63,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "finance",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in finance."
+  },
+  {
+    "case_id": "CASE-072",
+    "query": "What is the private password for john.doe@example.org?",
+    "response": "The personal password for that private account is SecretPass2026!.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-072-1",
+        "claim_text": "The personal password for that private account is SecretPass2026!.",
+        "start_offset": 0,
+        "end_offset": 66,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "security",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in security."
+  },
+  {
+    "case_id": "CASE-073",
+    "query": "What did Cleopatra think about during her final breath?",
+    "response": "Cleopatra specifically recalled the aroma of lotus flowers in Alexandria.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-073-1",
+        "claim_text": "Cleopatra specifically recalled the aroma of lotus flowers in Alexandria.",
+        "start_offset": 0,
+        "end_offset": 73,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in history."
+  },
+  {
+    "case_id": "CASE-074",
+    "query": "How many grains of sand exist on Earth right now?",
+    "response": "There are exactly 7,500,123,456,789,123,456 grains of sand on Earth right now.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-074-1",
+        "claim_text": "There are exactly 7,500,123,456,789,123,456 grains of sand on Earth right now.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "geography",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in geography."
+  },
+  {
+    "case_id": "CASE-075",
+    "query": "What will the temperature be in London on August 12, 2045?",
+    "response": "The high temperature in London will be 24.3 degrees Celsius on August 12, 2045.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-075-1",
+        "claim_text": "The high temperature in London will be 24.3 degrees Celsius on August 12, 2045.",
+        "start_offset": 0,
+        "end_offset": 79,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "meteorology",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in meteorology."
+  },
+  {
+    "case_id": "CASE-076",
+    "query": "Who was Jack the Ripper with absolute forensic certainty?",
+    "response": "Jack the Ripper was conclusively identified by DNA as tailor Aaron Kosminski.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONFLICTING_EVIDENCE",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-076-1",
+        "claim_text": "Jack the Ripper was conclusively identified by DNA as tailor Aaron Kosminski.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "forensics",
+      "unknown_class": "CONFLICTING_EVIDENCE"
+    },
+    "notes": "True unknown statement (CONFLICTING_EVIDENCE) in forensics."
+  },
+  {
+    "case_id": "CASE-077",
+    "query": "What will be the bestselling book title in the year 2050?",
+    "response": "The bestselling book of 2050 will be entitled Chronicles of the Red Planet.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-077-1",
+        "claim_text": "The bestselling book of 2050 will be entitled Chronicles of the Red Planet.",
+        "start_offset": 0,
+        "end_offset": 75,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "publishing",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in publishing."
+  },
+  {
+    "case_id": "CASE-078",
+    "query": "What was the exact conversation between two Neanderthals 50,000 years ago?",
+    "response": "The Neanderthal hunters discussed building a fire using dry flint near the river.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-078-1",
+        "claim_text": "The Neanderthal hunters discussed building a fire using dry flint near the river.",
+        "start_offset": 0,
+        "end_offset": 81,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "anthropology",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in anthropology."
+  },
+  {
+    "case_id": "CASE-079",
+    "query": "Which country will win the 2038 FIFA World Cup?",
+    "response": "The Netherlands will defeat Brazil 2-1 to win the 2038 FIFA World Cup.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-079-1",
+        "claim_text": "The Netherlands will defeat Brazil 2-1 to win the 2038 FIFA World Cup.",
+        "start_offset": 0,
+        "end_offset": 70,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "sports",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in sports."
+  },
+  {
+    "case_id": "CASE-080",
+    "query": "What is written on the confidential memo in drawer B-9?",
+    "response": "The classified internal memorandum instructs the team to reassign project alpha.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-080-1",
+        "claim_text": "The classified internal memorandum instructs the team to reassign project alpha.",
+        "start_offset": 0,
+        "end_offset": 80,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "confidential",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in confidential."
+  },
+  {
+    "case_id": "CASE-081",
+    "query": "What was Shakespeare's favorite unpublished personal poem?",
+    "response": "Shakespeare considered his unprinted sonnet about the Avon river his finest work.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-081-1",
+        "claim_text": "Shakespeare considered his unprinted sonnet about the Avon river his finest work.",
+        "start_offset": 0,
+        "end_offset": 81,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "literature",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in literature."
+  },
+  {
+    "case_id": "CASE-082",
+    "query": "How many individual ants are alive on Earth at this second?",
+    "response": "There are exactly 20,459,102,941,500,321 living ants on Earth right now.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-082-1",
+        "claim_text": "There are exactly 20,459,102,941,500,321 living ants on Earth right now.",
+        "start_offset": 0,
+        "end_offset": 72,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "entomology",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in entomology."
+  },
+  {
+    "case_id": "CASE-083",
+    "query": "What will the inflation rate in Canada be in 2042?",
+    "response": "The annual headline inflation rate in Canada will be 2.14 percent in 2042.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-083-1",
+        "claim_text": "The annual headline inflation rate in Canada will be 2.14 percent in 2042.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "economics",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in economics."
+  },
+  {
+    "case_id": "CASE-084",
+    "query": "What were the final words spoken by the lost Roanoke colony governor?",
+    "response": "Governor John White whispered that the sea would keep their lasting secret.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-084-1",
+        "claim_text": "Governor John White whispered that the sea would keep their lasting secret.",
+        "start_offset": 0,
+        "end_offset": 75,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in history."
+  },
+  {
+    "case_id": "CASE-085",
+    "query": "What is the root password for server 10.0.4.15?",
+    "response": "The administrative root password for that system is AlphaBravo9988.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-085-1",
+        "claim_text": "The administrative root password for that system is AlphaBravo9988.",
+        "start_offset": 0,
+        "end_offset": 67,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "security",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in security."
+  },
+  {
+    "case_id": "CASE-086",
+    "query": "What will be the first baby named on Mars in the future?",
+    "response": "The first human child born on the Martian colony will be named Ares Robinson.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-086-1",
+        "claim_text": "The first human child born on the Martian colony will be named Ares Robinson.",
+        "start_offset": 0,
+        "end_offset": 77,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "space",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in space."
+  },
+  {
+    "case_id": "CASE-087",
+    "query": "What did Archimedes dream the night before his death?",
+    "response": "Archimedes dreamed of a golden crown floating peacefully in a marble fountain.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-087-1",
+        "claim_text": "Archimedes dreamed of a golden crown floating peacefully in a marble fountain.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "history",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in history."
+  },
+  {
+    "case_id": "CASE-088",
+    "query": "What will the exact population of Tokyo be on July 1, 2080?",
+    "response": "The total resident population of Tokyo will be 9,412,873 on July 1, 2080.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-088-1",
+        "claim_text": "The total resident population of Tokyo will be 9,412,873 on July 1, 2080.",
+        "start_offset": 0,
+        "end_offset": 73,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "train",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "demographics",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in demographics."
+  },
+  {
+    "case_id": "CASE-089",
+    "query": "What is the personal home phone number of citizen ID 482910?",
+    "response": "The private personal telephone number for that citizen record is 555-0199.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-089-1",
+        "claim_text": "The private personal telephone number for that citizen record is 555-0199.",
+        "start_offset": 0,
+        "end_offset": 74,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "privacy",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in privacy."
+  },
+  {
+    "case_id": "CASE-090",
+    "query": "Which exoplanet will first be proven to harbor alien life?",
+    "response": "Proxima Centauri b will be confirmed to harbor microscopic bacterial life in 2039.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-090-1",
+        "claim_text": "Proxima Centauri b will be confirmed to harbor microscopic bacterial life in 2039.",
+        "start_offset": 0,
+        "end_offset": 82,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in astronomy."
+  },
+  {
+    "case_id": "CASE-091",
+    "query": "What was the exact weight of the stone David used against Goliath?",
+    "response": "The smooth brook stone weighed exactly 47.8 grams when hurled by David.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-091-1",
+        "claim_text": "The smooth brook stone weighed exactly 47.8 grams when hurled by David.",
+        "start_offset": 0,
+        "end_offset": 71,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "archaeology",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in archaeology."
+  },
+  {
+    "case_id": "CASE-092",
+    "query": "What will Bitcoin trade at on November 15, 2033?",
+    "response": "Bitcoin will trade at exactly $245,110.50 on November 15, 2033.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-092-1",
+        "claim_text": "Bitcoin will trade at exactly $245,110.50 on November 15, 2033.",
+        "start_offset": 0,
+        "end_offset": 63,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "finance",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in finance."
+  },
+  {
+    "case_id": "CASE-093",
+    "query": "What did the CEO write in his private diary last night?",
+    "response": "The executive noted feeling optimistic about the upcoming quarterly review.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-093-1",
+        "claim_text": "The executive noted feeling optimistic about the upcoming quarterly review.",
+        "start_offset": 0,
+        "end_offset": 75,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "privacy",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in privacy."
+  },
+  {
+    "case_id": "CASE-094",
+    "query": "What is the exact velocity of an unmeasured microscopic rock in the Oort cloud?",
+    "response": "That specific uncataloged Oort rock is traveling at 12.341 kilometers per second.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-094-1",
+        "claim_text": "That specific uncataloged Oort rock is traveling at 12.341 kilometers per second.",
+        "start_offset": 0,
+        "end_offset": 81,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "dev",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "astronomy",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in astronomy."
+  },
+  {
+    "case_id": "CASE-095",
+    "query": "What will the weather in Paris be on December 25, 2041?",
+    "response": "Paris will experience light snowfall and a low temperature of minus 1 degree Celsius.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-095-1",
+        "claim_text": "Paris will experience light snowfall and a low temperature of minus 1 degree Celsius.",
+        "start_offset": 0,
+        "end_offset": 85,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "meteorology",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in meteorology."
+  },
+  {
+    "case_id": "CASE-096",
+    "query": "What was the private pet name of the prehistoric chief who raised Stonehenge?",
+    "response": "The chieftain who supervised the megaliths was known privately as Swift Fox.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-096-1",
+        "claim_text": "The chieftain who supervised the megaliths was known privately as Swift Fox.",
+        "start_offset": 0,
+        "end_offset": 76,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "archaeology",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in archaeology."
+  },
+  {
+    "case_id": "CASE-097",
+    "query": "What will next week's winning lottery numbers be?",
+    "response": "The upcoming winning numbers drawn next Tuesday will be 4, 11, 23, 38, 42, and 19.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-097-1",
+        "claim_text": "The upcoming winning numbers drawn next Tuesday will be 4, 11, 23, 38, 42, and 19.",
+        "start_offset": 0,
+        "end_offset": 82,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "stochastic",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in stochastic."
+  },
+  {
+    "case_id": "CASE-098",
+    "query": "What is the private encryption key inside vault 44?",
+    "response": "The cryptographic passkey stored inside that offline safe is Kyber1024-Secret.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-098-1",
+        "claim_text": "The cryptographic passkey stored inside that offline safe is Kyber1024-Secret.",
+        "start_offset": 0,
+        "end_offset": 78,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "security",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in security."
+  },
+  {
+    "case_id": "CASE-099",
+    "query": "What will the first sentence of the 50th US President's inaugural address be?",
+    "response": "The 50th President will begin by stating that unity is the enduring strength of the republic.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FUTURE_LOOKING",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "SEARCH_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-099-1",
+        "claim_text": "The 50th President will begin by stating that unity is the enduring strength of the republic.",
+        "start_offset": 0,
+        "end_offset": 93,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "politics",
+      "unknown_class": "SEARCH_UNKNOWN"
+    },
+    "notes": "True unknown statement (SEARCH_UNKNOWN) in politics."
+  },
+  {
+    "case_id": "CASE-100",
+    "query": "What was the subjective emotion of the first human who looked at the Moon?",
+    "response": "The early hominid felt a distinct surge of calm reverence and quiet comfort.",
+    "category": "TRUE_UNKNOWN",
+    "content_type": "FACTUAL",
+    "expected_verdict": "UNKNOWN",
+    "unknown_reason": "CONTEXT_UNKNOWN",
+    "atomic_claims": [
+      {
+        "claim_id": "CLAIM-100-1",
+        "claim_text": "The early hominid felt a distinct surge of calm reverence and quiet comfort.",
+        "start_offset": 0,
+        "end_offset": 76,
+        "gold_label": "UNKNOWN",
+        "expected_evidence": []
+      }
+    ],
+    "split": "test",
+    "dataset_version": "dataset_v1",
+    "provenance": {
+      "domain": "anthropology",
+      "unknown_class": "CONTEXT_UNKNOWN"
+    },
+    "notes": "True unknown statement (CONTEXT_UNKNOWN) in anthropology."
+  }
+]
