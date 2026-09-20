@@ -34,13 +34,13 @@
 | 19 | `c85ff39` | `Final` | `docs: record Phase 3 verification engine completion in governance registers` | Phase 3 | VERIFIED & PUSHED |
 | 20 | `fbe10f0` | `Final` | `fix(backend): close Phase 3 validation and classification gaps` | Phase 3 (Cleanup) | VERIFIED & PUSHED |
 | 21 | `d529c5b` | `Final` | `docs: record Phase 3 cleanup commit SHA in ledger (fbe10f0)` | Phase 3 (Cleanup) | VERIFIED & PUSHED |
-| 22 | Pending | `Final` | `docs: formally accept sparse-index numeric-collision as dev-only constraint` | Phase 3 (Governance) | VERIFIED (Pending Push) |
+| 22 | `7c8e477` | `Final` | `docs: formally accept sparse-index numeric-collision as dev-only constraint` | Phase 3 (Governance) | VERIFIED & PUSHED |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 22 (21 pushed + 1 pending)
+- **Total Commits Recorded:** 22 (22 pushed)
 - **Target Ceiling:** 500
 - **Remaining Commit Budget:** 478
 
