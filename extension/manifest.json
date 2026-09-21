@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "VerifAI — AI Hallucination & Fact Checker",
+  "version": "1.0.0",
+  "description": "Independently verify AI-generated text from ChatGPT, Claude, Gemini, and web pages using VerifAI verification engine.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Verify with VerifAI"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

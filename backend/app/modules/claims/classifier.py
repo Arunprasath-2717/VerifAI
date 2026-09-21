@@ -24,23 +24,30 @@ class ContentClassifier:
 
     # Lexical markers for opinion and subjective viewpoint
     OPINION_MARKERS = re.compile(
-        r"\b(?:i\s+think|i\s+feel|i\s+believe|in\s+my\s+view|in\s+my\s+opinion|"
+        r"\b(?:i\s+(?:personally\s+)?(?:think|feel|believe|prefer|consider)|"
+        r"in\s+my\s+view|in\s+my\s+opinion|in\s+our\s+opinion|in\s+my\s+viewpoint|"
         r"best|worst|greatest|terrible|wonderful|superior|inferior|should|ought|"
-        r"tastiest|underrated|overrated|beautiful|ugly)\b",
+        r"tastiest|underrated|overrated|beautiful|ugly|breathtaking|uninspiring|"
+        r"unjustified|pretentious|calming|rejuvenating|enjoyable|mediocre|unnatural|"
+        r"the\s+most\s+(?:pleasant|relaxing|sophisticated|expressive|impressive)|"
+        r"finest|serene|charming|cozy|welcoming|delightful)\b",
         re.IGNORECASE,
     )
 
     # Lexical markers for predictions and future-looking assertions
     PREDICTION_MARKERS = re.compile(
-        r"\b(?:will\s+(?:be|occur|happen|increase|decrease|reach|drop|exceed)|"
-        r"predicted\s+to|forecasted\s+to|projected\s+to|by\s+20[3-9]\d|in\s+20[3-9]\d|"
+        r"\b(?:will\s+(?:be|occur|happen|increase|decrease|reach|drop|exceed|"
+        r"solve|rise|replace|dominate|achieve|eradicate|handle|experience|"
+        r"detect|revolutionize|make)|"
+        r"expected\s+to|predicted\s+to|forecasted\s+to|projected\s+to|"
+        r"by\s+20[3-9]\d|in\s+20[3-9]\d|"
         r"in\s+the\s+future|next\s+(?:decade|century|year|month))\b",
         re.IGNORECASE,
     )
 
     # Lexical markers for hypothetical and scenario conditional statements
     HYPOTHETICAL_MARKERS = re.compile(
-        r"\b(?:if|suppose|supposing|assuming\s+that|were\s+to|what\s+if|"
+        r"\b(?:if|imagine|suppose|supposing|assuming\s+that|were\s+to|what\s+if|"
         r"hypothetically|in\s+the\s+event\s+that|would\s+have\s+been)\b",
         re.IGNORECASE,
     )
@@ -75,7 +82,8 @@ class ContentClassifier:
         r"explain|describe|summarize|summarise|outline|"
         r"list|enumerate|show|tell|give|provide|find|"
         r"help\s+me|translate|convert|calculate|compute|"
-        r"draw|make|build|design|develop"
+        r"draw|make|build|design|develop|"
+        r"format|implement|review|set\s+up"
         r")\b",
         re.IGNORECASE,
     )
