@@ -40,7 +40,7 @@
 | 25 | `a4a9c65` | `Final` | `feat(backend): implement Phase 4 payload ingestion API and Chrome extension` | Phase 4 | VERIFIED |
 | 26 | `8120c35` | `Final` | `test(backend): expand test suite to 1,020 hermetic scenarios across SSRF, taxonomy, and pipeline reliability` | Phase 4 | VERIFIED |
 | 27 | `341f710` | `Final` | `docs: record Phase 4 implementation, ADR-010, and governance updates` | Phase 4 | VERIFIED |
-| 28 | Pending | `Final` | `docs: record final Phase 4 commit SHAs in commit ledger` | Phase 4 | VERIFIED |
+| 28 | `31f7b63` | `Final` | `docs: record final Phase 4 commit SHAs in commit ledger` | Phase 4 | VERIFIED |
 
 ---
 
