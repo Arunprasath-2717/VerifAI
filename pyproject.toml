@@ -40,8 +40,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Data generator has intentionally long string literals for benchmark case text.
+# Data generator and test suites have intentionally long string literals for benchmark/test cases.
 "scripts/generate_benchmark_dataset.py" = ["E501"]
+"backend/tests/*" = ["E501"]
+"benchmark/tests/*" = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
