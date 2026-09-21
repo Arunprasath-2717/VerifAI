@@ -40,14 +40,15 @@
 | 25 | `a4a9c65` | `Final` | `feat(backend): implement Phase 4 payload ingestion API and Chrome extension` | Phase 4 | VERIFIED |
 | 26 | `8120c35` | `Final` | `test(backend): expand test suite to 1,020 hermetic scenarios across SSRF, taxonomy, and pipeline reliability` | Phase 4 | VERIFIED |
 | 27 | `341f710` | `Final` | `docs: record Phase 4 implementation, ADR-010, and governance updates` | Phase 4 | VERIFIED |
-| 28 | `31f7b63` | `Final` | `docs: record final Phase 4 commit SHAs in commit ledger` | Phase 4 | VERIFIED |
+| 28 | `31f7b63` | `Final` | `docs: record final Phase 4 commit SHAs in commit ledger` | Phase 4 | VERIFIED & PUSHED |
+| 29 | `5ecf626` | `Final` | `fix(backend): resolve all Phase 4 PRD v1.1 compliance defects — 1,054 tests pass` | Phase 4 (Remediation) | VERIFIED & PUSHED |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 28 (24 pushed, 4 local)
+- **Total Commits Recorded:** 29 (29 pushed, 0 local)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 472
+- **Remaining Commit Budget:** 471
 
 
