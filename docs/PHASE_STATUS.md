@@ -2,57 +2,44 @@
 
 ## Current Phase
 
-**Active Phase:** Phase 3 — Backend Core & Verification Engine (APPROVED & SIGNED OFF)  
-**Status:** **APPROVED & SIGNED OFF BY ARUN**  
+**Active Phase:** Phase 4 — Ingestion & Browser Extension  
+**Status:** **IMPLEMENTATION COMPLETE — AWAITING ARUN'S FORMAL REVIEW & SIGN-OFF**  
 **Authorized Reviewer:** Arun (Single Source of Verification Truth)  
-**Sign-Off Date:** 2026-09-20  
-**Next Step:** Phase 4 Initialization (Ingestion & Browser Extension)
+**Implementation Completion Date:** 2026-09-21  
+**Next Step:** Arun's formal human review and sign-off in `docs/SIGN_OFF_REGISTER.md`
 
 ---
 
-## The Five Mandatory Completion Criteria Audit (Phase 3)
+## The Five Mandatory Completion Criteria Audit (Phase 4)
 
 | Mandatory Criterion | Verification Summary | Status |
 |---|---|---|
-| **Criterion 1: Specification Compliance** | Atomic claim extraction with character offset invariance (`text[start:end] == claim`), 6-way content classification, evidence retrieval with SSRF prevention, multi-judge evaluation with conservative disagreement handling, document trust scoring, and auditable response schema implemented. | **VERIFIED** |
-| **Criterion 2: Hermetic Test Coverage** | 111 unit and integration tests in `backend/tests/` (92 core + 19 new instruction-classifier regression tests) and 61 benchmark tests in `benchmark/tests/` (172 tests total). Hermetic, zero external network coupling, runs in <0.6s. | **VERIFIED — 172/172 PASS** |
-| **Criterion 3: Negative Control Audit** | Negative controls confirmed: SSRF rejection of loopback/private/metadata IPs; uncalibrated confidence reported as None with status NOT_CALIBRATED; numeric mismatch flags CONTRADICTED; empty/whitespace text rejected with 422; non-existent UUID returns 404. | **VERIFIED** |
-| **Criterion 4: Documentation & Contract Integrity** | OpenAPI specification updated with `/api/v1/verification` and `/api/v1/verification/{id}`; `PHASE_STATUS.md`, `IMPLEMENTATION_ROADMAP.md`, `SIGN_OFF_REGISTER.md`, `COMMIT_LEDGER.md` synchronized. | **VERIFIED** |
-| **Criterion 5: Formal Human Sign-Off** | All code, automated tests, CLI demonstrations, and linters verified; formally approved and signed off by Arun on 2026-09-20 in `docs/SIGN_OFF_REGISTER.md`. | **APPROVED BY ARUN** |
+| **Criterion 1: Specification Compliance** | Ingestion endpoints (`POST /api/v1/ingest`, `GET /api/v1/ingest/{id}`) implemented with SSRF URL validation, Pydantic v2 schemas (`extra="forbid"`), SQLAlchemy `IngestedPayload` model, and optional immediate verification trigger. Manifest V3 Chrome Extension implemented with DOM auto-detection (ChatGPT, Claude, Gemini, DeepSeek), text selection, context menu, glassmorphism popup UI, and REST API integration. | **VERIFIED** |
+| **Criterion 2: Hermetic Test Coverage** | 1,020 automated tests passing hermetically in <1.7s without network coupling (959 backend tests + 61 benchmark tests). Surpasses the 1,000+ executed scenarios target across ingestion API, SSRF matrix (250), claim taxonomy matrix (175), pipeline reliability matrix (120), and API boundary matrix (292). | **VERIFIED — 1,020/1,020 PASS** |
+| **Criterion 3: Negative Control Audit** | Negative controls verified across all surfaces: 250 SSRF edge cases (loopback, link-local, private ranges, cloud metadata, authority checks) blocked; HTTP 422 returned on empty/whitespace text, oversized payloads (>20k chars), non-HTTP schemes, unrecognized enum sources, and forbidden injected fields; HTTP 404 on non-existent UUIDs; HTTP 405 on invalid HTTP methods. | **VERIFIED** |
+| **Criterion 4: Documentation & Contract Integrity** | Architecture Decision Record ADR-010 established; `IMPLEMENTATION_ROADMAP.md`, `PHASE_STATUS.md`, `SIGN_OFF_REGISTER.md`, `COMMIT_LEDGER.md`, and `README.md` synchronized; extension documentation with full installation steps provided in `extension/README.md`. | **VERIFIED** |
+| **Criterion 5: Formal Human Sign-Off** | All code, automated tests, linters, and type checkers clean; Phase 4 implementation is complete and awaiting Arun's formal human review and sign-off. | **AWAITING ARUN'S SIGN-OFF** |
 
 ---
 
-## Phase 3 Deliverables & Verification Checklist
+## Phase 4 Deliverables & Verification Checklist
 
 | Component | Implementation Details | Verification Status |
 |---|---|---|
-| `backend/app/models/verification.py` | SQLAlchemy 2.x models: `VerificationJob`, `ExtractedClaim`, `RetrievedEvidence`, `JudgeVerdict`, `AuditRecord` with cascade deletes and indexes | **VERIFIED** |
-| `backend/app/schemas/verification.py` | Strongly typed Pydantic v2 schemas for verification creation, options, claims, evidence, evaluations, audit records, and responses | **VERIFIED** |
-| `backend/app/modules/claims/extractor.py` | `DeterministicClaimExtractor` preserving exact slice offsets and asserting `text[start:end] == claim_text` | **VERIFIED** |
-| `backend/app/modules/claims/classifier.py` | `ContentClassifier` taxonomy: FACTUAL, OPINION (VIEWPOINT), PREDICTION (FUTURE_LOOKING), HYPOTHETICAL (SCENARIO), CREATIVE, INSTRUCTION. Expanded `INSTRUCTION_MARKERS` covers natural-language imperative verbs and `HOW_TO_MARKERS` covers interrogative how-to forms. | **VERIFIED** |
-| `backend/app/modules/evidence/local_retriever.py` | Deterministic in-memory retriever (DEVELOPMENT ONLY). Docstring updated with prominent production-limitation notice: sparse index, lexical scoring, `LOCAL_PASSAGE_INDEX` label, not to be presented as live evidence. | **VERIFIED** |
-| `backend/app/modules/evidence/security.py` | SSRF prevention blocking 18 IP ranges + metadata endpoints; domain authority scoring | **VERIFIED** |
-| `backend/app/modules/evidence/web_retriever.py` | `SafeWebRetriever` using Wikipedia public REST search API with timeouts and graceful degradation | **VERIFIED** |
-| `backend/app/modules/judging/deterministic_judge.py` | `DeterministicRuleJudge` with entity matching, numeric conflict detection, and polar negation checking | **VERIFIED** |
-| `backend/app/modules/judging/semantic_judge.py` | `SecondarySemanticJudge` with directional proposition containment and numeric validation | **VERIFIED** |
-| `backend/app/modules/judging/model_judge.py` | `OpenSourceModelJudge` adapter with honest UNAVAILABLE reporting when offline | **VERIFIED** |
-| `backend/app/modules/judging/disagreement.py` | `DisagreementEngine` arbitrating dual judgments with conservative contradiction safety priority | **VERIFIED** |
-| `backend/app/modules/judging/decision.py` | `DecisionEngine` calculating document-level trust score and generating human-readable summary | **VERIFIED** |
-| `backend/app/modules/verification/orchestrator.py` | Asynchronous `VerificationOrchestrator` coordinating validation, extraction, classification, retrieval, judging, disagreement, decision, audit logging, and database persistence | **VERIFIED** |
-| `backend/app/api/v1/endpoints/verification.py` | REST API endpoints: `POST /api/v1/verification` and `GET /api/v1/verification/{id}` with optional DB fallback | **VERIFIED** |
-| `scripts/verify.py` | Production CLI tool with terminal formatted report and raw `--json` output modes | **VERIFIED** |
-| `backend/tests/` | 111 total tests: all prior tests plus 19 new instruction-classifier regression tests covering natural-language imperatives, interrogative how-to forms, and negative factual controls | **VERIFIED — 111/111 PASS** |
-| `backend/tests/conftest.py` | Generator return types added to `app` and `client` fixtures; `app` fixture parameter annotated as `FastAPI` | **VERIFIED — MyPy CLEAN** |
-| `backend/tests/test_judging_disagreement.py` | `assert is not None` guards added before `.lower()` and `in` accesses on `str \| None` fields | **VERIFIED — MyPy CLEAN** |
-| `backend/tests/test_verification_models.py` | `assert is not None` guard added before indexing `evaluation_metadata` dict | **VERIFIED — MyPy CLEAN** |
-
-### Research Integrity Statement
-
-> **VerifAI maintains strict research integrity:**  
-> 1. No artificial intelligence outputs, web links, or confidence numbers are fabricated.  
-> 2. Rule-based and offline judges report `confidence = None` with `calibration_status = "NOT_CALIBRATED"`.  
-> 3. Disagreement arbitration prioritizes `CONTRADICTED` whenever conflict exists to prevent false safety.  
-> 4. Non-factual content (opinions, creative text, instructions) is classified and exempt from empirical verification with `trust_score = None`.
+| `backend/app/models/ingestion.py` | SQLAlchemy 2.x `IngestedPayload` model with `verification_id` foreign key, `IngestionSource` and `IngestionStatus` enums, cascade deletes, and query indexes | **VERIFIED** |
+| `backend/app/schemas/ingestion.py` | Pydantic v2 schemas: `IngestionPayloadRequest` (`extra="forbid"`, text whitespace check, URL scheme validator) and `IngestionResponse` | **VERIFIED** |
+| `backend/app/api/v1/endpoints/ingestion.py` | `POST /api/v1/ingest` and `GET /api/v1/ingest/{id}` with SSRF blocking, optional DB persistence, transaction rollback, and immediate verification | **VERIFIED** |
+| `extension/manifest.json` | Chrome Manifest V3 configuration with `activeTab`, `scripting`, `storage`, `contextMenus` permissions, and host permissions for `http://localhost:8000/*` | **VERIFIED** |
+| `extension/content.js` | Intelligent DOM parser detecting ChatGPT, Claude, Gemini, Perplexity, and DeepSeek response elements, selection extraction, and message handling | **VERIFIED** |
+| `extension/background.js` | Background service worker registering "Verify with VerifAI" context menu and forwarding selections | **VERIFIED** |
+| `extension/popup.html` & `popup.css` | Dark glassmorphism popup UI with connection status indicator, model selector, auto-capture button, trust score gauge, metrics breakdown pills, and claim cards | **VERIFIED** |
+| `extension/popup.js` | Interactive client script: engine health polling, API request transmission, stage progress animation, trust score percentage rendering (0-100 scale), and claim listing | **VERIFIED** |
+| `extension/README.md` | Comprehensive user and developer guide for installing unpacked extension in Chrome/Chromium and testing with active LLMs | **VERIFIED** |
+| `backend/tests/test_ingestion_api.py` | 11 unit/integration tests covering valid payloads, immediate verification, whitespace rejection, size bounds, invalid URLs, SSRF rejection, and mock DB session commits | **VERIFIED — 11/11 PASS** |
+| `backend/tests/test_security_ssrf_matrix.py` | 250 parameterized security tests validating loopback, private IPv4/IPv6, link-local metadata (169.254.169.254), cloud providers, and domain authority calculations | **VERIFIED — 250/250 PASS** |
+| `backend/tests/test_claim_taxonomy_matrix.py` | 175 parameterized tests across 6 content taxonomy classes (factual, opinion, prediction, hypothetical, creative, instruction) with negative controls | **VERIFIED — 175/175 PASS** |
+| `backend/tests/test_pipeline_reliability_matrix.py` | 120 failure, edge-case, and boundary tests covering multilingual claims (Latin, Cyrillic, Greek, CJK, Arabic, Hebrew, Devanagari), dual judge permutations, numeric conflict detection, and trust score distributions | **VERIFIED — 120/120 PASS** |
+| `backend/tests/test_api_boundary_matrix.py` | 292 boundary tests covering HTTP method enforcement (405), valid/invalid source enums, X-Request-ID propagation, URL schemes, metadata structures, malformed JSON, options bounds, extra forbidden fields, and text sanitization | **VERIFIED — 292/292 PASS** |
 
 ---
 
@@ -64,7 +51,7 @@
 | **Phase 1** | Database & Authentication Foundation | **COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
 | **Phase 2** | Benchmark Dataset, Annotation & Quality Gate | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
 | **Phase 3** | Backend Core & Verification Engine | **APPROVED** | 2026-09-20 (Signed off by Arun) |
-| **Phase 4** | Ingestion & Browser Extension | **UNLOCKED — READY FOR INITIALIZATION** | Phase 3 sign-off satisfied |
+| **Phase 4** | Ingestion & Browser Extension | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Pending Arun Review |
 | **Phase 5** | Hardening, Integration & Delivery | **LOCKED** | Requires Phase 4 sign-off |
 
 ---

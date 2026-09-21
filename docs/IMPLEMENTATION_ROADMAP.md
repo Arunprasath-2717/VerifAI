@@ -37,7 +37,7 @@
 | **Phase 1** | **Database & Auth Foundation**         | Async PostgreSQL foundation, centralized config, structured logging, errors, CI | **COMPLETE — AWAITING ARUN'S SIGN-OFF** |
 | **Phase 2** | **Benchmark Dataset & Annotation**     | 100-case hallucination benchmark, Cohen's kappa quality gate, dataset freeze   | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** |
 | **Phase 3** | **Backend Core & Verification Engine** | Verification orchestration, claim extraction, evidence retrieval, multi-judge  | **COMPLETE & APPROVED** |
-| **Phase 4** | **Ingestion & Browser Extension**      | Payload ingestion API, Chrome extension integration                             | **UNLOCKED**         |
+| **Phase 4** | **Ingestion & Browser Extension**      | Payload ingestion API, Chrome extension integration, security & reliability     | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** |
 | **Phase 5** | **Hardening, Integration & Delivery**  | Hermetic validation, end-to-end verification, release preparation               | Planned              |
 
 ---
@@ -55,6 +55,23 @@
 | `backend/app/api/v1/endpoints/verification.py` | FastAPI REST endpoints `POST /api/v1/verification` and `GET /api/v1/verification/{id}` | **COMPLETE** |
 | `scripts/verify.py` | Standalone CLI demonstration tool with human-readable and raw JSON reporting | **COMPLETE** |
 | `backend/tests/` | 111 hermetic unit and integration tests (172 tests combined with benchmark suite) | **COMPLETE — 172/172 PASS** |
+
+---
+
+## 5. Phase 4 — Ingestion & Browser Extension Scope
+
+| Deliverable | Description | Status |
+|---|---|---|
+| `backend/app/models/ingestion.py` | SQLAlchemy 2.x ORM model `IngestedPayload` with relationship to `VerificationJob` and status tracking | **COMPLETE** |
+| `backend/app/schemas/ingestion.py` | Pydantic v2 schemas: `IngestionSource`, `IngestionStatus`, `IngestionPayloadRequest`, `IngestionResponse` | **COMPLETE** |
+| `backend/app/api/v1/endpoints/ingestion.py` | FastAPI REST endpoints `POST /api/v1/ingest` and `GET /api/v1/ingest/{id}` with SSRF safety & verification trigger | **COMPLETE** |
+| `extension/` | Chrome Manifest V3 extension with DOM auto-detection (ChatGPT, Claude, Gemini, DeepSeek), text selection, context menu, popup UI | **COMPLETE** |
+| `backend/tests/test_ingestion_api.py` | Unit & integration tests for ingestion endpoints, DB session commit, and error responses | **COMPLETE** |
+| `backend/tests/test_security_ssrf_matrix.py` | 250 parameterized SSRF tests covering loopback, private IPv4/IPv6, cloud metadata, and domain authority | **COMPLETE** |
+| `backend/tests/test_claim_taxonomy_matrix.py` | 175 parameterized taxonomy tests across factual, opinion, prediction, hypothetical, creative, and instruction classes | **COMPLETE** |
+| `backend/tests/test_pipeline_reliability_matrix.py` | 120 failure, edge-case, and boundary tests for multilingual text, judge arbitration, numbers, and polarity | **COMPLETE** |
+| `backend/tests/test_api_boundary_matrix.py` | 292 boundary tests covering HTTP method enforcement, headers, metadata nesting, UUID paths, and text limits | **COMPLETE** |
+| Full Test Suite | 1,020 total tests across backend and benchmark suites executed hermetically in <1.7s | **COMPLETE — 1,020/1,020 PASS** |
 
 ---
 

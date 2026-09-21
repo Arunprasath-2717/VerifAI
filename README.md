@@ -17,27 +17,34 @@ VerifAI is designed as a high-throughput **Modular Monolith** powered by **Pytho
 ```
 VerifAI/
 ├── backend/          # Core FastAPI modular monolith & async persistence
-│   ├── app/          # Application package (core, api/v1, modules)
-│   ├── tests/        # Deterministic hermetic test suite (45 unit/integration tests)
+│   ├── app/          # Application package (core, api/v1, modules, models, schemas)
+│   ├── tests/        # Deterministic hermetic test suite (959 unit, integration & matrix tests)
 │   ├── pyproject.toml# Tooling configuration (pytest, ruff, mypy)
 │   ├── requirements.txt      # Pinned production dependencies
 │   ├── requirements-dev.txt  # Development & test tooling dependencies
 │   └── requirements-lock.txt # Frozen reproducible dependency lockfile
 ├── database/         # Supabase PostgreSQL schema, migrations, and seeds
 ├── scripts/          # Automation, utilities, and live smoke test runners
+│   ├── verify.py     # Standalone CLI demonstration and verification runner
 │   └── smoke_test.py # 8-checkpoint automated live application smoke test
+├── extension/        # Chrome Manifest V3 browser extension (Phase 4)
+│   ├── manifest.json # MV3 permissions, host matching, and action declaration
+│   ├── content.js    # Multi-LLM DOM auto-detection (ChatGPT, Claude, Gemini, DeepSeek)
+│   ├── background.js # Service worker and context menu verification relay
+│   ├── popup.html    # Glassmorphism extension popup interface
+│   ├── popup.css     # Design tokens, animations, and responsive popup layout
+│   └── popup.js      # Backend communication, health polling, and verification rendering
 ├── docs/             # Architecture Decision Records (ADRs) & governance ledgers
 │   ├── IMPLEMENTATION_ROADMAP.md # Multi-phase execution roadmap
 │   ├── PHASE_STATUS.md           # Phase progression & verification status
-│   ├── ARCHITECTURE_DECISIONS.md # Locked ADR-001 through ADR-008
+│   ├── ARCHITECTURE_DECISIONS.md # Locked ADR-001 through ADR-010
 │   ├── COMMIT_LEDGER.md          # 500-commit budget ledger & tracking
 │   └── SIGN_OFF_REGISTER.md      # Gate check sign-off registry
 ├── .github/workflows/# Continuous integration pipelines
 │   └── backend-ci.yml# Multi-version Python verification workflow
 ├── frontend/         # Web dashboard (future integration surface; out of scope for MVP)
-├── extension/        # Browser extension (Phase 3)
 ├── mcp/              # Model Context Protocol integrations (future integration surface)
-└── benchmark/        # Hallucination benchmark datasets & evaluators (Phase 4)
+└── benchmark/        # Hallucination benchmark datasets & evaluators (Phase 2)
 ```
 
 ---
@@ -45,12 +52,14 @@ VerifAI/
 ## 2. Current Project Status
 
 - **Phase 0 (Repository Baseline & Governance):** **COMPLETE** (Formally approved by Arun; Commit `74324a6`).
-- **Phase 1 (Database & Foundation):** **COMPLETE — AWAITING ARUN’S SIGN-OFF**
-  - Prompt 1: FastAPI Foundation & Routing (Approved; Commit `3e1c9c1` baseline).
-  - Prompt 2: Async PostgreSQL Foundation (Approved; Commit `33ce288`).
-  - Prompt 3: Centralized Config, Logging, Errors & ADR-008 (Approved; Commit `f0e8255` & `7a9be18`).
-  - Hardening & CI: Standalone smoke test (`scripts/smoke_test.py`), GitHub Actions workflow (`backend-ci.yml`), root documentation alignment.
-- **Phase 2 (Backend Core & Verification Engine):** **STRICTLY LOCKED** pending Arun's formal Phase 1 sign-off.
+- **Phase 1 (Database & Auth Foundation):** **COMPLETE — AWAITING ARUN'S SIGN-OFF**
+- **Phase 2 (Benchmark Dataset & Quality Gate):** **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF**
+- **Phase 3 (Backend Core & Verification Engine):** **APPROVED & SIGNED OFF BY ARUN** (Commit `8de897d`).
+- **Phase 4 (Ingestion & Browser Extension):** **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF**
+  - Payload Ingestion API (`POST /api/v1/ingest`, `GET /api/v1/ingest/{id}`) with SSRF perimeter.
+  - Manifest V3 Chrome Extension with DOM auto-detection and dark glassmorphism popup.
+  - 1,020 hermetic automated tests (100% passing across backend and benchmark suites).
+- **Phase 5 (Hardening, Integration & Delivery):** **LOCKED** pending Phase 4 formal sign-off.
 
 ---
 
@@ -59,6 +68,7 @@ VerifAI/
 ### 3.1 Prerequisites
 - Python 3.11, 3.12, or 3.14
 - Git
+- Google Chrome or Chromium-based browser (for extension)
 
 ### 3.2 Installation
 ```bash
@@ -88,41 +98,48 @@ Interactive documentation:
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **OpenAPI Schema:** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
 
+### 3.4 CLI Verification Demonstration Tool
+Test the verification pipeline directly from the command line:
+```bash
+# Verify a factual statement
+.venv/bin/python scripts/verify.py --text "Water has the chemical formula H2O."
+
+# Output structured JSON
+.venv/bin/python scripts/verify.py --text "Apollo 11 landed on the moon in 1969." --json
+```
+
+### 3.5 Chrome Extension Installation
+1. Open Chrome / Chromium and navigate to `chrome://extensions/`.
+2. Enable **Developer mode** toggle in top-right corner.
+3. Click **Load unpacked** and select the `extension/` directory from this repository.
+4. Pin the **VerifAI** icon to your toolbar.
+5. Open any LLM interface (ChatGPT, Claude, Gemini, DeepSeek, Perplexity) and click the extension icon to verify responses.
+
 ---
 
 ## 4. Verification Suite & Quality Assurance
 
 VerifAI enforces a zero-regression, hermetic quality gate:
 
-### 4.1 Execute Test Suite
+### 4.1 Execute Test Suite (1,020 Tests)
 ```bash
-PYTHONPATH=backend .venv/bin/pytest backend/tests -v
+.venv/bin/pytest -v
 ```
 
 ### 4.2 Linting and Formatting
 ```bash
-PYTHONPATH=backend .venv/bin/ruff check backend scripts
-PYTHONPATH=backend .venv/bin/ruff format --check backend scripts
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
 ```
 
 ### 4.3 Static Type Checking
 ```bash
-PYTHONPATH=backend .venv/bin/mypy backend/app
+.venv/bin/mypy backend/app backend/tests
 ```
 
-### 4.4 Dependency Integrity Check
+### 4.4 Automated Live Application Smoke Test
 ```bash
-.venv/bin/python -m pip check
-```
-
-### 4.5 Automated Live Application Smoke Test
-```bash
-PYTHONPATH=backend .venv/bin/python scripts/smoke_test.py
-```
-
-To test against an externally running server:
-```bash
-PYTHONPATH=backend .venv/bin/python scripts/smoke_test.py --base-url http://127.0.0.1:8000
+.venv/bin/python scripts/smoke_test.py
 ```
 
 ---
@@ -134,20 +151,22 @@ PYTHONPATH=backend .venv/bin/python scripts/smoke_test.py --base-url http://127.
   Returns HTTP 200 with `{status: "live", service: "verifai-backend", version: "0.1.0", request_id: "..."}`.
 - **Readiness Probe (`GET /api/v1/ready`):**
   Evaluates dependency health honestly. Returns HTTP 503 until external persistence dependencies are configured.
-- **Root `/health`:** Strictly unmounted (returns HTTP 404).
+- **Payload Ingestion (`POST /api/v1/ingest`):**
+  Ingests AI-generated text, enforces SSRF boundaries, stores payload in PostgreSQL, and optionally triggers immediate verification.
+- **Ingestion Query (`GET /api/v1/ingest/{id}`):**
+  Retrieves previously ingested payload record by UUID.
+- **Claim Verification (`POST /api/v1/verification`):**
+  Executes end-to-end claim extraction, evidence retrieval, multi-judge evaluation, and trust score calculation.
+- **Verification Result (`GET /api/v1/verification/{id}`):**
+  Retrieves completed verification job and full audit trail by UUID.
 
-### 5.2 Request & Correlation ID Tracking
-- Middleware intercepts every request, validates/sanitizes client-supplied IDs, and assigns a clean UUID4 identifier if absent or malformed.
-- Header `X-Request-ID` is guaranteed on **every** HTTP response (including 200, 404, 405, 422, and 500).
-- Request ID is automatically bound to `contextvars` and included in all server logs (`[request_id=...]`).
-
-### 5.3 Unified JSON Error Envelope
-All errors conform to a strict schema:
+### 5.2 Unified JSON Error Envelope
+All errors conform to RFC-7807 compliant structure:
 ```json
 {
   "error": {
-    "code": "NOT_FOUND",
-    "message": "Resource not found",
+    "code": "VALIDATION_ERROR",
+    "message": "source_url must use http or https scheme.",
     "request_id": "c4b82d3f9a7e4...",
     "details": null
   }
@@ -158,9 +177,10 @@ All errors conform to a strict schema:
 
 ## 6. Locked Architectural Boundaries
 
-Per approved Architecture Decision Records (ADR-001 through ADR-008):
+Per approved Architecture Decision Records (ADR-001 through ADR-010):
 - **Verification Authority:** Arun is the single source of verification truth. The backend owns 100% of verification orchestration.
-- **Authentication Deferral:** Supabase Auth is deferred to Future Enhancements (ADR-003 Addendum). No custom auth or OTP in initial phases.
-- **AI Models:** Local open-source models only (ADR-004), scheduled for Phase 2.
+- **Authentication Deferral:** Supabase Auth is deferred to Future Enhancements (ADR-003 Addendum).
+- **AI Models:** Local open-source models only (ADR-004).
+- **SSRF Defense:** Strict pre-persistence validation of client-submitted URLs (ADR-010).
 - **Out of Scope for Core MVP:** React dashboard and Model Context Protocol (MCP) are designated as future integration surfaces (ADR-006).
 - **Branch Governance:** All active work occurs on `Final`. Pushes to `main` are strictly forbidden until verified release.

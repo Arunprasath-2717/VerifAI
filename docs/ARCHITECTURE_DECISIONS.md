@@ -86,3 +86,18 @@
   - Production retrieval using vector embeddings, full knowledge corpus ingestion, and live web retrieval is strictly governed under Phase 4 and Phase 5.
   - Phase 3 backend verification core is unblocked for formal human sign-off.
 
+---
+
+## ADR-010: Ingestion API Contract, SSRF Perimeter & Browser Extension Architecture
+- **Status:** Accepted (Locked)
+- **Context:** Phase 4 requires capturing AI responses directly from active user browser sessions (ChatGPT, Claude, Gemini, DeepSeek, Perplexity) and ingestion through a decoupled API perimeter. The ingestion layer must prevent Server-Side Request Forgery (SSRF) abuse through submitted source URLs, handle client metadata cleanly, support optional immediate verification triggering, and provide an offline-resilient, permission-minimal browser extension.
+- **Decision:**
+  - **API Contract:** Expose dedicated `/api/v1/ingest` (POST) and `/api/v1/ingest/{id}` (GET) endpoints backed by SQLAlchemy `IngestedPayload` ORM persistence and Pydantic v2 schemas (`extra="forbid"`).
+  - **SSRF Defense-in-Depth:** Mandatory pre-persistence URL validation via `is_safe_url`. Rejects loopback (`127.0.0.0/8`, `::1`), link-local/cloud metadata (`169.254.0.0/16`, `fe80::/10`), private RFC-1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), unique local IPv6 (`fc00::/7`), carrier-grade NAT, and non-HTTP schemes with HTTP 400.
+  - **Immediate Verification Mode:** Support `verify_immediately: bool = True` triggering `VerificationOrchestrator` in-process and embedding the full verification outcome in the ingestion response, while retaining asynchronous persistence.
+  - **Chrome Manifest V3 Extension:** Manifest V3 client using scoped permissions (`activeTab`, `scripting`, `storage`, `contextMenus`, `http://localhost:8000/*`), intelligent DOM heuristics targeting modern LLM web client markup, user selection fallback, context menu integration, and dark glassmorphism popup UI.
+- **Consequences:**
+  - Secures backend and cloud environments against malicious URL callback abuse.
+  - Decouples client text capture from pipeline execution details.
+  - Enables single-click verification of AI responses across leading LLM interfaces without requiring browser credential exposure.
+

@@ -21,7 +21,7 @@
 | **Phase 1** | Database & Authentication Foundation | Arun | Pending | Pending | **COMPLETE — AWAITING ARUN'S SIGN-OFF** | Foundation, async DB, config, logging, errors, CI workflow, and smoke tests verified. Ready for Arun's final sign-off. |
 | **Phase 2** | Benchmark Dataset, Annotation & Quality Gate | Arun | Pending | Pending | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | 100-case draft dataset, Cohen's kappa engine, quality gate state machine, SHA-256 freeze, 61 tests passing. Dataset is DRAFT — human annotation review pending. |
 | **Phase 3** | Backend Core & Verification Engine | Arun | 2026-09-20 | `8de897d` | **APPROVED** | Formally approved and signed off by Arun. Full backend verification pipeline verified (claims, classification, evidence, judges, disagreement, decision, audit trail, orchestrator, REST API, CLI). 172/172 tests passing hermetically. 0 MyPy/Ruff errors. Dev-only sparse index constraint formally accepted. |
-| **Phase 4** | Ingestion & Browser Extension | Arun | — | — | **UNLOCKED** | Phase 3 sign-off satisfied. Ready for Phase 4 initialization. |
+| **Phase 4** | Ingestion & Browser Extension | Arun | Pending | Pending | **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF** | Ingestion API (`POST /api/v1/ingest`, `GET /api/v1/ingest/{id}`), Chrome Manifest V3 extension, SSRF perimeter (250 tests), taxonomy & reliability matrices, 1,020 hermetic tests passing, 0 linter/type errors. Ready for Arun's review. |
 | **Phase 5** | Hardening, Integration & Delivery | Arun | — | — | **LOCKED** | Requires Phase 4 sign-off. |
 
 ---
