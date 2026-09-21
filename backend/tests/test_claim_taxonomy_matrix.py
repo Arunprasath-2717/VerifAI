@@ -1,5 +1,7 @@
 """Exhaustive test matrix for claim extraction offset invariants and content classification."""
 
+from typing import Any
+
 import pytest
 
 from app.modules.claims.classifier import ContentClassifier
@@ -217,43 +219,43 @@ class TestClaimTaxonomyMatrix:
 
     @pytest.mark.parametrize("text", OPINION_SAMPLES)
     def test_opinion_samples_classified_as_opinion(self, text: str) -> None:
-        """Verify subjective evaluations and viewpoints are categorized as OPINION."""
+        """Verify subjective evaluations and viewpoints are categorized as OPINION with verdict=None."""
         result = classifier.classify(text)
         assert result.content_type == ContentType.OPINION
         assert result.is_verifiable is False
-        assert result.verdict == VerdictType.VIEWPOINT
+        assert result.verdict is None
 
     @pytest.mark.parametrize("text", PREDICTION_SAMPLES)
     def test_prediction_samples_classified_as_prediction(self, text: str) -> None:
-        """Verify forward-looking speculations are categorized as PREDICTION."""
+        """Verify forward-looking speculations are categorized as PREDICTION with verdict=None."""
         result = classifier.classify(text)
         assert result.content_type == ContentType.PREDICTION
         assert result.is_verifiable is False
-        assert result.verdict == VerdictType.FUTURE_LOOKING
+        assert result.verdict is None
 
     @pytest.mark.parametrize("text", HYPOTHETICAL_SAMPLES)
     def test_hypothetical_samples_classified_as_hypothetical(self, text: str) -> None:
-        """Verify counterfactual conditional scenarios are categorized as HYPOTHETICAL."""
+        """Verify counterfactual conditional scenarios are categorized as HYPOTHETICAL with verdict=None."""
         result = classifier.classify(text)
         assert result.content_type == ContentType.HYPOTHETICAL
         assert result.is_verifiable is False
-        assert result.verdict == VerdictType.SCENARIO
+        assert result.verdict is None
 
     @pytest.mark.parametrize("text", CREATIVE_SAMPLES)
     def test_creative_samples_classified_as_creative(self, text: str) -> None:
-        """Verify fiction, poetry, and storytelling are categorized as CREATIVE."""
+        """Verify fiction, poetry, and storytelling are categorized as CREATIVE with verdict=None."""
         result = classifier.classify(text)
         assert result.content_type == ContentType.CREATIVE
         assert result.is_verifiable is False
-        assert result.verdict == VerdictType.CREATIVE
+        assert result.verdict is None
 
     @pytest.mark.parametrize("text", INSTRUCTION_SAMPLES)
     def test_instruction_samples_classified_as_instruction(self, text: str) -> None:
-        """Verify directives, imperatives, and how-tos are categorized as INSTRUCTION."""
+        """Verify directives, imperatives, and how-tos are categorized as INSTRUCTION with verdict=None."""
         result = classifier.classify(text)
         assert result.content_type == ContentType.INSTRUCTION
         assert result.is_verifiable is False
-        assert result.verdict == VerdictType.INCONCLUSIVE
+        assert result.verdict is None
 
     @pytest.mark.parametrize(
         "paragraph",
@@ -290,3 +292,64 @@ class TestClaimTaxonomyMatrix:
             assert claim.start_offset >= 0
             assert claim.end_offset <= len(paragraph)
             assert claim.start_offset < claim.end_offset
+
+    def test_verdict_type_contains_only_three_permitted_values(self) -> None:
+        """PRD Section 6 & 10: Factual verdicts must strictly contain exactly 3 values."""
+        permitted = {"SUPPORTED", "CONTRADICTED", "UNKNOWN"}
+        actual = {v.value for v in VerdictType}
+        assert actual == permitted
+        assert len(VerdictType) == 3
+
+    def test_legacy_verdict_values_rejected(self) -> None:
+        """Verify legacy non-factual verdict strings raise ValueError."""
+        legacy_values = [
+            "VIEWPOINT",
+            "FUTURE_LOOKING",
+            "SCENARIO",
+            "CREATIVE",
+            "INCONCLUSIVE",
+        ]
+        for val in legacy_values:
+            with pytest.raises(ValueError):
+                VerdictType(val)
+
+    def test_non_factual_claims_excluded_from_factual_aggregation(self) -> None:
+        """Verify non-factual content does not contaminate factual trust score calculation."""
+        from app.modules.judging.decision import DecisionEngine
+
+        engine = DecisionEngine()
+        mixed_claims: list[dict[str, Any]] = [
+            {
+                "verdict": VerdictType.SUPPORTED,
+                "is_verifiable": True,
+                "content_type": ContentType.FACTUAL,
+            },
+            {
+                "verdict": VerdictType.SUPPORTED,
+                "is_verifiable": True,
+                "content_type": ContentType.FACTUAL,
+            },
+            {
+                "verdict": None,
+                "is_verifiable": False,
+                "content_type": ContentType.OPINION,
+            },
+            {
+                "verdict": None,
+                "is_verifiable": False,
+                "content_type": ContentType.PREDICTION,
+            },
+            {
+                "verdict": None,
+                "is_verifiable": False,
+                "content_type": ContentType.CREATIVE,
+            },
+        ]
+        summary = engine.aggregate(mixed_claims)
+        assert summary.total_claims == 5
+        assert summary.supported_claims == 2
+        assert summary.contradicted_claims == 0
+        assert summary.unknown_claims == 0
+        assert summary.non_factual_claims == 3
+        # Factual claims are 2 supported out of 2 factual -> exactly 100.0%
+        assert summary.trust_score == 100.0

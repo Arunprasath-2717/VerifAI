@@ -51,21 +51,11 @@ class DecisionEngine:
         contradicted = sum(
             1 for c in claims if c.get("verdict") == VerdictType.CONTRADICTED
         )
-        unknown = sum(
-            1
-            for c in claims
-            if c.get("verdict") in {VerdictType.UNKNOWN, VerdictType.INCONCLUSIVE}
-        )
+        unknown = sum(1 for c in claims if c.get("verdict") == VerdictType.UNKNOWN)
         non_factual = sum(
             1
             for c in claims
-            if c.get("verdict")
-            in {
-                VerdictType.VIEWPOINT,
-                VerdictType.FUTURE_LOOKING,
-                VerdictType.SCENARIO,
-                VerdictType.CREATIVE,
-            }
+            if c.get("verdict") is None or not c.get("is_verifiable", True)
         )
 
         factual_count = supported + contradicted + unknown

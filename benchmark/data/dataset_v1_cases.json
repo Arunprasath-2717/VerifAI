@@ -19,7 +19,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "physics",
@@ -47,7 +47,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -75,7 +75,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "literature",
@@ -103,7 +103,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -131,7 +131,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -159,7 +159,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -187,7 +187,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "economics",
@@ -215,7 +215,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "astronomy",
@@ -243,7 +243,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "physics",
@@ -271,7 +271,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -299,7 +299,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -327,7 +327,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "medicine",
@@ -355,7 +355,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -383,7 +383,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -411,7 +411,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -439,7 +439,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -467,7 +467,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -495,7 +495,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "computer_science",
@@ -523,7 +523,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -551,7 +551,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "genetics",
@@ -579,7 +579,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -607,7 +607,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "astronomy",
@@ -635,7 +635,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -663,7 +663,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -691,7 +691,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "physics",
@@ -719,7 +719,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -747,7 +747,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "art_history",
@@ -775,7 +775,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "physics",
@@ -803,7 +803,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -831,7 +831,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -859,7 +859,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -887,7 +887,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -1139,7 +1139,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -1167,7 +1167,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "technology",
@@ -1195,7 +1195,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -1223,7 +1223,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -1251,7 +1251,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "astronomy",
@@ -1279,7 +1279,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "literature",
@@ -1307,7 +1307,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "medicine",
@@ -1335,7 +1335,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "physics",
@@ -1363,7 +1363,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -1391,7 +1391,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -1419,7 +1419,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "genetics",
@@ -1447,7 +1447,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geology",
@@ -1475,7 +1475,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -1503,7 +1503,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "computer_science",
@@ -1531,7 +1531,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "astronomy",
@@ -1559,7 +1559,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -1587,7 +1587,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "physics",
@@ -1615,7 +1615,7 @@
         ]
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -1643,7 +1643,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -1671,7 +1671,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -1699,7 +1699,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "biology",
@@ -1727,7 +1727,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "chemistry",
@@ -1755,7 +1755,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -1783,7 +1783,7 @@
         ]
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "economics",
@@ -1977,7 +1977,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "finance",
@@ -2003,7 +2003,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "security",
@@ -2029,7 +2029,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -2055,7 +2055,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "geography",
@@ -2081,7 +2081,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "meteorology",
@@ -2107,7 +2107,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "forensics",
@@ -2133,7 +2133,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "publishing",
@@ -2159,7 +2159,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "anthropology",
@@ -2185,7 +2185,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "sports",
@@ -2211,7 +2211,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "confidential",
@@ -2237,7 +2237,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "literature",
@@ -2263,7 +2263,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "dev",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "entomology",
@@ -2289,7 +2289,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "economics",
@@ -2315,7 +2315,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -2341,7 +2341,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "security",
@@ -2367,7 +2367,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "space",
@@ -2393,7 +2393,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "history",
@@ -2419,7 +2419,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "train",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "demographics",
@@ -2445,7 +2445,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "privacy",
@@ -2471,7 +2471,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "astronomy",
@@ -2497,7 +2497,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "archaeology",
@@ -2523,7 +2523,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "finance",
@@ -2549,7 +2549,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "privacy",
@@ -2575,7 +2575,7 @@
         "expected_evidence": []
       }
     ],
-    "split": "dev",
+    "split": "test",
     "dataset_version": "dataset_v1",
     "provenance": {
       "domain": "astronomy",

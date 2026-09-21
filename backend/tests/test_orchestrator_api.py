@@ -56,7 +56,7 @@ async def test_orchestrator_factual_contradicted_claim() -> None:
 
 @pytest.mark.anyio
 async def test_orchestrator_subjective_opinion() -> None:
-    """Verify opinion inputs are routed to VIEWPOINT with exempt trust score."""
+    """Verify opinion inputs receive verdict=None, is_verifiable=False, and exempt trust score."""
     orchestrator = VerificationOrchestrator()
     request = VerificationCreateRequest(
         text="In my opinion, chocolate ice cream is the best dessert.",
@@ -68,7 +68,8 @@ async def test_orchestrator_subjective_opinion() -> None:
     assert response.non_factual_claims == 1
     assert response.trust_score is None
     assert response.claims[0].content_type == ContentType.OPINION
-    assert response.claims[0].verdict == VerdictType.VIEWPOINT
+    assert response.claims[0].verdict is None
+    assert response.claims[0].is_verifiable is False
 
 
 @pytest.mark.anyio

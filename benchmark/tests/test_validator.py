@@ -71,10 +71,8 @@ def _make_100_cases() -> list[BenchmarkCase]:
     cases: list[BenchmarkCase] = []
     response = "A" * 50
 
-    # Assign splits: 60 train, 20 dev, 20 test
-    split_seq = (
-        [DatasetSplit.TRAIN] * 60 + [DatasetSplit.DEV] * 20 + [DatasetSplit.TEST] * 20
-    )
+    # Assign splits: 40 dev, 60 test per PRD Section 8
+    split_seq = [DatasetSplit.DEV] * 40 + [DatasetSplit.TEST] * 60
 
     for i in range(40):
         split = split_seq[i]
@@ -222,9 +220,8 @@ class TestDatasetValidation:
     def test_split_counts_correct(self):
         cases = _make_100_cases()
         report = validate_benchmark_dataset(cases, require_full_100=True)
-        assert report.split_counts["train"] == 60
-        assert report.split_counts["dev"] == 20
-        assert report.split_counts["test"] == 20
+        assert report.split_counts["dev"] == 40
+        assert report.split_counts["test"] == 60
 
     def test_wrong_total_count_gives_error(self):
         cases = _make_100_cases()[:50]  # only 50 cases

@@ -22,12 +22,9 @@ def create_100_cases() -> list[BenchmarkCase]:
     cases: list[BenchmarkCase] = []
 
     def get_split(idx_in_category: int, total_in_cat: int) -> DatasetSplit:
-        # Stratified 60% train / 20% dev / 20% test
-        train_threshold = int(total_in_cat * 0.60)
-        dev_threshold = int(total_in_cat * 0.80)
-        if idx_in_category < train_threshold:
-            return DatasetSplit.TRAIN
-        elif idx_in_category < dev_threshold:
+        # Stratified 40% dev / 60% held-out test per PRD Section 8 protocol
+        dev_threshold = int(total_in_cat * 0.40)
+        if idx_in_category < dev_threshold:
             return DatasetSplit.DEV
         else:
             return DatasetSplit.TEST

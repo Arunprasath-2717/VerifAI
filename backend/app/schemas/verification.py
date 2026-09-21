@@ -30,16 +30,17 @@ class ContentType(StrEnum):
 
 
 class VerdictType(StrEnum):
-    """PRD Section 6 & Section 10 verdict outcomes."""
+    """PRD Section 6 & Section 10 factual verdict outcomes.
+
+    The factual verdict contract is strictly three values:
+    SUPPORTED, CONTRADICTED, UNKNOWN.
+    Non-factual content types are recorded separately in ContentType
+    and receive verdict = None.
+    """
 
     SUPPORTED = "SUPPORTED"
     CONTRADICTED = "CONTRADICTED"
     UNKNOWN = "UNKNOWN"
-    INCONCLUSIVE = "INCONCLUSIVE"
-    VIEWPOINT = "VIEWPOINT"
-    FUTURE_LOOKING = "FUTURE_LOOKING"
-    SCENARIO = "SCENARIO"
-    CREATIVE = "CREATIVE"
 
 
 class UnknownReason(StrEnum):
@@ -153,12 +154,15 @@ class ClaimResultSchema(BaseModel):
     start_offset: int
     end_offset: int
     content_type: str
-    verdict: str
+    verdict: VerdictType | None = None
+    is_verifiable: bool = True
     confidence: float | None = None
     is_calibrated: bool = False
     calibration_status: str = "NOT_CALIBRATED"
     unknown_reason: str | None = None
     explanation: str | None = None
+    degraded_evaluation: bool = False
+    arbitration_reason: str | None = None
     evidence: list[EvidenceSchema] = Field(default_factory=list)
     judges: list[JudgeEvaluationSchema] = Field(default_factory=list)
 
@@ -195,6 +199,7 @@ class VerificationResponse(BaseModel):
     calibrated_confidence: float | None = None
     is_calibrated: bool = False
     calibration_status: str = "NOT_CALIBRATED"
+    degraded_evaluation: bool = False
     summary: str | None = None
     created_at: datetime
     completed_at: datetime | None = None

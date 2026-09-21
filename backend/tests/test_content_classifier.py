@@ -3,7 +3,7 @@
 import pytest
 
 from app.modules.claims.classifier import ContentClassifier
-from app.schemas.verification import ContentType, VerdictType
+from app.schemas.verification import ContentType
 
 
 @pytest.fixture
@@ -27,55 +27,55 @@ def test_classify_factual_statement(classifier: ContentClassifier) -> None:
 
 
 def test_classify_opinion_statement(classifier: ContentClassifier) -> None:
-    """Verify opinion statements are marked OPINION, exempt, and mapped to VIEWPOINT."""
+    """Verify opinion statements are marked OPINION, exempt, and have verdict=None."""
     text = "In my opinion, chocolate ice cream is the best dessert ever made."
     result = classifier.classify(text)
 
     assert result.content_type == ContentType.OPINION
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.VIEWPOINT
+    assert result.verdict is None
     assert "opinion" in result.explanation.lower()
 
 
 def test_classify_prediction_statement(classifier: ContentClassifier) -> None:
-    """Verify future statements are marked PREDICTION and mapped to FUTURE_LOOKING."""
+    """Verify future statements are marked PREDICTION, exempt, and have verdict=None."""
     text = "Global temperatures will increase by two degrees by 2050."
     result = classifier.classify(text)
 
     assert result.content_type == ContentType.PREDICTION
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.FUTURE_LOOKING
+    assert result.verdict is None
     assert "future-looking" in result.explanation.lower()
 
 
 def test_classify_hypothetical_statement(classifier: ContentClassifier) -> None:
-    """Verify conditional statements are marked HYPOTHETICAL and mapped to SCENARIO."""
+    """Verify conditional statements are marked HYPOTHETICAL, exempt, and have verdict=None."""
     text = "If gravity were reversed, people would float into the stratosphere."
     result = classifier.classify(text)
 
     assert result.content_type == ContentType.HYPOTHETICAL
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.SCENARIO
+    assert result.verdict is None
 
 
 def test_classify_creative_statement(classifier: ContentClassifier) -> None:
-    """Verify mythical statements are marked CREATIVE and mapped to CREATIVE."""
+    """Verify mythical statements are marked CREATIVE, exempt, and have verdict=None."""
     text = "Once upon a time, a magical unicorn defended the enchanted forest."
     result = classifier.classify(text)
 
     assert result.content_type == ContentType.CREATIVE
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.CREATIVE
+    assert result.verdict is None
 
 
 def test_classify_instruction_statement(classifier: ContentClassifier) -> None:
-    """Verify commands are marked INSTRUCTION and mapped to INCONCLUSIVE."""
+    """Verify commands are marked INSTRUCTION, exempt, and have verdict=None."""
     text = "Please install the python dependencies using pip."
     result = classifier.classify(text)
 
     assert result.content_type == ContentType.INSTRUCTION
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.INCONCLUSIVE
+    assert result.verdict is None
 
 
 def test_classify_empty_string(classifier: ContentClassifier) -> None:
@@ -114,7 +114,7 @@ def test_classify_natural_language_instruction(
         f"Expected INSTRUCTION for {text!r}, got {result.content_type}"
     )
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.INCONCLUSIVE
+    assert result.verdict is None
 
 
 @pytest.mark.parametrize(
@@ -135,7 +135,7 @@ def test_classify_interrogative_how_to(
         f"Expected INSTRUCTION for {text!r}, got {result.content_type}"
     )
     assert result.is_verifiable is False
-    assert result.verdict == VerdictType.INCONCLUSIVE
+    assert result.verdict is None
 
 
 @pytest.mark.parametrize(

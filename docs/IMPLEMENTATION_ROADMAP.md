@@ -58,29 +58,34 @@
 
 ---
 
-## 5. Phase 4 — Ingestion & Browser Extension Scope
+## 5. Phase 4 — Ingestion & Auxiliary Extension Scope
 
 | Deliverable | Description | Status |
 |---|---|---|
 | `backend/app/models/ingestion.py` | SQLAlchemy 2.x ORM model `IngestedPayload` with relationship to `VerificationJob` and status tracking | **COMPLETE** |
 | `backend/app/schemas/ingestion.py` | Pydantic v2 schemas: `IngestionSource`, `IngestionStatus`, `IngestionPayloadRequest`, `IngestionResponse` | **COMPLETE** |
 | `backend/app/api/v1/endpoints/ingestion.py` | FastAPI REST endpoints `POST /api/v1/ingest` and `GET /api/v1/ingest/{id}` with SSRF safety & verification trigger | **COMPLETE** |
-| `extension/` | Chrome Manifest V3 extension with DOM auto-detection (ChatGPT, Claude, Gemini, DeepSeek), text selection, context menu, popup UI | **COMPLETE** |
+| `extension/` | Auxiliary demonstration Chrome Manifest V3 extension (DOM auto-detection, selection, context menu, popup UI) | **COMPLETE (AUXILIARY)** |
 | `backend/tests/test_ingestion_api.py` | Unit & integration tests for ingestion endpoints, DB session commit, and error responses | **COMPLETE** |
 | `backend/tests/test_security_ssrf_matrix.py` | 250 parameterized SSRF tests covering loopback, private IPv4/IPv6, cloud metadata, and domain authority | **COMPLETE** |
 | `backend/tests/test_claim_taxonomy_matrix.py` | 175 parameterized taxonomy tests across factual, opinion, prediction, hypothetical, creative, and instruction classes | **COMPLETE** |
-| `backend/tests/test_pipeline_reliability_matrix.py` | 120 failure, edge-case, and boundary tests for multilingual text, judge arbitration, numbers, and polarity | **COMPLETE** |
+| `backend/tests/test_pipeline_reliability_matrix.py` | 129 failure, edge-case, and boundary tests for multilingual text, judge arbitration, numbers, and polarity | **COMPLETE** |
 | `backend/tests/test_api_boundary_matrix.py` | 292 boundary tests covering HTTP method enforcement, headers, metadata nesting, UUID paths, and text limits | **COMPLETE** |
-| Full Test Suite | 1,020 total tests across backend and benchmark suites executed hermetically in <1.7s | **COMPLETE — 1,020/1,020 PASS** |
+| `backend/tests/test_prompt_injection_isolation.py` | Adversarial tests for boundary isolation, breakout sanitization, and prompt extraction prevention | **COMPLETE** |
+| `backend/tests/test_deterministic_judge_config.py` | Tests for deterministic configuration (temperature=0.0, seed=42) and metadata reporting | **COMPLETE** |
+| `backend/tests/test_unknown_taxonomy_routing.py` | Tests for CONTEXT_UNKNOWN vs SEARCH_UNKNOWN routing, persistence, and serialization | **COMPLETE** |
+| Full Test Suite | 1,054 total tests across backend and benchmark suites executed hermetically in <2.5s | **COMPLETE — 1,054/1,054 PASS** |
 
 ---
 
-## 5. Architectural Boundaries & Scope Locks
+## 6. Architectural Boundaries & Scope Locks
 
-- **Core MVP Scope:** Backend verification engine (Python + FastAPI modular monolith), Supabase PostgreSQL persistence (SQLAlchemy + asyncpg), local knowledge retrieval, safe web search fallback, and baseline ingestion.
+- **Core MVP Scope:** Backend verification engine (Python + FastAPI modular monolith), Supabase PostgreSQL persistence (SQLAlchemy + asyncpg), local knowledge retrieval, safe web search fallback, and baseline ingestion. The core first-cycle interface is strictly the REST API.
+- **Auxiliary Demonstration Client:** The Chrome extension is an auxiliary demonstration client outside the locked core backend MVP acceptance gate. It does not introduce a separate core architecture.
 - **Future Integration Surfaces (Strictly Out-of-Scope for Core MVP):**
   - Model Context Protocol (MCP) integrations
   - Advanced React dashboard frontend
 - **Execution Constraints:**
-  - AI models must be free/open-source and executed locally where possible.
+  - AI models must be free/open-source and executed locally where possible with deterministic defaults (temperature=0.0, seed=42).
   - Verification truth is strictly owned by the backend; Arun is the single source of verification truth.
+  - Phase 5 remains strictly locked until formal human sign-off.

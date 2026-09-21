@@ -102,7 +102,7 @@ class ContentClassifier:
         if self.CREATIVE_MARKERS.search(text):
             return ClassificationResult(
                 content_type=ContentType.CREATIVE,
-                verdict=VerdictType.CREATIVE,
+                verdict=None,
                 is_verifiable=False,
                 confidence=None,
                 is_calibrated=False,
@@ -118,7 +118,7 @@ class ContentClassifier:
         if self.INSTRUCTION_MARKERS.search(text) or self.HOW_TO_MARKERS.search(text):
             return ClassificationResult(
                 content_type=ContentType.INSTRUCTION,
-                verdict=VerdictType.INCONCLUSIVE,
+                verdict=None,
                 is_verifiable=False,
                 confidence=None,
                 is_calibrated=False,
@@ -133,7 +133,7 @@ class ContentClassifier:
         if self.HYPOTHETICAL_MARKERS.search(text):
             return ClassificationResult(
                 content_type=ContentType.HYPOTHETICAL,
-                verdict=VerdictType.SCENARIO,
+                verdict=None,
                 is_verifiable=False,
                 confidence=None,
                 is_calibrated=False,
@@ -148,7 +148,7 @@ class ContentClassifier:
         if self.PREDICTION_MARKERS.search(text):
             return ClassificationResult(
                 content_type=ContentType.PREDICTION,
-                verdict=VerdictType.FUTURE_LOOKING,
+                verdict=None,
                 is_verifiable=False,
                 confidence=None,
                 is_calibrated=False,
@@ -163,7 +163,7 @@ class ContentClassifier:
         if self.OPINION_MARKERS.search(text):
             return ClassificationResult(
                 content_type=ContentType.OPINION,
-                verdict=VerdictType.VIEWPOINT,
+                verdict=None,
                 is_verifiable=False,
                 confidence=None,
                 is_calibrated=False,

@@ -30,3 +30,7 @@ class DisagreementResult:
     disagreement_details: str | None
     unknown_reason: UnknownReason | None
     judge_evaluations: list[JudgeEvaluationData]
+    degraded_evaluation: bool = False
+    judges_used: int = 2
+    third_judge_invoked: bool = False
+    arbitration_reason: str | None = None

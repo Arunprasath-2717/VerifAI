@@ -64,16 +64,20 @@ class SecondarySemanticJudge(BaseJudge):
             claim_nums = set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", claim_text))
             snippet_nums = set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", item.snippet))
 
-            if claim_nums and snippet_nums and not (claim_nums & snippet_nums):
-                # Only flag contradiction if significant topic keywords align
-                shared_tokens = [w for w in claim_tokens if w in snippet_clean]
-                if len(shared_tokens) >= 2:
-                    is_contradicted = True
-                    rationale = (
-                        f"Secondary judge detected conflicting numeric values: "
-                        f"expected {claim_nums}, found {snippet_nums} in source."
-                    )
-                    break
+            if claim_nums and snippet_nums:
+                has_num_conflict = not (claim_nums & snippet_nums) or bool(
+                    (claim_nums - snippet_nums) and (snippet_nums - claim_nums)
+                )
+                if has_num_conflict:
+                    # Only flag contradiction if significant topic keywords align
+                    shared_tokens = [w for w in claim_tokens if w in snippet_clean]
+                    if len(shared_tokens) >= 2:
+                        is_contradicted = True
+                        rationale = (
+                            "Secondary judge detected conflicting numeric values: "
+                            f"claim={claim_nums}, source={snippet_nums}."
+                        )
+                        break
 
             # Inclusion count
             contained_tokens = [w for w in claim_tokens if w in snippet_clean]

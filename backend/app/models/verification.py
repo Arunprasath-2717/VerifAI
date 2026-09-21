@@ -93,6 +93,11 @@ class VerificationJob(Base, TimestampMixin):
         default="NOT_CALIBRATED",
         nullable=False,
     )
+    degraded_evaluation: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
     summary: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
@@ -170,11 +175,25 @@ class ExtractedClaim(Base, TimestampMixin):
         nullable=False,
         default="FACTUAL",
     )
-    verdict: Mapped[str] = mapped_column(
+    verdict: Mapped[str | None] = mapped_column(
         String(32),
-        nullable=False,
-        default="UNKNOWN",
+        nullable=True,
+        default=None,
         index=True,
+    )
+    is_verifiable: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+    degraded_evaluation: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+    arbitration_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
     confidence: Mapped[float | None] = mapped_column(
         Float,

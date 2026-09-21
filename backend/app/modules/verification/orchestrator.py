@@ -33,6 +33,7 @@ from app.schemas.verification import (
     AuditRecordSchema,
     ClaimResultSchema,
     EvidenceSchema,
+    JudgeDecision,
     JudgeEvaluationSchema,
     UnknownReason,
     VerdictType,
@@ -53,6 +54,7 @@ class VerificationOrchestrator:
         classifier: ContentClassifier | None = None,
         retriever: BaseEvidenceRetriever | None = None,
         judges: list[BaseJudge] | None = None,
+        tie_breaker_judge: BaseJudge | None = None,
         disagreement_engine: DisagreementEngine | None = None,
         decision_engine: DecisionEngine | None = None,
     ) -> None:
@@ -63,6 +65,7 @@ class VerificationOrchestrator:
             DeterministicRuleJudge(name="Judge-Primary-Deterministic"),
             SecondarySemanticJudge(name="Judge-Secondary-Semantic"),
         ]
+        self.tie_breaker_judge = tie_breaker_judge
         self.disagreement_engine = disagreement_engine or DisagreementEngine()
         self.decision_engine = decision_engine or DecisionEngine()
 
@@ -172,7 +175,8 @@ class VerificationOrchestrator:
 
                 # Step 4: Independent Judge Evaluation
                 if evidence_items:
-                    for judge in self.judges:
+                    # Evaluate primary 2 judges
+                    for judge in self.judges[:2]:
                         try:
                             eval_data = await judge.evaluate(item.text, evidence_items)
                             judge_evaluations.append(eval_data)
@@ -183,17 +187,63 @@ class VerificationOrchestrator:
                                 item.index,
                                 j_exc,
                             )
+                            judge_evaluations.append(
+                                JudgeEvaluationData(
+                                    judge_id=uuid.uuid4(),
+                                    judge_name=judge.name,
+                                    judgment=JudgeDecision.UNAVAILABLE,
+                                    rationale=f"Judge evaluation failed: {j_exc}",
+                                )
+                            )
 
                     # Step 5: Disagreement Analysis & Consensus
                     disagreement = self.disagreement_engine.arbitrate(
                         judge_evaluations,
                         strict_consensus=request.options.strict_consensus,
                     )
+
+                    # If primary 2 judges disagreed and tie-breaker is configured
+                    if (
+                        disagreement.has_disagreement
+                        and self.tie_breaker_judge is not None
+                    ):
+                        try:
+                            tb_data = await self.tie_breaker_judge.evaluate(
+                                item.text, evidence_items
+                            )
+                            judge_evaluations.append(tb_data)
+                        except Exception as tb_exc:
+                            logger.warning(
+                                "Tie-breaker judge %s failed on claim %d: %s",
+                                self.tie_breaker_judge.name,
+                                item.index,
+                                tb_exc,
+                            )
+                            judge_evaluations.append(
+                                JudgeEvaluationData(
+                                    judge_id=uuid.uuid4(),
+                                    judge_name=self.tie_breaker_judge.name,
+                                    judgment=JudgeDecision.UNAVAILABLE,
+                                    rationale=(
+                                        f"Tie-breaker evaluation failed: {tb_exc}"
+                                    ),
+                                )
+                            )
+
+                        # Re-arbitrate with all 3 evaluations
+                        disagreement = self.disagreement_engine.arbitrate(
+                            judge_evaluations,
+                            strict_consensus=request.options.strict_consensus,
+                        )
+
                     claim_verdict = disagreement.consensus_verdict
                     unknown_reason = disagreement.unknown_reason
+                    degraded_evaluation = disagreement.degraded_evaluation
+                    arbitration_reason = disagreement.arbitration_reason
                     if disagreement.has_disagreement:
                         explanation = (
-                            f"Judge disagreement: {disagreement.disagreement_details}"
+                            disagreement.disagreement_details
+                            or f"Judge disagreement: {arbitration_reason}"
                         )
                     else:
                         explanation = (
@@ -202,10 +252,27 @@ class VerificationOrchestrator:
                         )
                 else:
                     claim_verdict = VerdictType.UNKNOWN
-                    unknown_reason = UnknownReason.INSUFFICIENT_EVIDENCE
-                    explanation = (
-                        "No relevant evidence found in verified knowledge index."
-                    )
+                    degraded_evaluation = False
+                    arbitration_reason = None
+                    if request.options.enable_live_search:
+                        unknown_reason = UnknownReason.SEARCH_UNKNOWN
+                        explanation = (
+                            "External search protocol was attempted but "
+                            "failed to produce usable evidence."
+                        )
+                    else:
+                        unknown_reason = UnknownReason.CONTEXT_UNKNOWN
+                        explanation = (
+                            "Supplied local context or knowledge index does not "
+                            "establish or contradict the claim."
+                        )
+            else:
+                # Non-verifiable content receives verdict=None and is_verifiable=False
+                claim_verdict = None
+                unknown_reason = None
+                degraded_evaluation = False
+                arbitration_reason = None
+                explanation = classification.explanation
 
             # Construct claim data dictionary
             claim_data = {
@@ -215,12 +282,15 @@ class VerificationOrchestrator:
                 "start_offset": item.start_offset,
                 "end_offset": item.end_offset,
                 "content_type": classification.content_type,
-                "verdict": claim_verdict or VerdictType.UNKNOWN,
+                "verdict": claim_verdict,
+                "is_verifiable": classification.is_verifiable,
                 "confidence": None,
                 "is_calibrated": False,
                 "calibration_status": "NOT_CALIBRATED",
-                "unknown_reason": str(unknown_reason) if unknown_reason else None,
+                "unknown_reason": unknown_reason,
                 "explanation": explanation,
+                "degraded_evaluation": degraded_evaluation,
+                "arbitration_reason": arbitration_reason,
                 "evidence": evidence_items,
                 "judges": judge_evaluations,
             }
@@ -235,11 +305,16 @@ class VerificationOrchestrator:
                 start_offset=item.start_offset,
                 end_offset=item.end_offset,
                 content_type=classification.content_type.value,
-                verdict=claim_verdict.value if claim_verdict else "UNKNOWN",
+                verdict=claim_verdict.value if claim_verdict else None,
+                is_verifiable=classification.is_verifiable,
+                degraded_evaluation=degraded_evaluation,
+                arbitration_reason=arbitration_reason,
                 confidence=None,
                 is_calibrated=False,
                 calibration_status="NOT_CALIBRATED",
-                unknown_reason=str(unknown_reason) if unknown_reason else None,
+                unknown_reason=(
+                    unknown_reason.value if unknown_reason is not None else None
+                ),
                 explanation=explanation,
             )
 
@@ -320,6 +395,9 @@ class VerificationOrchestrator:
             calibrated_confidence=None,
             is_calibrated=False,
             calibration_status="NOT_CALIBRATED",
+            degraded_evaluation=any(
+                c.get("degraded_evaluation", False) for c in claims_processed
+            ),
             summary=doc_summary.summary_text,
             completed_at=completed_at,
             execution_metadata={
@@ -393,12 +471,15 @@ class VerificationOrchestrator:
                     start_offset=c["start_offset"],
                     end_offset=c["end_offset"],
                     content_type=c["content_type"].value,
-                    verdict=c["verdict"].value,
+                    verdict=c["verdict"],
+                    is_verifiable=c["is_verifiable"],
                     confidence=c["confidence"],
                     is_calibrated=c["is_calibrated"],
                     calibration_status=c["calibration_status"],
                     unknown_reason=c["unknown_reason"],
                     explanation=c["explanation"],
+                    degraded_evaluation=c["degraded_evaluation"],
+                    arbitration_reason=c["arbitration_reason"],
                     evidence=ev_schemas,
                     judges=je_schemas,
                 )
@@ -431,6 +512,9 @@ class VerificationOrchestrator:
             calibrated_confidence=None,
             is_calibrated=False,
             calibration_status="NOT_CALIBRATED",
+            degraded_evaluation=any(
+                c.get("degraded_evaluation", False) for c in claims_processed
+            ),
             summary=doc_summary.summary_text,
             created_at=now_utc,
             completed_at=completed_at,

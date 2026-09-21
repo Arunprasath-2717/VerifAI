@@ -3,7 +3,6 @@
 import uuid
 from datetime import UTC, datetime
 
-from benchmark.schemas import ContentType, VerdictType
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -16,6 +15,7 @@ from app.models.verification import (
     VerificationJob,
 )
 from app.modules.judging.models import JudgeDecision
+from app.schemas.verification import ContentType, VerdictType
 
 
 def test_model_table_names() -> None:

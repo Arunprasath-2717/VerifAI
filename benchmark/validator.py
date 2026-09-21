@@ -126,6 +126,18 @@ def validate_benchmark_dataset(
                     f"found {actual_count}."
                 )
 
+        expected_splits = {
+            "dev": 40,
+            "test": 60,
+        }
+        for sp, expected_count in expected_splits.items():
+            actual_count = report.split_counts.get(sp, 0)
+            if actual_count != expected_count:
+                report.errors.append(
+                    f"Formal PRD evaluation split '{sp}' requires "
+                    f"{expected_count} cases, found {actual_count}."
+                )
+
     report.is_valid = len(report.errors) == 0
     return report
 

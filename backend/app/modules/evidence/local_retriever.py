@@ -49,7 +49,9 @@ class LocalPassageRetriever(BaseEvidenceRetriever):
     def __init__(self, passages: list[dict[str, str]] | None = None) -> None:
         self._passages: list[KnowledgePassage] = []
         # Seed with initial core facts
-        seed_data = passages or self._get_default_reference_passages()
+        seed_data = (
+            passages if passages is not None else self._get_default_reference_passages()
+        )
         for p in seed_data:
             self.add_passage(
                 title=p["title"],

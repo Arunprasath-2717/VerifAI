@@ -20,8 +20,11 @@ from app.modules.verification.orchestrator import VerificationOrchestrator
 from app.schemas.verification import (
     AuditRecordSchema,
     ClaimResultSchema,
+    ContentType,
     EvidenceSchema,
     JudgeEvaluationSchema,
+    UnknownReason,
+    VerdictType,
     VerificationCreateRequest,
     VerificationResponse,
 )
@@ -148,13 +151,20 @@ async def get_verification(
                 claim_text=c.claim_text,
                 start_offset=c.start_offset,
                 end_offset=c.end_offset,
-                content_type=c.content_type,
-                verdict=c.verdict,
+                content_type=ContentType(c.content_type)
+                if c.content_type is not None
+                else ContentType.FACTUAL,
+                verdict=VerdictType(c.verdict) if c.verdict is not None else None,
+                is_verifiable=c.is_verifiable,
                 confidence=c.confidence,
                 is_calibrated=c.is_calibrated,
                 calibration_status=c.calibration_status,
-                unknown_reason=c.unknown_reason,
+                unknown_reason=UnknownReason(c.unknown_reason)
+                if c.unknown_reason is not None
+                else None,
                 explanation=c.explanation,
+                degraded_evaluation=c.degraded_evaluation,
+                arbitration_reason=c.arbitration_reason,
                 evidence=evidence_out,
                 judges=judges_out,
             )
@@ -187,6 +197,7 @@ async def get_verification(
         calibrated_confidence=job.calibrated_confidence,
         is_calibrated=job.is_calibrated,
         calibration_status=job.calibration_status,
+        degraded_evaluation=job.degraded_evaluation,
         summary=job.summary,
         created_at=job.created_at,
         completed_at=job.completed_at,

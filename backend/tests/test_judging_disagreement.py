@@ -142,8 +142,8 @@ def test_disagreement_engine_full_consensus_support() -> None:
     assert res.disagreement_details is None
 
 
-def test_disagreement_engine_contradiction_priority() -> None:
-    """Verify CONTRADICTED takes precedence over SUPPORTED for hallucination safety."""
+def test_disagreement_engine_case_d_two_judges_disagree_third_unavailable() -> None:
+    """Case D: Two judges disagree and third judge is unavailable -> UNKNOWN, degraded=True."""
     engine = DisagreementEngine()
     evals = [
         JudgeEvaluationData(
@@ -164,47 +164,241 @@ def test_disagreement_engine_contradiction_priority() -> None:
         ),
     ]
     res = engine.arbitrate(evals)
-    assert res.consensus_verdict == VerdictType.CONTRADICTED
+    assert res.consensus_verdict == VerdictType.UNKNOWN
     assert res.has_disagreement is True
-    assert res.disagreement_details is not None
-    assert "Conflict detected" in res.disagreement_details
+    assert res.degraded_evaluation is True
+    assert res.judges_used == 2
+    assert res.third_judge_invoked is False
+    assert res.unknown_reason == UnknownReason.CONFLICTING_EVIDENCE
+    assert "tie-breaker is unavailable" in (res.arbitration_reason or "")
 
 
-def test_disagreement_engine_supported_vs_insufficient() -> None:
-    """Verify SUPPORTED vs INSUFFICIENT resolves to UNKNOWN."""
+def test_disagreement_engine_case_b_three_judges_majority_contradicted() -> None:
+    """Case B: Two judges disagree, third judge produces majority for CONTRADICTED."""
     engine = DisagreementEngine()
     evals = [
         JudgeEvaluationData(
             judge_id=uuid.uuid4(),
             judge_name="Judge-Rule",
-            judgment=JudgeDecision.SUPPORTED,
-            confidence=0.8,
-            rationale="Some match",
+            judgment=JudgeDecision.CONTRADICTED,
+            confidence=1.0,
+            rationale="Numeric mismatch found",
             evidence_references=[],
         ),
         JudgeEvaluationData(
             judge_id=uuid.uuid4(),
-            judge_name="Judge-Secondary",
+            judge_name="Judge-Semantic",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.7,
+            rationale="Tokens matched",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-TieBreaker",
+            judgment=JudgeDecision.CONTRADICTED,
+            confidence=0.9,
+            rationale="Cross-check confirmed numeric contradiction",
+            evidence_references=[],
+        ),
+    ]
+    res = engine.arbitrate(evals)
+    assert res.consensus_verdict == VerdictType.CONTRADICTED
+    assert res.has_disagreement is True
+    assert res.degraded_evaluation is False
+    assert res.judges_used == 3
+    assert res.third_judge_invoked is True
+    assert len(res.judge_evaluations) == 3
+
+
+def test_disagreement_engine_case_b_three_judges_majority_supported() -> None:
+    """Case B: Two judges disagree, third judge produces majority for SUPPORTED."""
+    engine = DisagreementEngine()
+    evals = [
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-Rule",
+            judgment=JudgeDecision.CONTRADICTED,
+            confidence=0.6,
+            rationale="Weak mismatch",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-Semantic",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.85,
+            rationale="Strong token match",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-TieBreaker",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.9,
+            rationale="Independent evaluation supports claim",
+            evidence_references=[],
+        ),
+    ]
+    res = engine.arbitrate(evals)
+    assert res.consensus_verdict == VerdictType.SUPPORTED
+    assert res.has_disagreement is True
+    assert res.degraded_evaluation is False
+    assert res.judges_used == 3
+    assert res.third_judge_invoked is True
+    assert len(res.judge_evaluations) == 3
+
+
+def test_disagreement_engine_case_c_all_three_judges_disagree() -> None:
+    """Case C: All three judges disagree (SUPPORTED, CONTRADICTED, INSUFFICIENT)."""
+    engine = DisagreementEngine()
+    evals = [
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-1",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.7,
+            rationale="Supported",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-2",
+            judgment=JudgeDecision.CONTRADICTED,
+            confidence=0.7,
+            rationale="Contradicted",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-3",
             judgment=JudgeDecision.INSUFFICIENT_EVIDENCE,
             confidence=None,
-            rationale="Insufficient overlap",
+            rationale="Insufficient evidence",
             evidence_references=[],
         ),
     ]
     res = engine.arbitrate(evals)
     assert res.consensus_verdict == VerdictType.UNKNOWN
     assert res.has_disagreement is True
+    assert res.degraded_evaluation is True
+    assert res.judges_used == 3
+    assert res.third_judge_invoked is True
     assert res.unknown_reason == UnknownReason.CONFLICTING_EVIDENCE
+    assert "All three judges disagreed" in (res.arbitration_reason or "")
+
+
+def test_disagreement_engine_case_e_invalid_or_unusable_judge_output() -> None:
+    """Case E: Invalid or unusable judge outputs trigger safe degraded evaluation."""
+    engine = DisagreementEngine()
+    # All unavailable
+    evals_all_down = [
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-1",
+            judgment=JudgeDecision.UNAVAILABLE,
+            confidence=None,
+            rationale="Service connection timed out",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-2",
+            judgment=JudgeDecision.UNAVAILABLE,
+            confidence=None,
+            rationale="Service offline",
+            evidence_references=[],
+        ),
+    ]
+    res_all_down = engine.arbitrate(evals_all_down)
+    assert res_all_down.consensus_verdict == VerdictType.UNKNOWN
+    assert res_all_down.degraded_evaluation is True
+    assert res_all_down.unknown_reason == UnknownReason.INSUFFICIENT_EVIDENCE
+    assert "All configured judges reported UNAVAILABLE" in (
+        res_all_down.disagreement_details or ""
+    )
+
+    # Partial failure: 1 active out of 2
+    evals_partial = [
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-1",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.9,
+            rationale="Valid",
+            evidence_references=[],
+        ),
+        JudgeEvaluationData(
+            judge_id=uuid.uuid4(),
+            judge_name="Judge-2",
+            judgment=JudgeDecision.UNAVAILABLE,
+            confidence=None,
+            rationale="Crashed",
+            evidence_references=[],
+        ),
+    ]
+    res_partial = engine.arbitrate(evals_partial)
+    assert res_partial.consensus_verdict == VerdictType.UNKNOWN
+    assert res_partial.has_disagreement is True
+    assert res_partial.degraded_evaluation is True
+    assert "Insufficient active judges" in (res_partial.disagreement_details or "")
+
+
+def test_disagreement_engine_preserves_individual_judge_outputs() -> None:
+    """Verify individual judge identities, verdicts, confidences, and rationales are preserved."""
+    engine = DisagreementEngine()
+    id1, id2 = uuid.uuid4(), uuid.uuid4()
+    evals = [
+        JudgeEvaluationData(
+            judge_id=id1,
+            judge_name="DeterministicRuleJudge",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.95,
+            rationale="Exact numeric match",
+            evidence_references=["ref-1"],
+        ),
+        JudgeEvaluationData(
+            judge_id=id2,
+            judge_name="SecondarySemanticJudge",
+            judgment=JudgeDecision.SUPPORTED,
+            confidence=0.88,
+            rationale="High semantic overlap",
+            evidence_references=["ref-2"],
+        ),
+    ]
+    res = engine.arbitrate(evals)
+    assert len(res.judge_evaluations) == 2
+    assert res.judge_evaluations[0].judge_id == id1
+    assert res.judge_evaluations[0].judge_name == "DeterministicRuleJudge"
+    assert res.judge_evaluations[0].confidence == 0.95
+    assert res.judge_evaluations[1].judge_id == id2
+    assert res.judge_evaluations[1].confidence == 0.88
 
 
 def test_decision_engine_aggregation_metrics() -> None:
     """Verify document-level trust score calculation and counts."""
     decision_engine = DecisionEngine()
     claims = [
-        {"verdict": VerdictType.SUPPORTED, "content_type": ContentType.FACTUAL},
-        {"verdict": VerdictType.SUPPORTED, "content_type": ContentType.FACTUAL},
-        {"verdict": VerdictType.CONTRADICTED, "content_type": ContentType.FACTUAL},
-        {"verdict": VerdictType.UNKNOWN, "content_type": ContentType.FACTUAL},
+        {
+            "verdict": VerdictType.SUPPORTED,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
+        {
+            "verdict": VerdictType.SUPPORTED,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
+        {
+            "verdict": VerdictType.CONTRADICTED,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
+        {
+            "verdict": VerdictType.UNKNOWN,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
     ]
     summary = decision_engine.aggregate(claims)
 
@@ -219,21 +413,37 @@ def test_decision_engine_aggregation_metrics() -> None:
 
     # When no contradictions exist, trust score is proportion of supported claims
     claims_clean = [
-        {"verdict": VerdictType.SUPPORTED, "content_type": ContentType.FACTUAL},
-        {"verdict": VerdictType.SUPPORTED, "content_type": ContentType.FACTUAL},
-        {"verdict": VerdictType.UNKNOWN, "content_type": ContentType.FACTUAL},
-        {"verdict": VerdictType.UNKNOWN, "content_type": ContentType.FACTUAL},
+        {
+            "verdict": VerdictType.SUPPORTED,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
+        {
+            "verdict": VerdictType.SUPPORTED,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
+        {
+            "verdict": VerdictType.UNKNOWN,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
+        {
+            "verdict": VerdictType.UNKNOWN,
+            "content_type": ContentType.FACTUAL,
+            "is_verifiable": True,
+        },
     ]
     summary2 = decision_engine.aggregate(claims_clean)
     assert summary2.trust_score == 50.0
 
 
 def test_decision_engine_non_factual_exempt() -> None:
-    """Verify non-factual content yields exempt None trust score."""
+    """Verify non-factual content yields exempt None trust score and verdict=None."""
     decision_engine = DecisionEngine()
     claims = [
-        {"verdict": VerdictType.VIEWPOINT, "content_type": ContentType.OPINION},
-        {"verdict": VerdictType.CREATIVE, "content_type": ContentType.CREATIVE},
+        {"verdict": None, "is_verifiable": False, "content_type": ContentType.OPINION},
+        {"verdict": None, "is_verifiable": False, "content_type": ContentType.CREATIVE},
     ]
     summary = decision_engine.aggregate(claims)
 

@@ -68,9 +68,9 @@ MULTILINGUAL_TEXTS = [
     for i in range(20)
 ]
 
-# 2. Dual Judge Disagreement Decision Matrix (40 permutations)
+# 2. Dual Judge Disagreement Decision Matrix
 JUDGE_PERMUTATIONS = [
-    # Dual agreement
+    # Case A: Dual agreement (both judges agree)
     (JudgeDecision.SUPPORTED, JudgeDecision.SUPPORTED, VerdictType.SUPPORTED, False),
     (
         JudgeDecision.CONTRADICTED,
@@ -85,41 +85,64 @@ JUDGE_PERMUTATIONS = [
         VerdictType.UNKNOWN,
         False,
     ),
-    # High-conflict contradictions (Conservative Contradiction Priority)
+    # Case D: Two judges disagree and third judge is unavailable -> UNKNOWN, has_disagreement=True
     (
         JudgeDecision.SUPPORTED,
         JudgeDecision.CONTRADICTED,
-        VerdictType.CONTRADICTED,
+        VerdictType.UNKNOWN,
         True,
     ),
     (
         JudgeDecision.CONTRADICTED,
         JudgeDecision.SUPPORTED,
-        VerdictType.CONTRADICTED,
+        VerdictType.UNKNOWN,
         True,
     ),
-    # Partial evidence vs Unknown
     (JudgeDecision.SUPPORTED, JudgeDecision.UNKNOWN, VerdictType.UNKNOWN, True),
     (JudgeDecision.UNKNOWN, JudgeDecision.SUPPORTED, VerdictType.UNKNOWN, True),
-    (JudgeDecision.CONTRADICTED, JudgeDecision.UNKNOWN, VerdictType.CONTRADICTED, True),
-    (JudgeDecision.UNKNOWN, JudgeDecision.CONTRADICTED, VerdictType.CONTRADICTED, True),
-    # Single judge available (e.g. secondary unavailable)
-    (JudgeDecision.SUPPORTED, JudgeDecision.UNAVAILABLE, VerdictType.SUPPORTED, False),
+    (JudgeDecision.CONTRADICTED, JudgeDecision.UNKNOWN, VerdictType.UNKNOWN, True),
+    (JudgeDecision.UNKNOWN, JudgeDecision.CONTRADICTED, VerdictType.UNKNOWN, True),
+    (
+        JudgeDecision.SUPPORTED,
+        JudgeDecision.INSUFFICIENT_EVIDENCE,
+        VerdictType.UNKNOWN,
+        True,
+    ),
+    (
+        JudgeDecision.INSUFFICIENT_EVIDENCE,
+        JudgeDecision.SUPPORTED,
+        VerdictType.UNKNOWN,
+        True,
+    ),
+    (
+        JudgeDecision.CONTRADICTED,
+        JudgeDecision.INSUFFICIENT_EVIDENCE,
+        VerdictType.UNKNOWN,
+        True,
+    ),
+    (
+        JudgeDecision.INSUFFICIENT_EVIDENCE,
+        JudgeDecision.CONTRADICTED,
+        VerdictType.UNKNOWN,
+        True,
+    ),
+    # Case E: Single judge available (only 1 active out of 2) -> UNKNOWN, has_disagreement=True
+    (JudgeDecision.SUPPORTED, JudgeDecision.UNAVAILABLE, VerdictType.UNKNOWN, True),
     (
         JudgeDecision.CONTRADICTED,
         JudgeDecision.UNAVAILABLE,
-        VerdictType.CONTRADICTED,
-        False,
+        VerdictType.UNKNOWN,
+        True,
     ),
-    (JudgeDecision.UNKNOWN, JudgeDecision.UNAVAILABLE, VerdictType.UNKNOWN, False),
-    (JudgeDecision.UNAVAILABLE, JudgeDecision.SUPPORTED, VerdictType.SUPPORTED, False),
+    (JudgeDecision.UNKNOWN, JudgeDecision.UNAVAILABLE, VerdictType.UNKNOWN, True),
+    (JudgeDecision.UNAVAILABLE, JudgeDecision.SUPPORTED, VerdictType.UNKNOWN, True),
     (
         JudgeDecision.UNAVAILABLE,
         JudgeDecision.CONTRADICTED,
-        VerdictType.CONTRADICTED,
-        False,
+        VerdictType.UNKNOWN,
+        True,
     ),
-    # Both unavailable
+    # Case E: Both unavailable -> UNKNOWN, has_disagreement=False
     (JudgeDecision.UNAVAILABLE, JudgeDecision.UNAVAILABLE, VerdictType.UNKNOWN, False),
 ]
 
@@ -341,10 +364,10 @@ class TestPipelineReliabilityMatrix:
     ) -> None:
         """Verify trust score formula under DecisionEngine.aggregate."""
         claims: list[dict[str, Any]] = (
-            [{"verdict": VerdictType.SUPPORTED}] * s_count
-            + [{"verdict": VerdictType.CONTRADICTED}] * c_count
-            + [{"verdict": VerdictType.UNKNOWN}] * u_count
-            + [{"verdict": VerdictType.VIEWPOINT}] * nf_count
+            [{"verdict": VerdictType.SUPPORTED, "is_verifiable": True}] * s_count
+            + [{"verdict": VerdictType.CONTRADICTED, "is_verifiable": True}] * c_count
+            + [{"verdict": VerdictType.UNKNOWN, "is_verifiable": True}] * u_count
+            + [{"verdict": None, "is_verifiable": False}] * nf_count
         )
         summary = decision_engine.aggregate(claims)
         if expected_score is None:
@@ -352,3 +375,76 @@ class TestPipelineReliabilityMatrix:
         else:
             assert summary.trust_score is not None
             assert summary.trust_score == pytest.approx(expected_score, abs=0.1)
+
+    @pytest.mark.parametrize(
+        ("j1", "j2", "j3", "expected_verdict", "expected_degraded", "expected_invoked"),
+        [
+            # Case B: 2-of-3 majority
+            (
+                JudgeDecision.SUPPORTED,
+                JudgeDecision.CONTRADICTED,
+                JudgeDecision.SUPPORTED,
+                VerdictType.SUPPORTED,
+                False,
+                True,
+            ),
+            (
+                JudgeDecision.CONTRADICTED,
+                JudgeDecision.SUPPORTED,
+                JudgeDecision.CONTRADICTED,
+                VerdictType.CONTRADICTED,
+                False,
+                True,
+            ),
+            (
+                JudgeDecision.SUPPORTED,
+                JudgeDecision.UNKNOWN,
+                JudgeDecision.SUPPORTED,
+                VerdictType.SUPPORTED,
+                False,
+                True,
+            ),
+            (
+                JudgeDecision.CONTRADICTED,
+                JudgeDecision.UNKNOWN,
+                JudgeDecision.CONTRADICTED,
+                VerdictType.CONTRADICTED,
+                False,
+                True,
+            ),
+            # Case C: All 3 disagree -> UNKNOWN, degraded=True
+            (
+                JudgeDecision.SUPPORTED,
+                JudgeDecision.CONTRADICTED,
+                JudgeDecision.INSUFFICIENT_EVIDENCE,
+                VerdictType.UNKNOWN,
+                True,
+                True,
+            ),
+        ],
+    )
+    def test_triple_judge_arbitration_matrix(
+        self,
+        j1: JudgeDecision,
+        j2: JudgeDecision,
+        j3: JudgeDecision,
+        expected_verdict: VerdictType,
+        expected_degraded: bool,
+        expected_invoked: bool,
+    ) -> None:
+        """Verify 3-judge arbitration under Case B (majority) and Case C (split)."""
+        evals = [
+            JudgeEvaluationData(
+                judge_name="J1", judgment=j1, confidence=0.8, rationale="R1"
+            ),
+            JudgeEvaluationData(
+                judge_name="J2", judgment=j2, confidence=0.8, rationale="R2"
+            ),
+            JudgeEvaluationData(
+                judge_name="J3", judgment=j3, confidence=0.8, rationale="R3"
+            ),
+        ]
+        res = disagreement_engine.arbitrate(evals)
+        assert res.consensus_verdict == expected_verdict
+        assert res.degraded_evaluation == expected_degraded
+        assert res.third_judge_invoked == expected_invoked

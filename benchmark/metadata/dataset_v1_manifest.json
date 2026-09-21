@@ -1,0 +1,20 @@
+{
+  "dataset_name": "verifai_hallucination_benchmark",
+  "version": "dataset_v1",
+  "status": "FROZEN",
+  "checksum_sha256": "36efa77db7b78818fc4a69705c95d77fb6df64f4e526079100d3d5af7a78f41e",
+  "total_cases": 100,
+  "category_breakdown": {
+    "VERIFIED_FACT": 40,
+    "CONTROLLED_HALLUCINATION": 30,
+    "TRUE_UNKNOWN": 30
+  },
+  "claim_count": 100,
+  "split_counts": {
+    "dev": 40,
+    "test": 60
+  },
+  "kappa_score": 0.8487,
+  "created_at": "2026-09-21T07:24:57Z",
+  "frozen_at": "2026-09-21T07:24:57Z"
+}

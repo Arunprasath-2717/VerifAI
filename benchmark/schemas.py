@@ -27,17 +27,15 @@ class ContentType(StrEnum):
 
 
 class VerdictType(StrEnum):
-    """PRD Section 6 & Section 10 verdict types."""
+    """PRD Section 6 & Section 10 factual verdict types.
+
+    The factual verdict contract is strictly three values:
+    SUPPORTED, CONTRADICTED, UNKNOWN.
+    """
 
     SUPPORTED = "SUPPORTED"
     CONTRADICTED = "CONTRADICTED"
     UNKNOWN = "UNKNOWN"
-    VIEWPOINT = "VIEWPOINT"
-    FUTURE_LOOKING = "FUTURE_LOOKING"
-    SCENARIO = "SCENARIO"
-    CREATIVE = "CREATIVE"
-    INSTRUCTION = "INSTRUCTION"
-    INCONCLUSIVE = "INCONCLUSIVE"
 
 
 class UnknownReason(StrEnum):
@@ -58,11 +56,17 @@ class ClaimLabel(StrEnum):
 
 
 class DatasetSplit(StrEnum):
-    """Dataset partition splits for reproducible benchmarking."""
+    """Dataset partition splits for reproducible benchmarking.
 
-    TRAIN = "train"
+    Formal PRD protocol specifies:
+    - DEV (40 cases): Development set
+    - TEST (60 cases): Held-out, frozen evaluation set
+    - TRAIN: Retained for compatibility; not part of formal PRD evaluation protocol.
+    """
+
     DEV = "dev"
     TEST = "test"
+    TRAIN = "train"
 
 
 class DatasetStatus(StrEnum):

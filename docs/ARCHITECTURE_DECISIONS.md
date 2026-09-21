@@ -88,16 +88,24 @@
 
 ---
 
-## ADR-010: Ingestion API Contract, SSRF Perimeter & Browser Extension Architecture
-- **Status:** Accepted (Locked)
-- **Context:** Phase 4 requires capturing AI responses directly from active user browser sessions (ChatGPT, Claude, Gemini, DeepSeek, Perplexity) and ingestion through a decoupled API perimeter. The ingestion layer must prevent Server-Side Request Forgery (SSRF) abuse through submitted source URLs, handle client metadata cleanly, support optional immediate verification triggering, and provide an offline-resilient, permission-minimal browser extension.
+## ADR-010: Ingestion API Contract, SSRF Perimeter & Browser Extension Governance
+- **Status:** Accepted (Locked with Governance Clarification)
+- **Context:** Phase 4 requires capturing AI responses directly from active user browser sessions (ChatGPT, Claude, Gemini, DeepSeek, Perplexity) and ingestion through a decoupled API perimeter. The ingestion layer must prevent Server-Side Request Forgery (SSRF) abuse through submitted source URLs, handle client metadata cleanly, support optional immediate verification triggering, and clarify client boundaries relative to core backend MVP delivery.
 - **Decision:**
-  - **API Contract:** Expose dedicated `/api/v1/ingest` (POST) and `/api/v1/ingest/{id}` (GET) endpoints backed by SQLAlchemy `IngestedPayload` ORM persistence and Pydantic v2 schemas (`extra="forbid"`).
-  - **SSRF Defense-in-Depth:** Mandatory pre-persistence URL validation via `is_safe_url`. Rejects loopback (`127.0.0.0/8`, `::1`), link-local/cloud metadata (`169.254.0.0/16`, `fe80::/10`), private RFC-1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), unique local IPv6 (`fc00::/7`), carrier-grade NAT, and non-HTTP schemes with HTTP 400.
-  - **Immediate Verification Mode:** Support `verify_immediately: bool = True` triggering `VerificationOrchestrator` in-process and embedding the full verification outcome in the ingestion response, while retaining asynchronous persistence.
-  - **Chrome Manifest V3 Extension:** Manifest V3 client using scoped permissions (`activeTab`, `scripting`, `storage`, `contextMenus`, `http://localhost:8000/*`), intelligent DOM heuristics targeting modern LLM web client markup, user selection fallback, context menu integration, and dark glassmorphism popup UI.
+  1. **Core First-Cycle Interface:** The core first-cycle VerifAI interface is strictly the REST API (`/api/v1/verify`, `/api/v1/ingest`). All verification orchestration, claim extraction, evidence retrieval, multi-judge arbitration, and verdict generation reside exclusively in the backend (ADR-005).
+  2. **Auxiliary Demonstration Client Status:** The Chrome extension (`clients/chrome-extension` / `extension/`) is strictly an auxiliary demonstration client.
+  3. **Outside Core MVP Acceptance Gate:** The extension is outside the locked core backend MVP acceptance gate. Its delivery, test coverage, or feature completeness does not alter or gate backend acceptance.
+  4. **No Separate Core Architecture:** The extension does not represent or introduce a separate core architecture. It interacts with the backend strictly via the public REST API endpoints as an external client.
+  5. **No React or MCP Authorization:** The existence or maintenance of the extension does NOT authorize React, Next.js, or Model Context Protocol (MCP) implementations. React and MCP remain strictly locked out per ADR-006.
+  6. **Isolated Client Package:** The Chrome extension may remain as an isolated, standalone vanilla JS/HTML client package.
+  7. **Backend Ownership Boundaries:** Backend ownership boundaries remain unchanged. The backend owns 100% of pipeline execution, truth calculation, and audit persistence.
+  8. **Phase 5 Remains Locked:** Phase 5 research scope (calibration, empirical baseline benchmarks B0–B3, threshold optimization, vector index deployment) remains strictly locked and cannot be entered without explicit human sign-off.
+  9. **API Contract:** Expose dedicated `/api/v1/ingest` (POST) and `/api/v1/ingest/{id}` (GET) endpoints backed by SQLAlchemy `IngestedPayload` ORM persistence and Pydantic v2 schemas (`extra="forbid"`).
+  10. **SSRF Defense-in-Depth:** Mandatory pre-persistence URL validation via `is_safe_url`. Rejects loopback (`127.0.0.0/8`, `::1`), link-local/cloud metadata (`169.254.0.0/16`, `fe80::/10`), private RFC-1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), unique local IPv6 (`fc00::/7`), carrier-grade NAT, and non-HTTP schemes with HTTP 400.
+  11. **Immediate Verification Mode:** Support `verify_immediately: bool = True` triggering `VerificationOrchestrator` in-process and embedding the full verification outcome in the ingestion response, while retaining asynchronous persistence.
 - **Consequences:**
   - Secures backend and cloud environments against malicious URL callback abuse.
   - Decouples client text capture from pipeline execution details.
-  - Enables single-click verification of AI responses across leading LLM interfaces without requiring browser credential exposure.
+  - Prevents unauthorized scope creep: React, MCP, and Phase 5 remain locked.
+  - Formally preserves backend MVP acceptance gates while allowing auxiliary demonstration client exploration.
 
