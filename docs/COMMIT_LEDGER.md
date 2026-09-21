@@ -39,13 +39,15 @@
 | 24 | `8de897d` | `Final` | `docs: record Arun's formal Phase 3 sign-off and unlock Phase 4` | Phase 3 (Sign-Off) | VERIFIED & PUSHED |
 | 25 | `a4a9c65` | `Final` | `feat(backend): implement Phase 4 payload ingestion API and Chrome extension` | Phase 4 | VERIFIED |
 | 26 | `8120c35` | `Final` | `test(backend): expand test suite to 1,020 hermetic scenarios across SSRF, taxonomy, and pipeline reliability` | Phase 4 | VERIFIED |
-| 27 | Pending | `Final` | `docs: record Phase 4 implementation, ADR-010, and governance updates` | Phase 4 | VERIFIED |
+| 27 | `341f710` | `Final` | `docs: record Phase 4 implementation, ADR-010, and governance updates` | Phase 4 | VERIFIED |
+| 28 | Pending | `Final` | `docs: record final Phase 4 commit SHAs in commit ledger` | Phase 4 | VERIFIED |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 27 (24 pushed, 3 local)
+- **Total Commits Recorded:** 28 (24 pushed, 4 local)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 473
+- **Remaining Commit Budget:** 472
+
 
