@@ -45,13 +45,13 @@
 | 30 | `e7d4056` | `Final` | `docs: record Phase 4 remediation commit in ledger (5ecf626)` | Phase 4 (Ledger Update) | VERIFIED & PUSHED |
 | 31 | `f6aa63e` | `Final` | `feat(evidence): implement 3-tier live search cascade and Supabase client` | Live Integration | VERIFIED & PUSHED |
 | 32 | `71835d9` | `Final` | `feat(backend): finalize demo-ready verification flow across all 10 core scenarios` | Demo Readiness | VERIFIED & PUSHED |
-| 33 | `TBD` | `Final` | `feat(cli): add mentor-ready verification demonstration console` | Mentor Demo Console | VERIFIED (1,099 tests) |
+| 33 | `710dbc1` | `Final` | `feat(cli): add mentor-ready verification demonstration console` | Mentor Demo Console | VERIFIED (1,099 tests) |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 33 (32 pushed, 1 staged)
+- **Total Commits Recorded:** 33 (32 pushed, 1 local)
 - **Target Ceiling:** 500
 - **Remaining Commit Budget:** 467
 
