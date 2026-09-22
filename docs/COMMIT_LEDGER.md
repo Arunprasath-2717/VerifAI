@@ -42,13 +42,15 @@
 | 27 | `341f710` | `Final` | `docs: record Phase 4 implementation, ADR-010, and governance updates` | Phase 4 | VERIFIED |
 | 28 | `31f7b63` | `Final` | `docs: record final Phase 4 commit SHAs in commit ledger` | Phase 4 | VERIFIED & PUSHED |
 | 29 | `5ecf626` | `Final` | `fix(backend): resolve all Phase 4 PRD v1.1 compliance defects — 1,054 tests pass` | Phase 4 (Remediation) | VERIFIED & PUSHED |
+| 30 | `e7d4056` | `Final` | `docs: record Phase 4 remediation commit in ledger (5ecf626)` | Phase 4 (Ledger Update) | VERIFIED & PUSHED |
+| 31 | `f6aa63e` | `Final` | `feat(evidence): implement 3-tier live search cascade and Supabase client` | Live Integration | VERIFIED & PUSHED |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 29 (29 pushed, 0 local)
+- **Total Commits Recorded:** 31 (31 pushed, 0 local)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 471
+- **Remaining Commit Budget:** 469
 
 
