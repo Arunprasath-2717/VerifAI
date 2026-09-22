@@ -24,3 +24,12 @@ async def get_async_session(
 
 # Alias for backward compatibility
 get_db_session = get_async_session
+
+
+def get_supabase_client(
+    settings: Settings = Depends(get_settings),
+):
+    """Provide configured SupabaseClient as a FastAPI dependency."""
+    from app.core.supabase import SupabaseClient
+
+    return SupabaseClient.from_settings(settings=settings)

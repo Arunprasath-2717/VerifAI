@@ -20,9 +20,9 @@ from app.modules.claims.extractor import (
     DeterministicClaimExtractor,
 )
 from app.modules.evidence.interface import BaseEvidenceRetriever
+from app.modules.evidence.live_retriever import LiveWebRetriever
 from app.modules.evidence.local_retriever import LocalPassageRetriever
 from app.modules.evidence.models import RetrievedEvidenceItem
-from app.modules.evidence.web_retriever import SafeWebRetriever
 from app.modules.judging.decision import DecisionEngine
 from app.modules.judging.deterministic_judge import DeterministicRuleJudge
 from app.modules.judging.disagreement import DisagreementEngine
@@ -129,15 +129,18 @@ class VerificationOrchestrator:
             details={"claims_count": len(extracted_items)},
         )
 
-        # Configure evidence retriever (select live web retriever if requested)
+        # Configure evidence retriever (select cascading live retriever if requested)
         active_retriever = self.retriever
         if request.options.enable_live_search:
-            active_retriever = SafeWebRetriever()
+            active_retriever = LiveWebRetriever.from_settings()
             log_audit(
                 stage="RETRIEVAL",
                 event_type="PROVIDER_SELECTED",
                 status="SUCCESS",
-                message="Live web search enabled for evidence retrieval.",
+                message=(
+                    "Live web search enabled: "
+                    "Tavily → DuckDuckGo → Nightcrawler cascade."
+                ),
                 details={"retriever": active_retriever.name},
             )
 

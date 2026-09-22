@@ -55,8 +55,41 @@ class Settings(BaseSettings):
     # Verification Engine Configuration
     VERIFICATION_MAX_INPUT_CHARS: int = 20000
     VERIFICATION_MAX_CLAIMS: int = 20
-    RETRIEVAL_TIMEOUT_SECONDS: float = 5.0
+    RETRIEVAL_TIMEOUT_SECONDS: float = 8.0
     ENABLE_LIVE_SEARCH: bool = False
+
+    # ===========================================================================
+    # Supabase Project Credentials
+    # SUPABASE_URL and keys are stored as SecretStr to prevent log leakage.
+    # DATABASE_URL (asyncpg) must be set separately from the Supabase
+    # project settings page: Settings → Database → Connection String.
+    # ===========================================================================
+    SUPABASE_URL: str | None = None
+    SUPABASE_PUBLISHABLE_KEY: SecretStr | None = None
+    SUPABASE_SECRET_KEY: SecretStr | None = None
+
+    # ===========================================================================
+    # Tavily Web Search (primary live evidence retrieval)
+    # Obtain key from: https://tavily.com
+    # ===========================================================================
+    TAVILY_API_KEY: SecretStr | None = None
+    TAVILY_MAX_RESULTS: int = 5
+    TAVILY_SEARCH_DEPTH: str = "basic"  # "basic" or "advanced"
+    TAVILY_TIMEOUT_SECONDS: float = 8.0
+
+    # ===========================================================================
+    # DuckDuckGo Search (secondary fallback — no API key required)
+    # ===========================================================================
+    ENABLE_DUCKDUCKGO_FALLBACK: bool = True
+    DUCKDUCKGO_MAX_RESULTS: int = 5
+    DUCKDUCKGO_TIMEOUT_SECONDS: float = 6.0
+
+    # ===========================================================================
+    # Nightcrawler / Wikipedia REST API (tertiary safe fallback)
+    # Uses Wikipedia REST API as the final controlled retrieval fallback.
+    # ===========================================================================
+    ENABLE_NIGHTCRAWLER_FALLBACK: bool = True
+    NIGHTCRAWLER_TIMEOUT_SECONDS: float = 5.0
 
     @field_validator("LOG_LEVEL", mode="after")
     @classmethod
@@ -94,7 +127,8 @@ class Settings(BaseSettings):
         return v
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Search for .env in backend/ first (Docker / CI), then repo root.
+        env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
