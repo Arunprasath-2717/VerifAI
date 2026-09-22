@@ -20,10 +20,12 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import shutil
 import sys
 import time
-from datetime import datetime
+import webbrowser
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +39,7 @@ if str(backend_dir) not in sys.path:
 
 from app.core.config import get_settings  # noqa: E402
 from app.core.supabase import SupabaseClient  # noqa: E402
+from app.modules.evidence.security import is_safe_url  # noqa: E402
 from app.modules.verification.orchestrator import (  # noqa: E402
     VerificationOrchestrator,
 )
@@ -59,6 +62,32 @@ def get_terminal_width(default: int = 80) -> int:
         return max(40, cols)
     except Exception:  # noqa: BLE001
         return default
+
+
+def sanitize_terminal_text(text: str | None, max_length: int = 2000) -> str:
+    """Sanitize arbitrary strings to prevent ANSI/control escape injection."""
+    if text is None:
+        return ""
+    # Strip any ANSI escape sequences first
+    ansi_regex = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    sanitized = ansi_regex.sub("", str(text))
+    # Strip dangerous terminal control characters (ASCII 0-31 except tab/newline)
+    # and DEL (127)
+    sanitized = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", sanitized)
+    if len(sanitized) > max_length:
+        sanitized = sanitized[: max_length - 3] + "..."
+    return sanitized
+
+
+def sanitize_url(url: str | None) -> str | None:
+    """Validate and sanitize URL for safe terminal rendering and navigation."""
+    if not url or not isinstance(url, str):
+        return None
+    url_clean = sanitize_terminal_text(url.strip())
+    # Reject non-http/https schemes and SSRF targets
+    if not is_safe_url(url_clean):
+        return None
+    return url_clean
 
 
 class TerminalStyler:
@@ -205,6 +234,52 @@ class TerminalStyler:
         else:
             colored_bar = self.red(bar)
         return f"[{colored_bar}] {clamped:.1f}%"
+
+    def progress_bar(self, percentage: float, width: int = 20) -> str:
+        """Render a graphical block progress bar for factual evidence coverage."""
+        clamped = max(0.0, min(100.0, float(percentage)))
+        filled = round((clamped / 100.0) * width)
+        filled = max(0, min(width, filled))
+        bar = "█" * filled + "░" * (width - filled)
+        if clamped >= 75.0:
+            colored_bar = self.green(bar)
+        elif clamped >= 40.0:
+            colored_bar = self.yellow(bar)
+        else:
+            colored_bar = self.neon_cyan(bar)
+        return f"{colored_bar} {clamped:.0f}%"
+
+    def hyperlink(self, url: str, text: str = "🔗 Open source") -> str:
+        """Generate an OSC 8 terminal hyperlink with plain-text fallback."""
+        if not url:
+            return text
+        clean_url = sanitize_url(url)
+        if not clean_url:
+            return text
+        if not self.enabled:
+            return text
+        # OSC 8 escape sequence: \033]8;;{url}\033\\{text}\033]8;;\033\\
+        return f"\033]8;;{clean_url}\033\\{text}\033]8;;\033\\"
+
+    def format_source_link(
+        self, url: str | None, title: str | None = None
+    ) -> list[str]:
+        """Format clickable terminal link and plain copyable URL with safety checks."""
+        if not url:
+            return ["  Link       : [URL Not Available]"]
+        clean_url = sanitize_url(url)
+        if not clean_url:
+            raw_disp = sanitize_terminal_text(url)
+            return [
+                f"  Link       : {self.red('⚠ Source blocked by network security policy')}",  # noqa: E501
+                f"               {self.dim(raw_disp)}",
+            ]
+        label = f"🔗 Open source ({title})" if title else "🔗 Open source"
+        clickable = self.hyperlink(clean_url, self.bold(self.neon_cyan(label)))
+        return [
+            f"  Link       : {clickable}",
+            f"               {self.dim(clean_url)}",
+        ]
 
     def box_card(self, title: str, subtitle: str = "", width: int = 64) -> str:
         """Render a double-lined glowing 3D-style Unicode header card."""
@@ -538,19 +613,160 @@ class ProgressRenderer:
             )
             print()
 
-        # Stage 3: Evidence Retrieval
+        # Stage 3: Live Evidence Retrieval Overview Panel (Section 9)
         if delay:
             time.sleep(delay)
-        print(
-            f"{check} {styler.bold('Evidence retrieved')}                      {styler.dim(timings.get('retrieval', '0.38s'))}"  # noqa: E501
-        )
+        cls._render_live_evidence_panel(claims, styler)
 
-        # Stage 4: Multi-Judge Consensus Evaluation
-        if delay:
-            time.sleep(delay)
-        print(f"{styler.neon_cyan('⟳')} {styler.bold('Evaluating independent judges')}")
-        print(f"   ├─ Judge 1 (DeterministicRuleJudge)   {check}")
-        print(f"   └─ Judge 2 (SecondarySemanticJudge)   {check}")
+        # Stage 4: Claim-by-Claim Live Evidence Retrieval & Judging (Section 3 & 4)
+        print(styler.divider("-", 64))
+        print(styler.bold(" EVIDENCE RETRIEVAL"))
+        print(styler.divider("-", 64))
+        print()
+
+        for c in claims:
+            idx = c.get("claim_index", 0) + 1
+            claim_text = sanitize_terminal_text(c.get("claim_text", ""))
+            ctype = c.get("content_type", "FACTUAL")
+
+            if ctype != "FACTUAL":
+                print(styler.bold(f"CLAIM {idx:02d}"))
+                print(styler.divider("-", 64))
+                print(f'"{claim_text}"')
+                print(f"Type: {ctype}")
+                print(
+                    styler.dim(
+                        "Empirical retrieval not applicable for "
+                        f"{ctype.lower()} assertion."
+                    )
+                )
+                print()
+                continue
+
+            print(styler.bold(f"CLAIM {idx:02d}"))
+            print(styler.divider("-", 64))
+            print(f'"{claim_text}"')
+            print()
+            print("Type:")
+            print(styler.bold("FACTUAL"))
+            print()
+            print(f"{styler.neon_cyan('⟳')} Analyzing claim {idx:02d}...")
+            if delay:
+                time.sleep(delay)
+            print(f"{styler.neon_cyan('⟳')} Searching approved evidence sources...")
+
+            ev_list = c.get("evidence", [])
+            if ev_list:
+                if delay:
+                    time.sleep(delay)
+                print("  → Source discovered")
+                print("  → Retrieving evidence")
+                print("  → Validating source")
+                print("  → Extracting relevant passage")
+                print()
+                print(f"{styler.green('✓ Evidence retrieved')}")
+                print()
+
+                if len(ev_list) == 1:
+                    ev = ev_list[0]
+                    src_title = sanitize_terminal_text(
+                        ev.get("source_title")
+                        or ev.get("publisher")
+                        or "Verified Passage"
+                    )
+                    src_url = ev.get("source_url")
+                    print(styler.bold("SOURCE"))
+                    print(styler.divider("-", 64))
+                    print(f"Title: {src_title}")
+                    for ll in styler.format_source_link(src_url, src_title):
+                        print(ll)
+                    print("Evidence:")
+                    print(f'"{sanitize_terminal_text(ev.get("snippet", ""))}"')
+                    rel = ev.get("relevance_score")
+                    rel_str = f"{rel:.4f}" if rel is not None else "NOT AVAILABLE"
+                    print(f"Relevance: {rel_str}")
+                    prov = ev.get("retriever_name") or "LOCAL_PASSAGE_INDEX"
+                    print(f"Provenance: {prov}")
+                    print(f"{styler.green('✓ Evidence available')}")
+                    print()
+                else:
+                    print(styler.bold(f"EVIDENCE SOURCES: {len(ev_list)}"))
+                    print(styler.divider("-", 64))
+                    for s_idx, ev in enumerate(ev_list, 1):
+                        src_title = sanitize_terminal_text(
+                            ev.get("source_title")
+                            or ev.get("publisher")
+                            or f"Source {s_idx}"
+                        )
+                        src_url = ev.get("source_url")
+                        print(f"[{s_idx}] {src_title}")
+                        for ll in styler.format_source_link(src_url, src_title):
+                            print(f"    {ll.strip()}")
+                        snip = sanitize_terminal_text(ev.get("snippet", ""))
+                        print(f'    Evidence: "{snip}"')
+                        rel = ev.get("relevance_score")
+                        rel_str = f"{rel:.4f}" if rel is not None else "NOT AVAILABLE"
+                        print(f"    Relevance: {rel_str}")
+                        print()
+                    print(f"{styler.green('✓ All sources retrieved & validated')}")
+                    print()
+
+                # Evidence -> Judge Connection (Section 13)
+                if delay:
+                    time.sleep(delay)
+                print(f"  {styler.dim('↓')}")
+                p_label = (
+                    "relevant passage" if len(ev_list) == 1 else "relevant passages"
+                )
+                print(f"  {styler.neon_cyan(str(len(ev_list)))} {p_label}")
+                print(f"  {styler.dim('↓')}")
+                msg = "Sending claim + evidence to independent judges"
+                print(f"{styler.neon_cyan('⟳')} {msg}")
+                print(f"  {styler.dim('↓')}")
+                judges = c.get("judges", [])
+                if judges:
+                    for j_idx, j in enumerate(judges, 1):
+                        j_name = j.get("judge_name", f"Judge {j_idx}")
+                        j_v = j.get("judgment", "UNKNOWN")
+                        j_badge = styler.verdict_badge(j_v)
+                        print(f"  ✓ {j_name} completed: {j_badge}")
+                else:
+                    print("  ✓ Independent judges evaluated retrieved evidence")
+                print(f"  {styler.dim('↓')}")
+                v_badge = styler.verdict_badge(c.get("verdict"))
+                print(f"  ✓ Decision engine verdict: {v_badge}")
+                print()
+            else:
+                # Failed / Insufficient Retrieval (Section 11 & 12)
+                if delay:
+                    time.sleep(delay)
+                fail_lines = [
+                    f"Claim {idx:02d}",
+                    "",
+                    f"{styler.yellow('⚠ No sufficient evidence retrieved')}",
+                    "",
+                    "Reason:",
+                    str(c.get("unknown_reason") or "INSUFFICIENT_EVIDENCE"),
+                    "",
+                    "Decision:",
+                    "UNKNOWN",
+                ]
+                print()
+                print(
+                    styler.rounded_card(
+                        "EVIDENCE RETRIEVAL", fail_lines, width=64, accent="yellow"
+                    )
+                )
+                print(f"Evidence: {styler.yellow('INSUFFICIENT')}")
+                print(f"Verdict : {styler.yellow('UNKNOWN')}")
+                print(f"Reason  : {c.get('unknown_reason') or 'INSUFFICIENT_EVIDENCE'}")
+                print(
+                    styler.dim(
+                        "Note: Missing evidence is never converted to "
+                        "CONTRADICTED or SUPPORTED."
+                    )
+                )
+                print()
 
         # Stage 5: Decision Engine
         if delay:
@@ -560,8 +776,85 @@ class ProgressRenderer:
         )
         print()
 
+        # Stage 6: Evidence Summary & Coverage (Section 15)
+        cls._render_evidence_summary(claims, styler)
+
         # Real-time Analysis Log Panel (Requirement 12)
         cls._render_realtime_log_panel(data, styler)
+
+    @classmethod
+    def _render_live_evidence_panel(
+        cls, claims: list[dict[str, Any]], styler: TerminalStyler
+    ) -> None:
+        """Render live evidence retrieval status overview panel (Section 9)."""
+        panel_lines = []
+        for c in claims:
+            idx = c.get("claim_index", 0) + 1
+            ctype = c.get("content_type", "FACTUAL")
+            if ctype == "FACTUAL":
+                ev_count = len(c.get("evidence", []))
+                if ev_count > 0:
+                    plural = "s" if ev_count > 1 else ""
+                    status_badge = f"{styler.green('✓')}  {ev_count} source{plural}"
+                else:
+                    status_badge = f"{styler.yellow('⚠')}  0 sources (INSUFFICIENT)"
+            else:
+                status_badge = f"{styler.dim('○')}  non-verifiable ({ctype.lower()})"
+            panel_lines.append(f"Claim {idx:02d}  {status_badge}")
+
+        print(
+            styler.rounded_card(
+                "LIVE EVIDENCE RETRIEVAL",
+                panel_lines,
+                width=64,
+                accent="neon_cyan",
+            )
+        )
+        print()
+
+    @classmethod
+    def _render_evidence_summary(
+        cls, claims: list[dict[str, Any]], styler: TerminalStyler
+    ) -> None:
+        """Render final evidence summary and factual coverage metrics (Section 15)."""
+        total_claims = len(claims)
+        factual_claims = [c for c in claims if c.get("content_type") == "FACTUAL"]
+        factual_count = len(factual_claims)
+        claims_with_ev = [c for c in factual_claims if len(c.get("evidence", [])) > 0]
+        with_ev_count = len(claims_with_ev)
+        without_ev_count = factual_count - with_ev_count
+        total_sources = sum(len(c.get("evidence", [])) for c in factual_claims)
+        coverage_pct = (
+            (with_ev_count / factual_count * 100.0) if factual_count > 0 else 0.0
+        )
+
+        bar = styler.progress_bar(coverage_pct)
+
+        print(styler.divider("-", 64))
+        print(styler.bold(" EVIDENCE SUMMARY"))
+        print(styler.divider("-", 64))
+        print(f"Claims analyzed       : {total_claims}")
+        print(f"Factual claims        : {factual_count}")
+        print(f"Claims with evidence  : {with_ev_count}")
+        print(f"Claims without enough : {without_ev_count}")
+        print()
+        print(f"Sources retrieved     : {total_sources}")
+        print()
+        print("Evidence coverage:")
+        print(f"{bar}")
+        print()
+        print("Evidence Coverage:")
+        print(f"{with_ev_count} / {factual_count} factual claims")
+        print()
+        print(
+            styler.dim(
+                "Important: Evidence coverage is a factual count derived "
+                "from retrieval results."
+            )
+        )
+        print(styler.dim("This is NOT a confidence score or truth probability."))
+        print(styler.divider("-", 64))
+        print()
 
     @classmethod
     def _render_realtime_log_panel(
@@ -676,33 +969,164 @@ class ResultRenderer:
         return "\n".join(out)
 
     @classmethod
+    def render_source_card(
+        cls,
+        claim: dict[str, Any],
+        styler: TerminalStyler | None = None,
+        width: int = 64,
+    ) -> str:
+        """Render a visually strong EVIDENCE SOURCE card matching Section 6."""
+        s = styler or TerminalStyler()
+        evidence_list = claim.get("evidence", [])
+        claim_text = sanitize_terminal_text(claim.get("claim_text", ""))
+
+        if not evidence_list:
+            reason = sanitize_terminal_text(
+                str(claim.get("unknown_reason") or "INSUFFICIENT_EVIDENCE")
+            )
+            card_lines = [
+                "Claim",
+                f'"{claim_text}"',
+                "",
+                f"{s.yellow('⚠ No sufficient evidence retrieved')}",
+                "",
+                "Reason:",
+                reason,
+                "",
+                "Decision:",
+                "UNKNOWN",
+            ]
+            return s.rounded_card(
+                "EVIDENCE SOURCE", card_lines, width=width, accent="yellow"
+            )
+
+        cards = []
+        for ev in evidence_list:
+            src_title = sanitize_terminal_text(
+                ev.get("source_title") or ev.get("publisher") or "Verified Passage"
+            )
+            src_url = ev.get("source_url")
+            link_lines = s.format_source_link(src_url, src_title)
+
+            card_lines = [
+                "Claim",
+                f'"{claim_text}"',
+                "",
+                "Source",
+                src_title,
+                "",
+                "Link",
+            ]
+            for ll in link_lines:
+                card_lines.append(ll.strip())
+
+            pub_date = ev.get("publication_date")
+            card_lines.append("")
+            card_lines.append("Retrieved / Publication Date")
+            card_lines.append(
+                str(pub_date)
+                if pub_date
+                else datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+            )
+
+            snippet = sanitize_terminal_text(ev.get("snippet", ""))
+            card_lines.append("")
+            card_lines.append("Evidence")
+            card_lines.append(f'"{snippet}"')
+
+            provenance_parts = []
+            if ev.get("retriever_name"):
+                provenance_parts.append(f"Retriever: {ev['retriever_name']}")
+            if ev.get("id"):
+                provenance_parts.append(f"ID: {ev['id']}")
+            rel = ev.get("relevance_score")
+            if rel is not None:
+                provenance_parts.append(f"Relevance: {rel:.4f}")
+            else:
+                provenance_parts.append("Relevance: NOT AVAILABLE")
+
+            card_lines.append("")
+            card_lines.append("Provenance")
+            card_lines.append(" | ".join(provenance_parts))
+
+            cards.append(
+                s.rounded_card(
+                    "EVIDENCE SOURCE", card_lines, width=width, accent="neon_cyan"
+                )
+            )
+
+        return "\n\n".join(cards)
+
+    @classmethod
     def render_claims_summary(
         cls, claims: list[dict[str, Any]], styler: TerminalStyler | None = None
     ) -> str:
-        """Render individual atomic claims breakdown."""
+        """Render individual atomic claims breakdown matching Section 14."""
         s = styler or TerminalStyler()
         out: list[str] = []
 
         for c in claims:
             idx = c.get("claim_index", 0) + 1
-            out.append(s.divider("-", cls.WIDTH))
-            out.append(s.bold(f"CLAIM {idx:02d}"))
-            out.append(s.divider("-", cls.WIDTH))
-            out.append("Text:")
-            out.append(f'"{c.get("claim_text", "")}"')
-            out.append("")
-            out.append(f"Type          : {c.get('content_type', 'FACTUAL')}")
+            claim_text = sanitize_terminal_text(c.get("claim_text", ""))
+            ctype = c.get("content_type", "FACTUAL")
             verifiable = "YES" if c.get("is_verifiable", True) else "NO"
-            out.append(f"Verifiable    : {verifiable}")
-            out.append(
-                f"Source Offset : {c.get('start_offset', 0)} -> {c.get('end_offset', 0)}"  # noqa: E501
-            )
             v_badge = s.verdict_badge(c.get("verdict"))
-            out.append(f"Verdict       : {v_badge}")
+            start_off = c.get("start_offset", 0)
+            end_off = c.get("end_offset", 0)
+
+            card_lines = [
+                "Claim:",
+                f'"{claim_text}"',
+                "",
+                f"Classification: {ctype}",
+                f"Verifiable    : {verifiable}",
+                f"Offsets       : {start_off} -> {end_off}",
+            ]
+
+            ev_list = c.get("evidence", [])
+            if ev_list:
+                card_lines.append("")
+                card_lines.append(
+                    f"Evidence: {len(ev_list)} source{'s' if len(ev_list) > 1 else ''}"
+                )
+                card_lines.append("Sources:")
+                for ev in ev_list:
+                    src_title = sanitize_terminal_text(
+                        ev.get("source_title")
+                        or ev.get("publisher")
+                        or "Verified Source"
+                    )
+                    src_url = ev.get("source_url")
+                    if src_url:
+                        for ll in s.format_source_link(src_url, src_title):
+                            card_lines.append(f"  {ll.strip()}")
+                    else:
+                        card_lines.append(f"  {src_title} [URL Not Available]")
+            elif ctype == "FACTUAL":
+                card_lines.append("")
+                card_lines.append("Evidence: 0 sources (INSUFFICIENT)")
+
+            judges = c.get("judges", [])
+            if judges:
+                card_lines.append("")
+                for j_idx, j in enumerate(judges, 1):
+                    j_name = j.get("judge_name", f"Judge {j_idx}")
+                    j_verdict = j.get("judgment", "UNKNOWN")
+                    j_badge = s.verdict_badge(j_verdict)
+                    card_lines.append(f"Judge {j_idx}: {j_badge} ({j_name})")
+
+            card_lines.append("")
+            card_lines.append(f"Final verdict: {v_badge}")
 
             unknown_reason = c.get("unknown_reason")
             if unknown_reason:
-                out.append(f"UNKNOWN Reason: {s.yellow(str(unknown_reason))}")
+                card_lines.append(f"UNKNOWN Reason: {s.yellow(str(unknown_reason))}")
+
+            out.append(
+                s.rounded_card(
+                    f"CLAIM #{idx:02d}", card_lines, width=cls.WIDTH, accent="neon_cyan"
+                )
+            )
             out.append("")
 
         return "\n".join(out)
@@ -711,7 +1135,7 @@ class ResultRenderer:
     def render_evidence_drilldown(
         cls, claims: list[dict[str, Any]], styler: TerminalStyler | None = None
     ) -> str:
-        """Render evidence passages and provenance details."""
+        """Render evidence passages, provenance details, and clickable source links."""
         s = styler or TerminalStyler()
         out: list[str] = []
         out.append(s.box_card("EVIDENCE DRILL-DOWN", width=cls.WIDTH))
@@ -724,25 +1148,35 @@ class ResultRenderer:
 
         for c in factual_claims:
             idx = c.get("claim_index", 0) + 1
-            out.append(s.bold(f'Claim {idx:02d}: "{c.get("claim_text", "")}"'))
+            claim_text = sanitize_terminal_text(c.get("claim_text", ""))
+            out.append(s.bold(f'Claim {idx:02d}: "{claim_text}"'))
             evidence_list = c.get("evidence", [])
             if evidence_list:
-                for ev in evidence_list:
-                    src = ev.get("source_title") or "Verified Passage"
-                    url = ev.get("source_url") or "urn:verifai:local-knowledge-base"
-                    snippet = ev.get("snippet", "")
+                out.append(f"  Evidence Sources: {len(evidence_list)}")
+                for e_idx, ev in enumerate(evidence_list, 1):
+                    src = sanitize_terminal_text(
+                        ev.get("source_title")
+                        or ev.get("publisher")
+                        or "Verified Passage"
+                    )
+                    url = ev.get("source_url")
+                    snippet = sanitize_terminal_text(ev.get("snippet", ""))
                     provenance = ev.get("retriever_name") or "Local Inverted Index"
                     rel = ev.get("relevance_score")
-                    rel_str = f"{rel:.4f}" if rel is not None else "N/A"
+                    rel_str = f"{rel:.4f}" if rel is not None else "NOT AVAILABLE"
+                    ev_id = ev.get("id") or "N/A"
 
-                    out.append(f"  Source     : {src}")
-                    out.append(f"  URL        : {url}")
-                    out.append(f'  Evidence   : "{snippet}"')
-                    out.append(f"  Provenance : {provenance} (Relevance: {rel_str})")
+                    out.append(f"  [{e_idx}] Source     : {src}")
+                    for ll in s.format_source_link(url, src):
+                        out.append(f"      {ll.strip()}")
+                    out.append(f'      Evidence   : "{snippet}"')
+                    prov_meta = f"ID: {ev_id} | Relevance: {rel_str}"
+                    out.append(f"      Provenance : {provenance} ({prov_meta})")
             else:
                 out.append(f"  Evidence   : {s.yellow('NOT AVAILABLE')}")
                 reason = c.get("unknown_reason") or "INSUFFICIENT_EVIDENCE"
                 out.append(f"  Reason     : {reason}")
+                out.append("  Decision   : UNKNOWN (Evidence: INSUFFICIENT)")
             out.append("")
 
         out.append(s.divider("=", cls.WIDTH))
@@ -989,7 +1423,8 @@ class ResultRenderer:
                         rel = ev.get("relevance_score")
                         rel_str = f"{rel:.4f}" if rel is not None else "N/A"
                         out.append(f"  Source    : {src}")
-                        out.append(f"  URL       : {url}")
+                        for ll in s.format_source_link(url, src):
+                            out.append(f"  {ll.strip()}")
                         out.append(f"  Snippet   : {snip_disp}")
                         out.append(f"  Relevance : {rel_str}")
                 else:
@@ -1382,17 +1817,76 @@ class MenuController:
         except Exception as exc:  # noqa: BLE001
             print(s.red(f"[ERROR] Verification failed: {exc}"))
 
+    def open_source_in_browser(self, claims: list[dict[str, Any]]) -> None:
+        """Safely open a retrieved evidence source URL in the user's default browser."""
+        s = self.styler
+        valid_sources: list[tuple[str, str]] = []
+        for c in claims:
+            for ev in c.get("evidence", []):
+                url = ev.get("source_url")
+                clean_url = sanitize_url(url)
+                if clean_url:
+                    title = sanitize_terminal_text(
+                        ev.get("source_title") or ev.get("publisher") or clean_url
+                    )
+                    valid_sources.append((title, clean_url))
+
+        if not valid_sources:
+            print(
+                s.yellow("\n[WARNING] No safe, verified web sources available to open.")
+            )
+            return
+
+        print()
+        print(s.box_card("OPEN VERIFIED SOURCE", width=64))
+        for idx, (title, url) in enumerate(valid_sources, 1):
+            print(f" [{idx:>2}] {title}")
+            print(f"      {s.dim(url)}")
+        print(f" [{s.bold(' 0')}] Cancel\n")
+
+        try:
+            choice = input(f"Select source to open [0-{len(valid_sources)}]: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print()
+            return
+
+        if not choice or choice in ("0", "c", "cancel"):
+            return
+
+        try:
+            num = int(choice)
+            if 1 <= num <= len(valid_sources):
+                selected_title, selected_url = valid_sources[num - 1]
+                print(
+                    f"\n{s.neon_cyan('Launching default browser for:')} "
+                    f"{selected_title}"
+                )
+                print(s.dim(f"Target: {selected_url}"))
+                try:
+                    webbrowser.open(selected_url)
+                except Exception as exc:  # noqa: BLE001
+                    print(s.red(f"[ERROR] Could not open browser: {exc}"))
+            else:
+                print(s.red(f"Invalid selection: '{choice}'"))
+        except ValueError:
+            print(
+                s.red(
+                    f"Invalid choice '{choice}'. "
+                    f"Expected number 0-{len(valid_sources)}."
+                )
+            )
+
     def post_verification_drilldown(
         self, data: dict[str, Any], elapsed: float | None = None
     ) -> None:
-        """Allow user to inspect Evidence, Judges, Audit, and Raw JSON repeatedly."""
+        """Allow user to inspect Evidence, Open Sources, Judges, Audit, and Raw JSON."""
         s = self.styler
         claims = data.get("claims", [])
         while True:
             print(s.divider("-", 64))
             print("Drill-Down Options:")
             print(
-                f"  {s.bold('[V]')} Evidence  {s.bold('[J]')} Judges  {s.bold('[A]')} Audit  {s.bold('[R]')} Raw JSON  {s.bold('[Enter]')} Back"  # noqa: E501
+                f"  {s.bold('[V]')} Evidence  {s.bold('[O]')} Open Source  {s.bold('[J]')} Judges  {s.bold('[A]')} Audit  {s.bold('[R]')} Raw JSON  {s.bold('[Enter]')} Back"  # noqa: E501
             )
             print(s.divider("-", 64))
             try:
@@ -1405,6 +1899,8 @@ class MenuController:
                 break
             elif action == "v":
                 print(ResultRenderer.render_evidence_drilldown(claims, styler=s))
+            elif action == "o":
+                self.open_source_in_browser(claims)
             elif action == "j":
                 print(ResultRenderer.render_judges_drilldown(claims, styler=s))
             elif action == "a":
@@ -1414,7 +1910,7 @@ class MenuController:
                 print(json.dumps(data, indent=2))
                 print(s.divider("=", 64))
             else:
-                print(s.yellow("Invalid choice. Enter V, J, A, R, or press Enter."))
+                print(s.yellow("Invalid choice. Enter V, O, J, A, R, or press Enter."))
 
     def run_predefined_demos_menu(self) -> None:
         """Display and execute from the 11 curated demo scenarios."""

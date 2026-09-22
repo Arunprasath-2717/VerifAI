@@ -22,6 +22,8 @@ from scripts.verifai_cli import (
     run_health_check,
     run_verify_command,
     run_version_info,
+    sanitize_terminal_text,
+    sanitize_url,
 )
 
 
@@ -623,3 +625,232 @@ def test_interactive_enter_runs_benchmark(capsys: pytest.CaptureFixture[str]) ->
     captured = capsys.readouterr()
     assert "Executing Full System Verification" in captured.out
     assert "VERIFICATION RESULT" in captured.out
+
+
+def test_terminal_styler_hyperlink_osc8() -> None:
+    """Verify OSC 8 hyperlink generation and disabled fallback."""
+    styler = TerminalStyler(force_color=True)
+    link = styler.hyperlink("https://en.wikipedia.org/wiki/Eiffel_Tower", "Open source")
+    assert "\033]8;;https://en.wikipedia.org/wiki/Eiffel_Tower\033\\" in link
+    assert "Open source" in link
+
+    # Disabled styler fallback
+    styler_off = TerminalStyler(force_color=False)
+    assert (
+        styler_off.hyperlink(
+            "https://en.wikipedia.org/wiki/Eiffel_Tower", "Open source"
+        )
+        == "Open source"
+    )
+
+
+def test_terminal_styler_format_source_link() -> None:
+    """Verify source link formatter outputs both clickable and copyable raw URL."""
+    styler = TerminalStyler(force_color=False)
+    lines = styler.format_source_link("https://en.wikipedia.org/wiki/Paris", "Paris")
+    assert any("Link       :" in line for line in lines)
+    assert any("https://en.wikipedia.org/wiki/Paris" in line for line in lines)
+
+    # Empty URL handling
+    empty_lines = styler.format_source_link(None)
+    assert "[URL Not Available]" in empty_lines[0]
+
+
+def test_terminal_styler_ssrf_and_security_blocking() -> None:
+    """Verify dangerous internal/metadata/SSRF URLs are blocked."""
+    styler = TerminalStyler(force_color=False)
+    # Localhost
+    lines_local = styler.format_source_link("http://127.0.0.1:8000/api/secret")
+    assert "Source blocked by network security policy" in lines_local[0]
+
+    # Cloud metadata
+    lines_meta = styler.format_source_link("http://169.254.169.254/computeMetadata/v1/")
+    assert "Source blocked by network security policy" in lines_meta[0]
+
+    # Non-HTTP scheme
+    lines_js = styler.format_source_link("javascript:alert('xss')")
+    assert "Source blocked by network security policy" in lines_js[0]
+
+
+def test_sanitize_terminal_text_and_urls() -> None:
+    """Verify sanitization strips ANSI escapes and control chars."""
+    raw = "\x1b[31;1mDanger\x1b[0m\x00\x07Text"
+    clean = sanitize_terminal_text(raw)
+    assert clean == "DangerText"
+    assert "\x1b" not in clean
+
+    assert sanitize_url("https://example.com/safe") == "https://example.com/safe"
+    assert sanitize_url("http://10.0.0.1/private") is None
+    assert sanitize_url(None) is None
+
+
+def test_result_renderer_source_card_rendering() -> None:
+    """Verify render_source_card renders high-fidelity metadata cards."""
+    styler = TerminalStyler(force_color=False)
+    claim_with_ev = {
+        "claim_text": "The Eiffel Tower is located in Paris, France.",
+        "content_type": "FACTUAL",
+        "evidence": [
+            {
+                "id": "ev-101",
+                "source_title": "Eiffel Tower Overview",
+                "source_url": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+                "publisher": "Wikipedia",
+                "publication_date": "2024-01-10",
+                "snippet": "The Eiffel Tower is located on the Champ de Mars in Paris, France.",
+                "retriever_name": "LOCAL_PASSAGE_INDEX",
+                "relevance_score": 0.4167,
+            }
+        ],
+    }
+    card = ResultRenderer.render_source_card(claim_with_ev, styler=styler)
+    assert "EVIDENCE SOURCE" in card
+    assert "The Eiffel Tower is located in Paris, France." in card
+    assert "Eiffel Tower Overview" in card
+    assert "https://en.wikipedia.org/wiki/Eiffel_Tower" in card
+    assert "2024-01-10" in card
+    assert "LOCAL_PASSAGE_INDEX" in card
+    assert "0.4167" in card
+
+    # Claim without evidence
+    claim_no_ev = {
+        "claim_text": "Unknown cosmological hypothesis.",
+        "content_type": "FACTUAL",
+        "evidence": [],
+        "unknown_reason": "CONTEXT_UNKNOWN",
+    }
+    empty_card = ResultRenderer.render_source_card(claim_no_ev, styler=styler)
+    assert "No sufficient evidence retrieved" in empty_card
+    assert "CONTEXT_UNKNOWN" in empty_card
+    assert "UNKNOWN" in empty_card
+
+
+def test_live_evidence_retrieval_and_summary_flow(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify claim-by-claim live foreground progress and evidence summary rendering."""
+    styler = TerminalStyler(force_color=False)
+    data = {
+        "input_text": "The Eiffel Tower is located in Paris. Dilithium crystals stabilize warp cores.",
+        "claims": [
+            {
+                "claim_index": 0,
+                "claim_text": "The Eiffel Tower is located in Paris.",
+                "content_type": "FACTUAL",
+                "verdict": "SUPPORTED",
+                "evidence": [
+                    {
+                        "id": "ev-01",
+                        "source_title": "Eiffel Tower Geography",
+                        "source_url": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+                        "snippet": "Located on Champ de Mars in Paris.",
+                        "retriever_name": "LOCAL_PASSAGE_INDEX",
+                        "relevance_score": 0.45,
+                    }
+                ],
+                "judges": [
+                    {
+                        "judge_name": "DeterministicRuleJudge",
+                        "judgment": "SUPPORTED",
+                    }
+                ],
+            },
+            {
+                "claim_index": 1,
+                "claim_text": "Dilithium crystals stabilize warp cores.",
+                "content_type": "FACTUAL",
+                "verdict": "UNKNOWN",
+                "unknown_reason": "CONTEXT_UNKNOWN",
+                "evidence": [],
+                "judges": [],
+            },
+        ],
+        "audit_trail": [],
+    }
+
+    ProgressRenderer.render_live_foreground_progress(
+        data, total_elapsed=0.15, styler=styler, live_delay=False
+    )
+    captured = capsys.readouterr()
+    assert "LIVE EVIDENCE RETRIEVAL" in captured.out
+    assert "Searching approved evidence sources..." in captured.out
+    assert "Source discovered" in captured.out
+    assert "Evidence retrieved" in captured.out
+    assert "Eiffel Tower Geography" in captured.out
+    assert "https://en.wikipedia.org/wiki/Eiffel_Tower" in captured.out
+    assert "Sending claim + evidence to independent judges" in captured.out
+    assert "DeterministicRuleJudge completed" in captured.out
+    assert "No sufficient evidence retrieved" in captured.out
+    assert "EVIDENCE SUMMARY" in captured.out
+    assert "Claims analyzed       : 2" in captured.out
+    assert "Factual claims        : 2" in captured.out
+    assert "Claims with evidence  : 1" in captured.out
+    assert "Claims without enough : 1" in captured.out
+    assert "Evidence Coverage:" in captured.out
+    assert "1 / 2 factual claims" in captured.out
+
+
+def test_menu_controller_open_source_in_browser(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify open_source_in_browser validates selection and invokes webbrowser.open."""
+    controller = MenuController()
+    controller.styler = TerminalStyler(force_color=False)
+    claims = [
+        {
+            "evidence": [
+                {
+                    "source_title": "Wikipedia - Eiffel Tower",
+                    "source_url": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+                }
+            ]
+        }
+    ]
+
+    with patch("webbrowser.open") as mock_open:
+        with patch("builtins.input", return_value="1"):
+            controller.open_source_in_browser(claims)
+        mock_open.assert_called_once_with("https://en.wikipedia.org/wiki/Eiffel_Tower")
+
+    captured = capsys.readouterr()
+    assert "OPEN VERIFIED SOURCE" in captured.out
+    assert "Wikipedia - Eiffel Tower" in captured.out
+    assert "Launching default browser for: Wikipedia - Eiffel Tower" in captured.out
+
+
+def test_claims_summary_section14_compliance() -> None:
+    """Verify ResultRenderer.render_claims_summary complies with Section 14 card layout."""
+    styler = TerminalStyler(force_color=False)
+    claims = [
+        {
+            "claim_index": 0,
+            "claim_text": "The Eiffel Tower is located in Berlin.",
+            "content_type": "FACTUAL",
+            "is_verifiable": True,
+            "verdict": "CONTRADICTED",
+            "evidence": [
+                {
+                    "source_title": "Wikipedia",
+                    "source_url": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+                }
+            ],
+            "judges": [
+                {
+                    "judge_name": "DeterministicJudge",
+                    "judgment": "CONTRADICTED",
+                },
+                {"judge_name": "SemanticJudge", "judgment": "CONTRADICTED"},
+            ],
+        }
+    ]
+    summary = ResultRenderer.render_claims_summary(claims, styler=styler)
+    assert "CLAIM #01" in summary
+    assert "The Eiffel Tower is located in Berlin." in summary
+    assert "Classification: FACTUAL" in summary
+    assert "Evidence: 1 source" in summary
+    assert "Sources:" in summary
+    assert "Wikipedia" in summary
+    assert "https://en.wikipedia.org/wiki/Eiffel_Tower" in summary
+    assert "Judge 1: [✗ CONTRADICTED] (DeterministicJudge)" in summary
+    assert "Judge 2: [✗ CONTRADICTED] (SemanticJudge)" in summary
+    assert "Final verdict: [✗ CONTRADICTED]" in summary
