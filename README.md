@@ -98,15 +98,50 @@ Interactive documentation:
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **OpenAPI Schema:** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
 
-### 3.4 CLI Verification Demonstration Tool
-Test the verification pipeline directly from the command line:
-```bash
-# Verify a factual statement
-.venv/bin/python scripts/verify.py --text "Water has the chemical formula H2O."
+### 3.4 Interactive Terminal Verification Dashboard & Mentor Demo Console
+The repository provides a full terminal verification console (`scripts/verifai_cli.py`) for live demonstrations, testing, and debugging:
 
-# Output structured JSON
-.venv/bin/python scripts/verify.py --text "Apollo 11 landed on the moon in 1969." --json
+```bash
+# 1. Start backend server (Terminal 1)
+PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# 2. Check engine health
+.venv/bin/python scripts/verifai_cli.py health
+
+# 3. Run the primary mentor demo (Complex Internet/ARPANET history with facts, contradictions, and opinions)
+.venv/bin/python scripts/verifai_cli.py demo --case mixed
+
+# 4. Run all 11 predefined demo cases with automated PASS/FAIL validation
+.venv/bin/python scripts/verifai_cli.py demo --all
+
+# 5. Verify custom AI output text
+.venv/bin/python scripts/verifai_cli.py verify "Water freezes at 0 degrees Celsius."
+
+# 6. Verify text from a file
+.venv/bin/python scripts/verifai_cli.py verify --file path/to/input.txt
+
+# 7. Compact summary mode
+.venv/bin/python scripts/verifai_cli.py demo --case supported --compact
+
+# 8. Output raw structured JSON
+.venv/bin/python scripts/verifai_cli.py demo --case mixed --json
+
+# 9. Start interactive verification shell
+.venv/bin/python scripts/verifai_cli.py interactive
 ```
+
+#### What Each Terminal Dashboard Section Means:
+- **INPUT:** Shows the exact text string submitted for evaluation.
+- **CLAIM EXTRACTION:** Lists discrete atomic claims deconstructed by the deterministic syntactic segmentation engine with start/end character offsets.
+- **EVIDENCE:** Displays reference passages retrieved from the local indexed knowledge base or live search cascade with source titles, URLs, and relevance scores.
+- **JUDGE RESULTS:** Shows independent evaluations from both `DeterministicRuleJudge` and `SecondarySemanticJudge` with specific rationales.
+- **ARBITRATION:** Shows consensus status or multi-judge dispute resolution from the Decision Engine.
+- **UNKNOWN REASONING:** Explains why a claim received `UNKNOWN` (e.g. `CONTEXT_UNKNOWN`), ensuring the system never guesses or fabricates evidence.
+- **NON-FACTUAL CLAIMS:** Separates subjective opinions and future-looking predictions so they do not falsely receive factual verdicts.
+- **SECURITY TEST:** Shows adversarial instruction isolation protecting trusted verification rules from prompt injection attempts.
+- **DECISION:** Shows the individual verdict per claim (`SUPPORTED`, `CONTRADICTED`, `UNKNOWN`, or `NON-VERIFIABLE`).
+- **SUMMARY:** Aggregates claims, overall trust score (0.0% to 100.0%), and hallucination risk warnings.
+- **AUDIT & TRACEABILITY:** Displays verification UUID, duration, stage progression, and calibration status.
 
 ### 3.5 Chrome Extension Installation
 1. Open Chrome / Chromium and navigate to `chrome://extensions/`.

@@ -89,17 +89,34 @@ class DeterministicRuleJudge(BaseJudge):
         contradiction_reason: str | None = None
         support_reason: str | None = None
 
-        for item in evidence_items:
+        all_evidence_numbers: set[str] = set()
+        for it in evidence_items:
+            all_evidence_numbers.update(
+                re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", it.snippet)
+            )
+
+        # Sort evidence items by numeric overlap and token overlap
+        sorted_items = sorted(
+            evidence_items,
+            key=lambda it: (
+                len(
+                    claim_numbers
+                    & set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", it.snippet))
+                ),
+                len(
+                    claim_tokens
+                    & set(re.findall(r"\b[a-z0-9]{3,}\b", it.snippet.lower()))
+                ),
+                it.relevance_score or 0.0,
+            ),
+            reverse=True,
+        )
+
+        for item in sorted_items:
             snippet_clean = item.snippet.lower()
             snippet_tokens = set(re.findall(r"\b[a-z0-9]{3,}\b", snippet_clean))
             snippet_numbers = set(
                 re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", item.snippet)
-            )
-            has_snippet_negation = bool(
-                re.search(
-                    r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't|false|untrue|incorrect)\b",
-                    snippet_clean,
-                )
             )
 
             # Check for topic relevance first
@@ -109,24 +126,44 @@ class DeterministicRuleJudge(BaseJudge):
 
             cited_evidence.append(str(item.id))
 
-            # 1. Contradiction Check: Numeric Discrepancy on shared topic
-            # If claim has specific numbers and snippet has different numbers
-            if claim_numbers and snippet_numbers:
-                discrepancy = bool(
-                    (claim_numbers - snippet_numbers)
-                    and (snippet_numbers - claim_numbers)
-                )
-                has_num_conflict = not (claim_numbers & snippet_numbers) or discrepancy
-                if has_num_conflict and overlap >= 2:
-                    contradiction_found = True
-                    contradiction_reason = (
-                        f"Numeric discrepancy: claim asserts {claim_numbers} while "
-                        f"evidence states {snippet_numbers}."
-                    )
-                    break
+            # Find best-matching sentence in snippet for proposition-level polarity
+            best_sent = ""
+            best_sent_overlap = 0
+            for sent in re.split(r"[.!?;\n]+", snippet_clean):
+                s_tokens = set(re.findall(r"\b[a-z0-9]{3,}\b", sent))
+                s_overlap = len(claim_tokens & s_tokens)
+                if s_overlap > best_sent_overlap:
+                    best_sent_overlap = s_overlap
+                    best_sent = sent.strip()
 
-            # 2. Contradiction Check: Polar Negation Mismatch
-            if has_claim_negation != has_snippet_negation and overlap >= 3:
+            has_sentence_negation = bool(
+                re.search(
+                    r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't|false|untrue|incorrect)\b",
+                    best_sent,
+                )
+            )
+
+            # 1. Contradiction Check: Numeric Discrepancy on shared topic
+            if claim_numbers and snippet_numbers:
+                num_match = claim_numbers.issubset(snippet_numbers)
+                if not num_match:
+                    unmatched_claim_numbers = claim_numbers - all_evidence_numbers
+                    conflicting_snippet_numbers = snippet_numbers - claim_numbers
+                    if (
+                        unmatched_claim_numbers
+                        and conflicting_snippet_numbers
+                        and overlap >= 2
+                    ):
+                        contradiction_found = True
+                        contradiction_reason = (
+                            f"Numeric discrepancy: claim asserts "
+                            f"{unmatched_claim_numbers} while evidence states "
+                            f"{conflicting_snippet_numbers}."
+                        )
+                        break
+
+            # 2. Contradiction Check: Polar Negation Mismatch on proposition
+            if has_claim_negation != has_sentence_negation and best_sent_overlap >= 3:
                 contradiction_found = True
                 contradiction_reason = (
                     "Polarity mismatch: negation detected between claim and evidence."
@@ -182,6 +219,7 @@ class DeterministicRuleJudge(BaseJudge):
                     f"Evidence passage confirms key entities and propositions "
                     f"(token overlap: {overlap}/{len(claim_tokens)})."
                 )
+                break
 
         if contradiction_found:
             return JudgeEvaluationData(

@@ -265,4 +265,48 @@ class LocalPassageRetriever(BaseEvidenceRetriever):
                 "publisher": "Wikipedia",
                 "publication_date": "2024-01-10",
             },
+            {
+                "title": "History of the Internet and ARPANET",
+                "snippet": (
+                    "The Internet developed from several research networks, with "
+                    "ARPANET being one of the most important early projects "
+                    "funded by the United States Department of Defense. The first "
+                    "ARPANET message was transmitted in 1969, and the network "
+                    "initially connected a small number of research institutions. "
+                    "In 1983, ARPANET adopted TCP/IP, which became an important "
+                    "milestone in the development of interconnected networks. "
+                    "ARPANET was permanently shut down in 1995."
+                ),
+                "url": "https://en.wikipedia.org/wiki/ARPANET",
+                "publisher": "Wikipedia",
+                "publication_date": "2024-01-10",
+            },
+            {
+                "title": "World Wide Web Architecture and CERN",
+                "snippet": (
+                    "Tim Berners-Lee proposed the World Wide Web at CERN in 1989, "
+                    "and the first website became available in 1991. The World "
+                    "Wide Web and the Internet are not the same technology; the "
+                    "Web is an application service operating on top of the "
+                    "Internet. Today, the Internet consists of interconnected "
+                    "networks operated by many organizations. All global Internet "
+                    "traffic does not pass through a single centralized server "
+                    "operated by CERN; rather, the Internet architecture is "
+                    "fundamentally decentralized."
+                ),
+                "url": "https://home.cern/science/computing/birth-web",
+                "publisher": "CERN",
+                "publication_date": "2023-12-01",
+            },
+            {
+                "title": "Python Programming Language Creation",
+                "snippet": (
+                    "The Python programming language was created by Guido van Rossum "
+                    "and first released in 1991. Python is an interpreted, high-level "
+                    "programming language emphasizing code readability."
+                ),
+                "url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+                "publisher": "Wikipedia",
+                "publication_date": "2024-02-01",
+            },
         ]

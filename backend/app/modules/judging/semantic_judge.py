@@ -90,26 +90,70 @@ class SecondarySemanticJudge(BaseJudge):
         is_contradicted = False
         rationale = ""
 
-        for item in evidence_items:
+        all_evidence_numbers: set[str] = set()
+        for it in evidence_items:
+            all_evidence_numbers.update(
+                re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", it.snippet)
+            )
+
+        # Sort evidence items by numeric overlap and token overlap
+        claim_nums = set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", claim_text))
+        sorted_items = sorted(
+            evidence_items,
+            key=lambda it: (
+                len(
+                    claim_nums
+                    & set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", it.snippet))
+                ),
+                len(
+                    set(claim_tokens)
+                    & set(re.findall(r"\b[a-z0-9]{3,}\b", it.snippet.lower()))
+                ),
+                it.relevance_score or 0.0,
+            ),
+            reverse=True,
+        )
+
+        for item in sorted_items:
             snippet_clean = item.snippet.lower()
             cited_evidence.append(str(item.id))
 
             # Numeric consistency check
-            claim_nums = set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", claim_text))
             snippet_nums = set(re.findall(r"\b\d+(?:,\d+)*(?:\.\d+)?\b", item.snippet))
 
-            if claim_nums and snippet_nums:
-                has_num_conflict = not (claim_nums & snippet_nums) or bool(
-                    (claim_nums - snippet_nums) and (snippet_nums - claim_nums)
+            # Find best-matching sentence in snippet for proposition-level polarity
+            best_sent = ""
+            best_sent_overlap = 0
+            for sent in re.split(r"[.!?;\n]+", snippet_clean):
+                s_tokens = set(re.findall(r"\b[a-z0-9]{3,}\b", sent))
+                s_overlap = len(set(claim_tokens) & s_tokens)
+                if s_overlap > best_sent_overlap:
+                    best_sent_overlap = s_overlap
+                    best_sent = sent.strip()
+
+            has_sentence_neg = bool(
+                re.search(
+                    r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't|false|untrue|incorrect)\b",
+                    best_sent,
                 )
-                if has_num_conflict:
-                    # Only flag contradiction if significant topic keywords align
+            )
+
+            if claim_nums and snippet_nums:
+                num_match = claim_nums.issubset(snippet_nums)
+                if not num_match:
+                    unmatched_claim_numbers = claim_nums - all_evidence_numbers
+                    conflicting_snippet_numbers = snippet_nums - claim_nums
                     shared_tokens = [w for w in claim_tokens if w in snippet_clean]
-                    if len(shared_tokens) >= 2:
+                    if (
+                        unmatched_claim_numbers
+                        and conflicting_snippet_numbers
+                        and len(shared_tokens) >= 2
+                    ):
                         is_contradicted = True
                         rationale = (
                             "Secondary judge detected conflicting numeric values: "
-                            f"claim={claim_nums}, source={snippet_nums}."
+                            f"claim={unmatched_claim_numbers}, "
+                            f"source={conflicting_snippet_numbers}."
                         )
                         break
 
@@ -155,20 +199,14 @@ class SecondarySemanticJudge(BaseJudge):
                 )
                 break
 
-            # Polarity / negation mismatch check
+            # Polarity / negation mismatch check on best sentence
             has_claim_neg = bool(
                 re.search(
                     r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't)\b",
                     claim_clean,
                 )
             )
-            has_snip_neg = bool(
-                re.search(
-                    r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't|false|untrue|incorrect)\b",
-                    snippet_clean,
-                )
-            )
-            if has_claim_neg != has_snip_neg and len(shared_tokens) >= 3:
+            if has_claim_neg != has_sentence_neg and best_sent_overlap >= 3:
                 is_contradicted = True
                 rationale = (
                     "Secondary judge detected polarity/negation mismatch "
@@ -192,6 +230,7 @@ class SecondarySemanticJudge(BaseJudge):
                     f"Secondary judge confirmed proposition containment "
                     f"({len(contained_tokens)}/{len(claim_tokens)} tokens matched)."
                 )
+                break
 
         if is_contradicted:
             return JudgeEvaluationData(

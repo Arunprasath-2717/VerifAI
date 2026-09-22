@@ -7,7 +7,7 @@ testpaths = [
     "backend/tests",
     "benchmark/tests",
 ]
-pythonpath = ["."]
+pythonpath = [".", "backend"]
 addopts = "-v --strict-markers"
 filterwarnings = [
     "ignore::starlette.testclient.StarletteDeprecationWarning",
