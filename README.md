@@ -98,52 +98,81 @@ Interactive documentation:
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **OpenAPI Schema:** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
 
-### 3.4 Interactive Terminal Verification Dashboard & Mentor Demo Console
-The repository provides a full terminal verification console (`scripts/verifai_cli.py`) for live demonstrations, testing, and debugging:
+## Interactive CLI Demo
 
+The repository includes a mentor-ready terminal verification console (`scripts/verifai_cli.py`) for live demonstrations, testing, and debugging.
+
+### Start Backend
 ```bash
-# 1. Start backend server (Terminal 1)
-PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+# Terminal 1: Launch FastAPI verification server
+PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
 
-# 2. Check engine health
-.venv/bin/python scripts/verifai_cli.py health
+### Launch Interactive Console
+```bash
+# Terminal 2: Launch interactive menu console
+.venv/bin/python scripts/verifai_cli.py
 
-# 3. Run the primary mentor demo (Complex Internet/ARPANET history with facts, contradictions, and opinions)
-.venv/bin/python scripts/verifai_cli.py demo --case mixed
-
-# 4. Run all 11 predefined demo cases with automated PASS/FAIL validation
-.venv/bin/python scripts/verifai_cli.py demo --all
-
-# 5. Verify custom AI output text
-.venv/bin/python scripts/verifai_cli.py verify "Water freezes at 0 degrees Celsius."
-
-# 6. Verify text from a file
-.venv/bin/python scripts/verifai_cli.py verify --file path/to/input.txt
-
-# 7. Compact summary mode
-.venv/bin/python scripts/verifai_cli.py demo --case supported --compact
-
-# 8. Output raw structured JSON
-.venv/bin/python scripts/verifai_cli.py demo --case mixed --json
-
-# 9. Start interactive verification shell
+# Or explicitly:
 .venv/bin/python scripts/verifai_cli.py interactive
 ```
 
-#### What Each Terminal Dashboard Section Means:
-- **INPUT:** Shows the exact text string submitted for evaluation.
-- **CLAIM EXTRACTION:** Lists discrete atomic claims deconstructed by the deterministic syntactic segmentation engine with start/end character offsets.
-- **EVIDENCE:** Displays reference passages retrieved from the local indexed knowledge base or live search cascade with source titles, URLs, and relevance scores.
-- **JUDGE RESULTS:** Shows independent evaluations from both `DeterministicRuleJudge` and `SecondarySemanticJudge` with specific rationales.
-- **ARBITRATION:** Shows consensus status or multi-judge dispute resolution from the Decision Engine.
-- **UNKNOWN REASONING:** Explains why a claim received `UNKNOWN` (e.g. `CONTEXT_UNKNOWN`), ensuring the system never guesses or fabricates evidence.
-- **NON-FACTUAL CLAIMS:** Separates subjective opinions and future-looking predictions so they do not falsely receive factual verdicts.
-- **SECURITY TEST:** Shows adversarial instruction isolation protecting trusted verification rules from prompt injection attempts.
-- **DECISION:** Shows the individual verdict per claim (`SUPPORTED`, `CONTRADICTED`, `UNKNOWN`, or `NON-VERIFIABLE`).
-- **SUMMARY:** Aggregates claims, overall trust score (0.0% to 100.0%), and hallucination risk warnings.
-- **AUDIT & TRACEABILITY:** Displays verification UUID, duration, stage progression, and calibration status.
+When launched from an interactive terminal, VerifAI presents a double-lined menu:
+```text
+╔══════════════════════════════════════════════════════════════╗
+║                         VERIFAI                              ║
+║              AI RESPONSE VERIFICATION ENGINE                 ║
+╚══════════════════════════════════════════════════════════════╝
 
-### 3.5 Chrome Extension Installation
+ [1] Run Mentor Demo
+ [2] Predefined Demo Scenarios
+ [3] Run Automated Demo Suite
+ [4] Verify Custom AI Response
+ [5] Verify Text File
+ [6] System Health & Diagnostics
+ [7] Live Verification REPL
+ [8] Architecture & Methodology
+ [0] Exit
+```
+
+### Run Direct CLI Commands
+```bash
+# Verify custom assertion:
+.venv/bin/python scripts/verifai_cli.py verify "Water freezes at 0 degrees Celsius."
+
+# Verify text from file:
+.venv/bin/python scripts/verifai_cli.py verify --file path/to/input.txt
+
+# Run specific demo case:
+.venv/bin/python scripts/verifai_cli.py demo --case mixed
+
+# Run batch test suite across all 11 curated scenarios:
+.venv/bin/python scripts/verifai_cli.py demo --all
+
+# Inspect system health:
+.venv/bin/python scripts/verifai_cli.py health
+
+# Compact summary output:
+.venv/bin/python scripts/verifai_cli.py demo --case supported --compact
+
+# Output raw structured JSON:
+.venv/bin/python scripts/verifai_cli.py verify "Water freezes at 0C." --json
+```
+
+### Output Sections Explained
+- **PIPELINE PROGRESS:** Real-time visual progress indicators across the 5 internal stages: claim extraction, propositional taxonomy classification, verified evidence retrieval, dual-judge consensus evaluation, and decision engine arbitration.
+- **VERIFICATION RESULT:** Top-level scorecard displaying verification ID, completion status, processing duration, claim counts (total, factual, non-factual), and verdict totals (`SUPPORTED`, `CONTRADICTED`, `UNKNOWN`, `NON-VERIFIABLE`).
+- **TRUST SCORE & CALIBRATION:** Calibrated graphical gauge (e.g. `[████████████████████] 100.0%`) or `[N/A]` with `Calibration: NOT_CALIBRATED` when uncalibrated. Never fabricates values.
+- **CLAIM BREAKDOWN:** Every discrete atomic claim deconstructed from input with source offsets, propositional type, verifiability, and verdict badge.
+- **DRILL-DOWN OPTIONS:**
+  - `[V]` **Evidence:** Retrieved source titles, URLs, snippet passages, retriever provenance, and relevance scores.
+  - `[J]` **Judges:** Independent evaluations from `DeterministicRuleJudge` and `SecondarySemanticJudge`, consensus arbitration, and degradation flags.
+  - `[A]` **Audit:** Timestamped event trail and component latency trace.
+  - `[R]` **Raw JSON:** Full backend verification response envelope.
+  - `[Enter]` **Back:** Return to main menu.
+- **SECURITY & PROMPT ISOLATION:** Displays `Prompt Isolation: PASSED` when adversarial instructions (e.g. *"Ignore all previous instructions..."*) are neutralized and isolated as untrusted data while evaluating the underlying factual statement objectively.
+
+### Chrome Extension Installation
 1. Open Chrome / Chromium and navigate to `chrome://extensions/`.
 2. Enable **Developer mode** toggle in top-right corner.
 3. Click **Load unpacked** and select the `extension/` directory from this repository.
@@ -156,7 +185,7 @@ PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 VerifAI enforces a zero-regression, hermetic quality gate:
 
-### 4.1 Execute Test Suite (1,020 Tests)
+### 4.1 Execute Test Suite (1,116 Tests)
 ```bash
 .venv/bin/pytest -v
 ```
