@@ -9,6 +9,53 @@ from app.modules.evidence.interface import BaseEvidenceRetriever
 from app.modules.evidence.models import RetrievedEvidenceItem
 from app.modules.evidence.security import compute_domain_authority
 
+_STOP_WORDS = {
+    "the",
+    "and",
+    "that",
+    "this",
+    "with",
+    "from",
+    "for",
+    "are",
+    "was",
+    "were",
+    "been",
+    "has",
+    "have",
+    "had",
+    "will",
+    "would",
+    "can",
+    "could",
+    "should",
+    "during",
+    "about",
+    "into",
+    "than",
+    "then",
+    "also",
+    "very",
+    "just",
+    "some",
+    "any",
+    "each",
+    "other",
+    "its",
+    "our",
+    "their",
+    "such",
+    "only",
+    "same",
+    "both",
+    "all",
+    "more",
+    "most",
+    "not",
+    "out",
+    "over",
+}
+
 
 @dataclass
 class KnowledgePassage:
@@ -26,24 +73,23 @@ class LocalPassageRetriever(BaseEvidenceRetriever):
     """Deterministic in-memory evidence retriever — DEVELOPMENT / TESTING ONLY.
 
     This retriever operates entirely in-process against a small curated set of
-    reference passages (≈6 entries by default).  It performs no external network
+    reference passages (≈8 entries by default).  It performs no external network
     requests and produces fully reproducible, hermetic results suitable for unit
     tests and local demonstrations.
 
     KNOWN LIMITATIONS (not suitable for production):
     - The passage index is intentionally sparse.  Claims about topics not covered
-      by an indexed passage will receive INSUFFICIENT_EVIDENCE or may trigger
-      spurious numeric-discrepancy detection when unrelated numbers co-occur.
-    - Relevance scoring is lexical token-overlap (Jaccard-like); it is not
-      semantic or embedding-based.
+      by an indexed passage will receive INSUFFICIENT_EVIDENCE.
+    - Relevance scoring is content token-overlap (Jaccard-like with stopword
+      removal); it is not embedding-based.
     - Evidence sourced from this retriever is labelled ``retriever_name =
       "LOCAL_PASSAGE_INDEX"`` in every response so that consumers can
       distinguish it from live web or database evidence.
     - Do NOT present LOCAL_PASSAGE_INDEX results as authoritative live evidence
       in any user-facing context outside of development demonstrations.
 
-    For production evidence retrieval, configure :class:`SafeWebRetriever` with
-    a valid Wikipedia API endpoint, or a future vector-store retriever (Phase 4).
+    For production evidence retrieval, configure :class:`LiveWebRetriever` with
+    valid Tavily, DuckDuckGo, or Wikipedia endpoints.
     """
 
     def __init__(self, passages: list[dict[str, str]] | None = None) -> None:
@@ -75,7 +121,7 @@ class LocalPassageRetriever(BaseEvidenceRetriever):
     ) -> None:
         """Register a new verified passage into the in-memory index."""
         text = f"{title} {snippet}".lower()
-        tokens = set(re.findall(r"\b[a-z0-9]{3,}\b", text))
+        tokens = set(re.findall(r"\b[a-z0-9]{3,}\b", text)) - _STOP_WORDS
         self._passages.append(
             KnowledgePassage(
                 title=title,
@@ -91,7 +137,9 @@ class LocalPassageRetriever(BaseEvidenceRetriever):
         self, claim_text: str, max_passages: int = 3
     ) -> list[RetrievedEvidenceItem]:
         """Retrieve top matching passages based on token overlap score."""
-        claim_tokens = set(re.findall(r"\b[a-z0-9]{3,}\b", claim_text.lower()))
+        claim_tokens = (
+            set(re.findall(r"\b[a-z0-9]{3,}\b", claim_text.lower())) - _STOP_WORDS
+        )
         if not claim_tokens:
             return []
 
@@ -196,5 +244,25 @@ class LocalPassageRetriever(BaseEvidenceRetriever):
                 "url": "https://www.nature.com/subjects/photosynthesis",
                 "publisher": "Nature",
                 "publication_date": "2023-09-12",
+            },
+            {
+                "title": "Freezing Point of Water",
+                "snippet": (
+                    "Water freezes at 0 degrees Celsius (32 degrees Fahrenheit) "
+                    "at standard atmospheric pressure and boils at 100 degrees Celsius."
+                ),
+                "url": "https://en.wikipedia.org/wiki/Water",
+                "publisher": "Wikipedia",
+                "publication_date": "2024-01-15",
+            },
+            {
+                "title": "Eiffel Tower Location and Overview",
+                "snippet": (
+                    "The Eiffel Tower is a wrought-iron lattice tower located on "
+                    "the Champ de Mars in Paris, France."
+                ),
+                "url": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+                "publisher": "Wikipedia",
+                "publication_date": "2024-01-10",
             },
         ]

@@ -52,6 +52,11 @@ async def get_optional_db_session(
         yield None
 
 
+# Bounded ephemeral in-memory cache for development/demo when DATABASE_URL is not set
+_EPHEMERAL_MAX_ENTRIES = 100
+_EPHEMERAL_JOBS: dict[uuid.UUID, VerificationResponse] = {}
+
+
 @router.post(
     "/verification",
     response_model=VerificationResponse,
@@ -69,7 +74,13 @@ async def create_verification(
 ) -> VerificationResponse:
     """Execute end-to-end verification pipeline."""
     orchestrator = VerificationOrchestrator()
-    return await orchestrator.verify(request=request, db_session=db)
+    response = await orchestrator.verify(request=request, db_session=db)
+    if db is None:
+        if len(_EPHEMERAL_JOBS) >= _EPHEMERAL_MAX_ENTRIES:
+            oldest_key = next(iter(_EPHEMERAL_JOBS))
+            _EPHEMERAL_JOBS.pop(oldest_key, None)
+        _EPHEMERAL_JOBS[response.verification_id] = response
+    return response
 
 
 @router.get(
@@ -88,6 +99,9 @@ async def get_verification(
 ) -> VerificationResponse:
     """Retrieve an existing verification job by UUID."""
     if db is None:
+        cached = _EPHEMERAL_JOBS.get(verification_id)
+        if cached is not None:
+            return cached
         raise NotFoundError(
             message=f"Verification job {verification_id} not found.",
             details={"verification_id": str(verification_id)},

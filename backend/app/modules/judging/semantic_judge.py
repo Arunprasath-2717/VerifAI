@@ -8,6 +8,40 @@ from app.modules.judging.interface import BaseJudge
 from app.modules.judging.models import JudgeEvaluationData
 from app.schemas.verification import JudgeDecision
 
+_KNOWN_CITIES = {
+    "paris",
+    "berlin",
+    "london",
+    "rome",
+    "madrid",
+    "tokyo",
+    "beijing",
+    "washington",
+    "moscow",
+    "ottawa",
+    "cairo",
+    "canberra",
+    "delhi",
+    "brasilia",
+}
+
+_KNOWN_COUNTRIES = {
+    "france",
+    "germany",
+    "italy",
+    "spain",
+    "japan",
+    "china",
+    "usa",
+    "russia",
+    "canada",
+    "egypt",
+    "australia",
+    "india",
+    "brazil",
+    "uk",
+}
+
 
 class SecondarySemanticJudge(BaseJudge):
     """Secondary judge evaluating directional inclusion and entity matching."""
@@ -79,12 +113,80 @@ class SecondarySemanticJudge(BaseJudge):
                         )
                         break
 
+            # Geographic / entity consistency check
+            claim_cities = set(claim_tokens) & _KNOWN_CITIES
+            snippet_cities = (
+                set(re.findall(r"\b[a-z0-9]{3,}\b", snippet_clean)) & _KNOWN_CITIES
+            )
+            claim_countries = set(claim_tokens) & _KNOWN_COUNTRIES
+            snippet_countries = (
+                set(re.findall(r"\b[a-z0-9]{3,}\b", snippet_clean)) & _KNOWN_COUNTRIES
+            )
+
+            shared_tokens = [w for w in claim_tokens if w in snippet_clean]
+
+            if (
+                claim_cities
+                and snippet_cities
+                and not (claim_cities & snippet_cities)
+                and len(shared_tokens) >= 2
+            ):
+                is_contradicted = True
+                c_claim = ", ".join(sorted(claim_cities))
+                c_snip = ", ".join(sorted(snippet_cities))
+                rationale = (
+                    f"Secondary judge detected conflicting entity location: "
+                    f"claim asserts '{c_claim}', source specifies '{c_snip}'."
+                )
+                break
+
+            if (
+                claim_countries
+                and snippet_countries
+                and not (claim_countries & snippet_countries)
+                and len(shared_tokens) >= 2
+            ):
+                is_contradicted = True
+                c_claim = ", ".join(sorted(claim_countries))
+                c_snip = ", ".join(sorted(snippet_countries))
+                rationale = (
+                    f"Secondary judge detected conflicting country: "
+                    f"claim asserts '{c_claim}', source specifies '{c_snip}'."
+                )
+                break
+
+            # Polarity / negation mismatch check
+            has_claim_neg = bool(
+                re.search(
+                    r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't)\b",
+                    claim_clean,
+                )
+            )
+            has_snip_neg = bool(
+                re.search(
+                    r"\b(?:not|never|no|none|neither|cannot|didn't|wasn't|false|untrue|incorrect)\b",
+                    snippet_clean,
+                )
+            )
+            if has_claim_neg != has_snip_neg and len(shared_tokens) >= 3:
+                is_contradicted = True
+                rationale = (
+                    "Secondary judge detected polarity/negation mismatch "
+                    "between claim and evidence."
+                )
+                break
+
             # Inclusion count
             contained_tokens = [w for w in claim_tokens if w in snippet_clean]
             containment_ratio = len(contained_tokens) / len(claim_tokens)
 
             # Strict threshold for secondary support: 60% directional containment
-            if containment_ratio >= 0.60:
+            # and no unresolved entity conflict
+            entity_conflict = bool(
+                (claim_cities and not (claim_cities & snippet_cities))
+                or (claim_countries and not (claim_countries & snippet_countries))
+            )
+            if containment_ratio >= 0.60 and not entity_conflict:
                 is_supported = True
                 rationale = (
                     f"Secondary judge confirmed proposition containment "

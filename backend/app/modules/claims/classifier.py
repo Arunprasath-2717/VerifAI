@@ -38,7 +38,7 @@ class ContentClassifier:
     PREDICTION_MARKERS = re.compile(
         r"\b(?:will\s+(?:be|occur|happen|increase|decrease|reach|drop|exceed|"
         r"solve|rise|replace|dominate|achieve|eradicate|handle|experience|"
-        r"detect|revolutionize|make)|"
+        r"detect|revolutionize|make|become)|"
         r"expected\s+to|predicted\s+to|forecasted\s+to|projected\s+to|"
         r"by\s+20[3-9]\d|in\s+20[3-9]\d|"
         r"in\s+the\s+future|next\s+(?:decade|century|year|month))\b",
@@ -83,7 +83,9 @@ class ContentClassifier:
         r"list|enumerate|show|tell|give|provide|find|"
         r"help\s+me|translate|convert|calculate|compute|"
         r"draw|make|build|design|develop|"
-        r"format|implement|review|set\s+up"
+        r"format|implement|review|set\s+up|"
+        # System directives / instruction overrides
+        r"ignore|disregard|classify|override|forget|bypass"
         r")\b",
         re.IGNORECASE,
     )

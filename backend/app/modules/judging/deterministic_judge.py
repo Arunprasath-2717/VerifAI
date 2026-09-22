@@ -8,6 +8,40 @@ from app.modules.judging.interface import BaseJudge
 from app.modules.judging.models import JudgeEvaluationData
 from app.schemas.verification import JudgeDecision
 
+_KNOWN_CITIES = {
+    "paris",
+    "berlin",
+    "london",
+    "rome",
+    "madrid",
+    "tokyo",
+    "beijing",
+    "washington",
+    "moscow",
+    "ottawa",
+    "cairo",
+    "canberra",
+    "delhi",
+    "brasilia",
+}
+
+_KNOWN_COUNTRIES = {
+    "france",
+    "germany",
+    "italy",
+    "spain",
+    "japan",
+    "china",
+    "usa",
+    "russia",
+    "canada",
+    "egypt",
+    "australia",
+    "india",
+    "brazil",
+    "uk",
+}
+
 
 class DeterministicRuleJudge(BaseJudge):
     """Deterministic judge verifying factual alignment, numbers, and negations."""
@@ -99,11 +133,50 @@ class DeterministicRuleJudge(BaseJudge):
                 )
                 break
 
-            # 3. Support Check: High token overlap and numbers verified
+            # 3. Contradiction Check: Conflicting Geographic / Entity Locations
+            claim_cities = claim_tokens & _KNOWN_CITIES
+            snippet_cities = snippet_tokens & _KNOWN_CITIES
+            if (
+                claim_cities
+                and snippet_cities
+                and not (claim_cities & snippet_cities)
+                and overlap >= 2
+            ):
+                contradiction_found = True
+                c_claim = ", ".join(sorted(claim_cities))
+                c_snip = ", ".join(sorted(snippet_cities))
+                contradiction_reason = (
+                    f"Geographic discrepancy: claim asserts location '{c_claim}' "
+                    f"while evidence specifies '{c_snip}'."
+                )
+                break
+
+            claim_countries = claim_tokens & _KNOWN_COUNTRIES
+            snippet_countries = snippet_tokens & _KNOWN_COUNTRIES
+            if (
+                claim_countries
+                and snippet_countries
+                and not (claim_countries & snippet_countries)
+                and overlap >= 2
+            ):
+                contradiction_found = True
+                c_claim = ", ".join(sorted(claim_countries))
+                c_snip = ", ".join(sorted(snippet_countries))
+                contradiction_reason = (
+                    f"Geographic discrepancy: claim asserts country '{c_claim}' "
+                    f"while evidence specifies '{c_snip}'."
+                )
+                break
+
+            # 4. Support Check: High token overlap, numbers and entities verified
+            entity_conflict = bool(
+                (claim_cities and not (claim_cities & snippet_cities))
+                or (claim_countries and not (claim_countries & snippet_countries))
+            )
             num_match = (not claim_numbers) or claim_numbers.issubset(snippet_numbers)
             overlap_ratio = overlap / max(1, len(claim_tokens))
 
-            if overlap_ratio >= 0.50 and num_match:
+            if overlap_ratio >= 0.50 and num_match and not entity_conflict:
                 support_found = True
                 support_reason = (
                     f"Evidence passage confirms key entities and propositions "
