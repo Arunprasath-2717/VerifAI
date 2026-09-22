@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""VerifAI — Live Demonstration Script for Mentors and Auditors.
+"""VerifAI — Live Demonstration Script for Stakeholders and Auditors.
 
 Executes the complete verification pipeline across all 10 demo scenarios:
 1. SUPPORTED factual assertion

@@ -98,9 +98,9 @@ Interactive documentation:
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **OpenAPI Schema:** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
 
-## Interactive CLI Demo
+## Interactive Verification Console
 
-The repository includes a mentor-ready terminal verification console (`scripts/verifai_cli.py`) for live demonstrations, testing, and debugging.
+The repository includes a cinematic, 3D-styled terminal verification command center (`scripts/verifai_cli.py`) for live demonstrations, auditing, and interactive testing.
 
 ### Start Backend
 ```bash
@@ -110,29 +110,49 @@ PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 -
 
 ### Launch Interactive Console
 ```bash
-# Terminal 2: Launch interactive menu console
+# Terminal 2: Launch interactive console
 .venv/bin/python scripts/verifai_cli.py
 
 # Or explicitly:
 .venv/bin/python scripts/verifai_cli.py interactive
 ```
 
-When launched from an interactive terminal, VerifAI presents a double-lined menu:
+When launched, VerifAI displays the cinematic 3D cyber-aesthetic command center:
 ```text
-╔══════════════════════════════════════════════════════════════╗
-║                         VERIFAI                              ║
-║              AI RESPONSE VERIFICATION ENGINE                 ║
-╚══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║        ██╗   ██╗ ███████╗ ██████╗  ██╗ ███████╗  █████╗  ██╗         ║
+║        ██║   ██║ ██╔════╝ ██╔══██╗ ██║ ██╔════╝ ██╔══██╗ ██║         ║
+║        ██║   ██║ █████╗   ██████╔╝ ██║ █████╗   ███████║ ██║         ║
+║        ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗ ██║ ██╔══╝   ██╔══██║ ██║         ║
+║         ╚████╔╝  ███████╗ ██║  ██║ ██║ ██║      ██║  ██║ ██║         ║
+║          ╚═══╝   ╚══════╝ ╚═╝  ╚═╝ ╚═╝ ╚═╝      ╚═╝  ╚═╝ ╚═╝         ║
+║                                                                      ║
+║          CROSS-GENERATION CONSISTENCY VERIFICATION                   ║
+║              TRUTH  •  EVIDENCE  •  TRACEABILITY                     ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
 
- [1] Run Mentor Demo
- [2] Predefined Demo Scenarios
- [3] Run Automated Demo Suite
- [4] Verify Custom AI Response
- [5] Verify Text File
- [6] System Health & Diagnostics
- [7] Live Verification REPL
- [8] Architecture & Methodology
- [0] Exit
+╭──────────╮     ╭──────────────╮     ╭──────────────╮
+│  INPUT   │ ──▶ │ CLAIM        │ ──▶ │ CLASSIFY     │
+│    ✓     │     │ EXTRACTION ✓ │     │      ✓       │
+╰──────────╯     ╰──────────────╯     ╰──────────────╯
+                                             │        
+                                             ▼        
+╭──────────────╮     ╭──────────────╮     ╭──────────────╮
+│   DECISION   │ ◀── │ MULTI-JUDGE  │ ◀── │   EVIDENCE   │
+│      ✓       │     │      ✓       │     │      ✓       │
+╰──────────────╯     ╰──────────────╯     ╰──────────────╯
+
+╭──────────────────────────────────╮
+│ VERIFAI                          │
+├──────────────────────────────────┤
+│  1  Verify AI Response           │
+│  2  Verify Text File             │
+│  3  History                      │
+│  4  System Status                │
+│  0  Exit                         │
+╰──────────────────────────────────╯
 ```
 
 ### Run Direct CLI Commands
