@@ -109,3 +109,22 @@
   - Prevents unauthorized scope creep: React, MCP, and Phase 5 remain locked.
   - Formally preserves backend MVP acceptance gates while allowing auxiliary demonstration client exploration.
 
+---
+
+## ADR-011: Namespace-Isolated Knowledge Base as Primary Evidence Provider
+- **Status:** Accepted (Locked)
+- **Context:** Verifying factual assertions against internal documents and proprietary context requires searching a private knowledge base before external evidence sources, with strict tenant isolation, deterministic scoring, prompt injection defense, and auditable provenance.
+- **Decision:**
+  1. **Namespace Isolation vs. Multi-User Accounts:** Isolation is strictly enforced at the database and query boundary via `owner_id` / `namespace_id`. Full user authentication (Supabase Auth / JWT) remains deferred per ADR-003; the current implementation is explicitly designated as a *namespace-isolated Knowledge Base*, not production multi-user private accounts.
+  2. **Configurable Default Owner ID Gating:** The default owner identifier (`settings.DEFAULT_OWNER_ID = "default_dev_user"`) is accessible only when development or testing mode is explicitly enabled (`ENVIRONMENT in ("development", "test", "testing")` or `DEBUG == True`). In production environments, an explicit `owner_id` is mandatory.
+  3. **Evidence Provider Architecture:** `PrivateKBRetriever` implements the standard `BaseEvidenceRetriever` interface. Rather than creating a disjoint RAG stack, private KB retrieval operates as a native evidence provider under the verification orchestrator, feeding into the unified Evidence Set evaluated by independent judges.
+  4. **KB-First Evidence Orchestration:** For each verifiable factual claim, the orchestrator searches the private KB first. When sufficient relevant KB evidence is retrieved (`KBSufficiencyStatus.KB_RELEVANT`), external retrieval is skipped by default. External retrieval is triggered only when KB evidence is insufficient or when corroboration mode (`force_external_retrieval=True`) is explicitly requested.
+  5. **Configurable Retrieval Thresholds:** Retrieval scoring applies deterministic token overlap and length-normalized similarity. Relevance thresholds (`KB_RELEVANCE_THRESHOLD`, default 0.15) and token overlap minimums (`KB_MIN_OVERLAP_TOKENS`, default 2) are configurable via application settings and per-request overrides.
+  6. **Zero Blind Trust & Prompt Injection Defense:** All KB passages are treated as untrusted evidence data. Passages are quarantined inside `<untrusted_evidence>` XML boundaries with closing tag sanitization to prevent prompt breakout attacks.
+  7. **Full Provenance Transparency:** Every evidence item tracks its origin (`evidence_source: PRIVATE_KB | EXTERNAL`), document identifier, chunk index, document title, and relevance score, displayed clearly across REST API responses and the interactive CLI console.
+- **Consequences:**
+  - Guarantees deterministic, private-first verification without data leakage to external search engines.
+  - Allows seamless addition of future evidence providers (web, papers, APIs).
+  - Preserves strict namespace boundary guarantees without premature authentication coupling.
+
+

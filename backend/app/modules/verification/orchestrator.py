@@ -29,6 +29,9 @@ from app.modules.judging.disagreement import DisagreementEngine
 from app.modules.judging.interface import BaseJudge
 from app.modules.judging.models import JudgeEvaluationData
 from app.modules.judging.semantic_judge import SecondarySemanticJudge
+from app.modules.knowledge.retriever import KBSearchResult, PrivateKBRetriever
+from app.modules.knowledge.service import KnowledgeBaseService
+from app.schemas.knowledge import KBSufficiencyStatus
 from app.schemas.verification import (
     AuditRecordSchema,
     ClaimResultSchema,
@@ -53,6 +56,8 @@ class VerificationOrchestrator:
         extractor: BaseClaimExtractor | None = None,
         classifier: ContentClassifier | None = None,
         retriever: BaseEvidenceRetriever | None = None,
+        kb_retriever: PrivateKBRetriever | None = None,
+        kb_service: KnowledgeBaseService | None = None,
         judges: list[BaseJudge] | None = None,
         tie_breaker_judge: BaseJudge | None = None,
         disagreement_engine: DisagreementEngine | None = None,
@@ -61,6 +66,8 @@ class VerificationOrchestrator:
         self.extractor = extractor or DeterministicClaimExtractor()
         self.classifier = classifier or ContentClassifier()
         self.retriever = retriever or LocalPassageRetriever()
+        self.kb_retriever = kb_retriever
+        self.kb_service = kb_service
         self.judges = judges or [
             DeterministicRuleJudge(name="Judge-Primary-Deterministic"),
             SecondarySemanticJudge(name="Judge-Secondary-Semantic"),
@@ -129,7 +136,7 @@ class VerificationOrchestrator:
             details={"claims_count": len(extracted_items)},
         )
 
-        # Configure evidence retriever (select cascading live retriever if requested)
+        # Configure external evidence retriever (live web or local index)
         active_retriever = self.retriever
         if request.options.enable_live_search:
             active_retriever = LiveWebRetriever.from_settings()
@@ -143,6 +150,15 @@ class VerificationOrchestrator:
                 ),
                 details={"retriever": active_retriever.name},
             )
+
+        # Configure private knowledge base service and retriever for this execution
+        active_kb_service = self.kb_service or KnowledgeBaseService(
+            db_session=db_session
+        )
+        active_kb_retriever = self.kb_retriever or PrivateKBRetriever(
+            service=active_kb_service,
+            owner_id=request.options.owner_id,
+        )
 
         # Process each claim through classification, retrieval, and judging
         claims_processed: list[dict[str, Any]] = []
@@ -159,21 +175,136 @@ class VerificationOrchestrator:
             explanation = classification.explanation
 
             if classification.is_verifiable:
-                # Step 3: Evidence Retrieval for verifiable factual claims
-                try:
-                    evidence_items = await active_retriever.retrieve(
-                        item.text, max_passages=3
-                    )
-                except Exception as exc:
-                    logger.warning("Retrieval failed for claim %d: %s", item.index, exc)
+                kb_evidence: list[RetrievedEvidenceItem] = []
+                external_evidence: list[RetrievedEvidenceItem] = []
+                kb_hit = False
+
+                # Step 3A: Search Private Knowledge Base
+                if request.options.enable_kb_search:
                     log_audit(
                         stage="RETRIEVAL",
-                        event_type="DEGRADED_EXECUTION",
-                        status="WARNING",
+                        event_type="KB_SEARCH_STARTED",
+                        status="SUCCESS",
+                        message=f"Searching private KB for claim {item.index}.",
+                        details={
+                            "claim_index": item.index,
+                            "owner_id": request.options.owner_id,
+                        },
+                    )
+                    try:
+                        kb_result: KBSearchResult = await active_kb_retriever.search(
+                            claim_text=item.text,
+                            owner_id=request.options.owner_id,
+                            threshold=request.options.kb_relevance_threshold,
+                        )
+                        if kb_result.sufficiency == KBSufficiencyStatus.KB_RELEVANT:
+                            kb_hit = True
+                            kb_evidence = kb_result.evidence_items
+                            log_audit(
+                                stage="RETRIEVAL",
+                                event_type="KB_HIT",
+                                status="SUCCESS",
+                                message=(
+                                    f"Sufficient KB evidence for claim {item.index}: "
+                                    f"{len(kb_evidence)} passage(s)."
+                                ),
+                                details={
+                                    "claim_index": item.index,
+                                    "passages": len(kb_evidence),
+                                    "top_score": kb_result.top_score,
+                                },
+                            )
+                        else:
+                            log_audit(
+                                stage="RETRIEVAL",
+                                event_type="KB_MISS",
+                                status="INFO",
+                                message=(
+                                    f"Private KB: {kb_result.sufficiency.value} "
+                                    f"for claim {item.index}."
+                                ),
+                                details={
+                                    "claim_index": item.index,
+                                    "sufficiency": kb_result.sufficiency.value,
+                                    "top_score": kb_result.top_score,
+                                },
+                            )
+                    except Exception as kb_exc:
+                        logger.warning(
+                            "KB retrieval failed for claim %d: %s", item.index, kb_exc
+                        )
+                        log_audit(
+                            stage="RETRIEVAL",
+                            event_type="KB_ERROR",
+                            status="WARNING",
+                            message=f"KB error on claim {item.index}: {kb_exc}",
+                            details={"error": type(kb_exc).__name__},
+                        )
+
+                # Step 3B: External Retrieval (if KB insufficient or corroboration)
+                should_search_external = (
+                    not kb_hit or request.options.force_external_retrieval
+                )
+
+                if should_search_external:
+                    log_audit(
+                        stage="RETRIEVAL",
+                        event_type="EXTERNAL_RETRIEVAL_STARTED",
+                        status="SUCCESS",
+                        message=f"Searching external provider for claim {item.index}.",
+                        details={
+                            "provider": active_retriever.name,
+                            "claim_index": item.index,
+                        },
+                    )
+                    try:
+                        ext_items = await active_retriever.retrieve(
+                            claim_text=item.text,
+                            max_passages=3,
+                        )
+                        external_evidence = ext_items
+                    except Exception as exc:
+                        logger.warning(
+                            "External retrieval failed for claim %d: %s",
+                            item.index,
+                            exc,
+                        )
+                        log_audit(
+                            stage="RETRIEVAL",
+                            event_type="DEGRADED_EXECUTION",
+                            status="WARNING",
+                            message=f"External retrieval failed on claim {item.index}.",
+                            details={
+                                "error": type(exc).__name__,
+                                "claim_text": item.text,
+                            },
+                        )
+
+                # Combine evidence passages according to orchestration policy
+                if kb_hit and not request.options.force_external_retrieval:
+                    evidence_items = kb_evidence
+                elif request.options.force_external_retrieval:
+                    evidence_items = kb_evidence + external_evidence
+                else:
+                    evidence_items = external_evidence
+
+                if evidence_items:
+                    ev_srcs = {ev.evidence_source for ev in evidence_items}
+                    srcs = ", ".join(sorted(ev_srcs))
+                    log_audit(
+                        stage="RETRIEVAL",
+                        event_type="EVIDENCE_SELECTED",
+                        status="SUCCESS",
                         message=(
-                            f"Evidence retrieval failed for claim index {item.index}."
+                            f"Selected {len(evidence_items)} evidence passage(s) "
+                            f"for claim {item.index} (sources: {srcs})."
                         ),
-                        details={"error": type(exc).__name__, "claim_text": item.text},
+                        details={
+                            "claim_index": item.index,
+                            "evidence_sources": [
+                                ev.evidence_source for ev in evidence_items
+                            ],
+                        },
                     )
 
                 # Step 4: Independent Judge Evaluation
@@ -334,6 +465,9 @@ class VerificationOrchestrator:
                     snippet=ev.snippet,
                     query_used=ev.query_used,
                     retriever_name=ev.retriever_name,
+                    evidence_source=ev.evidence_source,
+                    document_id=ev.document_id,
+                    chunk_id=ev.chunk_id,
                     relevance_score=ev.relevance_score,
                     authority_score=ev.authority_score,
                     metadata_json=ev.metadata_json,
@@ -448,6 +582,11 @@ class VerificationOrchestrator:
                     publication_date=ev.publication_date,
                     snippet=ev.snippet,
                     retriever_name=ev.retriever_name,
+                    evidence_source=ev.evidence_source,
+                    document_id=ev.document_id,
+                    chunk_id=ev.chunk_id,
+                    chunk_index=ev.chunk_index,
+                    document_title=ev.document_title,
                     relevance_score=ev.relevance_score,
                     authority_score=ev.authority_score,
                 )

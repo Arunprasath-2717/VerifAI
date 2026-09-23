@@ -19,6 +19,11 @@ class RetrievedEvidenceItem:
     snippet: str = ""
     query_used: str | None = None
     retriever_name: str = "LOCAL"
+    evidence_source: str = "EXTERNAL"
+    document_id: uuid.UUID | None = None
+    chunk_id: uuid.UUID | None = None
+    chunk_index: int | None = None
+    document_title: str | None = None
     relevance_score: float | None = None
     authority_score: float | None = None
     metadata_json: dict[str, Any] = field(default_factory=dict)

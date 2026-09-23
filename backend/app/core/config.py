@@ -59,6 +59,18 @@ class Settings(BaseSettings):
     ENABLE_LIVE_SEARCH: bool = False
 
     # ===========================================================================
+    # Knowledge Base (KB) Configuration
+    # ===========================================================================
+    DEFAULT_OWNER_ID: str = "default_dev_user"
+    KB_RELEVANCE_THRESHOLD: float = 0.15
+    KB_MIN_OVERLAP_TOKENS: int = 2
+    KB_MAX_DOCUMENT_BYTES: int = 5 * 1024 * 1024  # 5 MB
+    KB_MAX_PASSAGES: int = 3
+    KB_CHUNK_SIZE: int = 600
+    KB_CHUNK_OVERLAP: int = 100
+    KB_CORROBORATION_MODE: bool = False
+
+    # ===========================================================================
     # Supabase Project Credentials
     # SUPABASE_URL and keys are stored as SecretStr to prevent log leakage.
     # DATABASE_URL (asyncpg) must be set separately from the Supabase

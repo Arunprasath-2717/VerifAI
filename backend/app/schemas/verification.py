@@ -81,6 +81,31 @@ class VerificationOptions(BaseModel):
         default=True,
         description="Contradictory signals immediately flag hallucination risk.",
     )
+    owner_id: str | None = Field(
+        default=None,
+        max_length=128,
+        description=(
+            "Namespace/owner ID for private knowledge base scoping. "
+            "Falls back to configured default in development mode."
+        ),
+    )
+    enable_kb_search: bool = Field(
+        default=True,
+        description="Search private knowledge base first before external sources.",
+    )
+    force_external_retrieval: bool = Field(
+        default=False,
+        description=(
+            "Corroboration mode: retrieve external evidence even if private "
+            "KB evidence meets sufficiency criteria."
+        ),
+    )
+    kb_relevance_threshold: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Optional override for KB sufficiency threshold.",
+    )
 
 
 class VerificationCreateRequest(BaseModel):
@@ -126,6 +151,11 @@ class EvidenceSchema(BaseModel):
     publication_date: str | None = None
     snippet: str
     retriever_name: str
+    evidence_source: str = "EXTERNAL"
+    document_id: uuid.UUID | None = None
+    chunk_id: uuid.UUID | None = None
+    chunk_index: int | None = None
+    document_title: str | None = None
     relevance_score: float | None = None
     authority_score: float | None = None
 

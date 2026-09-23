@@ -301,6 +301,19 @@ class RetrievedEvidence(Base, TimestampMixin):
         String(64),
         nullable=False,
     )
+    evidence_source: Mapped[str] = mapped_column(
+        String(32),
+        default="EXTERNAL",
+        nullable=False,
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        nullable=True,
+    )
+    chunk_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        nullable=True,
+    )
     relevance_score: Mapped[float | None] = mapped_column(
         Float,
         nullable=True,
