@@ -50,15 +50,16 @@
 | 35 | `3186094` | `Final` | `feat(cli): create cinematic interactive verification terminal` | Interactive Command Center | VERIFIED (1,123 tests) |
 | 36 | `4b176d6` | `Final` | `feat(cli): add live evidence retrieval and source traceability` | Live Evidence Retrieval | VERIFIED & PUSHED |
 | 37 | `f7d2764` | `Final` | `feat(backend): add private KB-first evidence orchestration` | Private KB Orchestration | VERIFIED (1,145 tests) |
-| 38 | `f4c202f` | `Final` | `feat(cli): show KB and external evidence provenance` | Private KB Provenance & CLI | VERIFIED (1,149 tests) |
+| 38 | `d395b05` | `Final` | `feat(cli): show KB and external evidence provenance` | Private KB Provenance & CLI | VERIFIED (1,149 tests) |
+| 39 | `HEAD` | `Final` | `docs: record Commits 37 and 38 in commit ledger (f7d2764, d395b05)` | Ledger Governance | VERIFIED & PUSHED |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 38 (36 pushed, 2 local)
+- **Total Commits Recorded:** 39 (36 pushed, 3 local)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 462
+- **Remaining Commit Budget:** 461
 
 
 
