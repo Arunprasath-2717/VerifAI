@@ -37,6 +37,35 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Database engine resources successfully disposed.")
 
 
+OPENAPI_TAGS = [
+    {
+        "name": "Health & Readiness",
+        "description": "Liveness and dependency readiness probes for zero-downtime orchestration.",
+    },
+    {
+        "name": "Verification",
+        "description": (
+            "End-to-end claim extraction, evidence retrieval, multi-judge evaluation, "
+            "and consensus verdict generation."
+        ),
+    },
+    {
+        "name": "Ingestion",
+        "description": (
+            "SSRF-protected payload ingestion for browser extensions, webhooks, "
+            "and client integrations."
+        ),
+    },
+    {
+        "name": "Knowledge Base",
+        "description": (
+            "Namespace-isolated private document management, text chunking, and "
+            "deterministic evidence retrieval."
+        ),
+    },
+]
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Instantiate and configure the FastAPI application."""
     app_settings = settings or get_settings()
@@ -48,6 +77,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title=app_settings.PROJECT_NAME,
         version=app_settings.VERSION,
         description=app_settings.DESCRIPTION,
+        openapi_tags=OPENAPI_TAGS,
+        contact={
+            "name": "VerifAI Team",
+            "url": "https://github.com/Arunprasath-2717/VerifAI",
+        },
+        license_info={
+            "name": "MIT License",
+            "url": "https://opensource.org/licenses/MIT",
+        },
+        swagger_ui_parameters={
+            "persistAuthorization": True,
+            "displayRequestDuration": True,
+            "docExpansion": "list",
+            "defaultModelsExpandDepth": 2,
+        },
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url="/redoc",
