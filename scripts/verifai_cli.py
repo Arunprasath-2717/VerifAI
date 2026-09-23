@@ -40,6 +40,7 @@ if str(backend_dir) not in sys.path:
 from app.core.config import get_settings  # noqa: E402
 from app.core.supabase import SupabaseClient  # noqa: E402
 from app.modules.evidence.security import is_safe_url  # noqa: E402
+from app.modules.knowledge.service import KnowledgeBaseService  # noqa: E402
 from app.modules.verification.orchestrator import (  # noqa: E402
     VerificationOrchestrator,
 )
@@ -618,9 +619,9 @@ class ProgressRenderer:
             time.sleep(delay)
         cls._render_live_evidence_panel(claims, styler)
 
-        # Stage 4: Claim-by-Claim Live Evidence Retrieval & Judging (Section 3 & 4)
+        # Stage 4: Live Evidence Orchestration (KB First -> External Fallback)
         print(styler.divider("-", 64))
-        print(styler.bold(" EVIDENCE RETRIEVAL"))
+        print(styler.bold(" EVIDENCE ORCHESTRATION"))
         print(styler.divider("-", 64))
         print()
 
@@ -630,7 +631,7 @@ class ProgressRenderer:
             ctype = c.get("content_type", "FACTUAL")
 
             if ctype != "FACTUAL":
-                print(styler.bold(f"CLAIM {idx:02d}"))
+                print(styler.bold(f"CLAIM #{idx:02d}"))
                 print(styler.divider("-", 64))
                 print(f'"{claim_text}"')
                 print(f"Type: {ctype}")
@@ -643,130 +644,113 @@ class ProgressRenderer:
                 print()
                 continue
 
-            print(styler.bold(f"CLAIM {idx:02d}"))
+            print(styler.bold(f"CLAIM #{idx:02d}"))
             print(styler.divider("-", 64))
             print(f'"{claim_text}"')
             print()
-            print("Type:")
-            print(styler.bold("FACTUAL"))
-            print()
-            print(f"{styler.neon_cyan('⟳')} Analyzing claim {idx:02d}...")
-            if delay:
-                time.sleep(delay)
-            print(f"{styler.neon_cyan('⟳')} Searching approved evidence sources...")
 
             ev_list = c.get("evidence", [])
+            kb_ev = [e for e in ev_list if e.get("evidence_source") == "PRIVATE_KB"]
+            ext_ev = [e for e in ev_list if e.get("evidence_source") != "PRIVATE_KB"]
+
+            # Step 1: Searching private knowledge base
+            print(f"{styler.neon_cyan('⟳')} Searching private knowledge base...")
+            if delay:
+                time.sleep(delay)
+
+            if kb_ev:
+                p_count = len(kb_ev)
+                p_lbl = "relevant passage" if p_count == 1 else "relevant passages"
+                print(f"\n{styler.green('✓ KB evidence found')}")
+                print(f"  {p_count} {p_lbl}\n")
+
+                for k_item in kb_ev:
+                    doc_title = sanitize_terminal_text(
+                        k_item.get("document_title")
+                        or k_item.get("source_title")
+                        or "Private Document"
+                    )
+                    c_idx = k_item.get("chunk_index")
+                    chunk_str = f"#{c_idx}" if c_idx is not None else "#0"
+                    snip = sanitize_terminal_text(k_item.get("snippet", ""))
+
+                    print(styler.bold("PRIVATE KNOWLEDGE BASE"))
+                    print(styler.divider("─", 44))
+                    print(f"Document : {doc_title}")
+                    print(f"Chunk    : {chunk_str}")
+                    print()
+                    print("Evidence :")
+                    print(f'"{snip}"')
+                    print()
+
+                print(f"{styler.green('✓ Sufficient KB evidence')}\n")
+                if not ext_ev:
+                    print(f"{styler.neon_cyan('→ External retrieval skipped')}\n")
+                else:
+                    print(f"{styler.dim('→ Corroborating with external sources...')}\n")
+
+            if not kb_ev:
+                if not ext_ev:
+                    print(f"\n{styler.yellow('○')} KB insufficient\n")
+                    print(f"{styler.neon_cyan('→ External evidence retrieval')}\n")
+                else:
+                    print(f"\n{styler.dim('○')} No sufficiently relevant KB evidence\n")
+                    arrow_msg = styler.neon_cyan(
+                        "→ Moving to external evidence retrieval"
+                    )
+                    print(f"{arrow_msg}\n")
+                print(f"{styler.neon_cyan('⟳')} Searching approved sources...")
+                if delay:
+                    time.sleep(delay)
+
+            if ext_ev:
+                p_count = len(ext_ev)
+                p_lbl = "passage" if p_count == 1 else "passages"
+                print(f"\n{styler.green('✓ Source found')} ({p_count} {p_lbl})\n")
+                for e_item in ext_ev:
+                    src_title = sanitize_terminal_text(
+                        e_item.get("source_title")
+                        or e_item.get("publisher")
+                        or "External Reference"
+                    )
+                    src_url = e_item.get("source_url")
+                    snip = sanitize_terminal_text(e_item.get("snippet", ""))
+
+                    print(styler.bold("EXTERNAL SOURCE"))
+                    print(styler.divider("─", 44))
+                    print(f"Source   : {src_title}")
+                    for ll in styler.format_source_link(src_url, src_title):
+                        print(f"URL      : {ll.strip()}")
+                    print()
+                    print("Evidence :")
+                    print(f'"{snip}"')
+                    print()
+                print(f"{styler.green('✓ Evidence retrieved')}\n")
+
+            if not ev_list:
+                print(f"{styler.yellow('○ Insufficient evidence')}\n")
+                print(styler.bold("FINAL VERDICT"))
+                print(styler.divider("─", 44))
+                print(f"{styler.yellow('? UNKNOWN')}\n")
+                print("Reason:")
+                print(f"{c.get('unknown_reason') or 'Insufficient evidence'}\n")
+
+            # Evidence -> Judges Evaluation
             if ev_list:
                 if delay:
                     time.sleep(delay)
-                print("  → Source discovered")
-                print("  → Retrieving evidence")
-                print("  → Validating source")
-                print("  → Extracting relevant passage")
-                print()
-                print(f"{styler.green('✓ Evidence retrieved')}")
-                print()
-
-                if len(ev_list) == 1:
-                    ev = ev_list[0]
-                    src_title = sanitize_terminal_text(
-                        ev.get("source_title")
-                        or ev.get("publisher")
-                        or "Verified Passage"
-                    )
-                    src_url = ev.get("source_url")
-                    print(styler.bold("SOURCE"))
-                    print(styler.divider("-", 64))
-                    print(f"Title: {src_title}")
-                    for ll in styler.format_source_link(src_url, src_title):
-                        print(ll)
-                    print("Evidence:")
-                    print(f'"{sanitize_terminal_text(ev.get("snippet", ""))}"')
-                    rel = ev.get("relevance_score")
-                    rel_str = f"{rel:.4f}" if rel is not None else "NOT AVAILABLE"
-                    print(f"Relevance: {rel_str}")
-                    prov = ev.get("retriever_name") or "LOCAL_PASSAGE_INDEX"
-                    print(f"Provenance: {prov}")
-                    print(f"{styler.green('✓ Evidence available')}")
-                    print()
-                else:
-                    print(styler.bold(f"EVIDENCE SOURCES: {len(ev_list)}"))
-                    print(styler.divider("-", 64))
-                    for s_idx, ev in enumerate(ev_list, 1):
-                        src_title = sanitize_terminal_text(
-                            ev.get("source_title")
-                            or ev.get("publisher")
-                            or f"Source {s_idx}"
-                        )
-                        src_url = ev.get("source_url")
-                        print(f"[{s_idx}] {src_title}")
-                        for ll in styler.format_source_link(src_url, src_title):
-                            print(f"    {ll.strip()}")
-                        snip = sanitize_terminal_text(ev.get("snippet", ""))
-                        print(f'    Evidence: "{snip}"')
-                        rel = ev.get("relevance_score")
-                        rel_str = f"{rel:.4f}" if rel is not None else "NOT AVAILABLE"
-                        print(f"    Relevance: {rel_str}")
-                        print()
-                    print(f"{styler.green('✓ All sources retrieved & validated')}")
-                    print()
-
-                # Evidence -> Judge Connection (Section 13)
-                if delay:
-                    time.sleep(delay)
-                print(f"  {styler.dim('↓')}")
-                p_label = (
-                    "relevant passage" if len(ev_list) == 1 else "relevant passages"
-                )
-                print(f"  {styler.neon_cyan(str(len(ev_list)))} {p_label}")
-                print(f"  {styler.dim('↓')}")
-                msg = "Sending claim + evidence to independent judges"
-                print(f"{styler.neon_cyan('⟳')} {msg}")
-                print(f"  {styler.dim('↓')}")
+                print(f"{styler.neon_cyan('⟳')} Independent judges evaluating...\n")
                 judges = c.get("judges", [])
                 if judges:
                     for j_idx, j in enumerate(judges, 1):
                         j_name = j.get("judge_name", f"Judge {j_idx}")
                         j_v = j.get("judgment", "UNKNOWN")
                         j_badge = styler.verdict_badge(j_v)
-                        print(f"  ✓ {j_name} completed: {j_badge}")
-                else:
-                    print("  ✓ Independent judges evaluated retrieved evidence")
+                        print(f"  {j_name:<28} {j_badge}")
+                    print(f"\n{styler.green('✓ Consensus')}")
                 print(f"  {styler.dim('↓')}")
                 v_badge = styler.verdict_badge(c.get("verdict"))
-                print(f"  ✓ Decision engine verdict: {v_badge}")
-                print()
-            else:
-                # Failed / Insufficient Retrieval (Section 11 & 12)
-                if delay:
-                    time.sleep(delay)
-                fail_lines = [
-                    f"Claim {idx:02d}",
-                    "",
-                    f"{styler.yellow('⚠ No sufficient evidence retrieved')}",
-                    "",
-                    "Reason:",
-                    str(c.get("unknown_reason") or "INSUFFICIENT_EVIDENCE"),
-                    "",
-                    "Decision:",
-                    "UNKNOWN",
-                ]
-                print()
-                print(
-                    styler.rounded_card(
-                        "EVIDENCE RETRIEVAL", fail_lines, width=64, accent="yellow"
-                    )
-                )
-                print(f"Evidence: {styler.yellow('INSUFFICIENT')}")
-                print(f"Verdict : {styler.yellow('UNKNOWN')}")
-                print(f"Reason  : {c.get('unknown_reason') or 'INSUFFICIENT_EVIDENCE'}")
-                print(
-                    styler.dim(
-                        "Note: Missing evidence is never converted to "
-                        "CONTRADICTED or SUPPORTED."
-                    )
-                )
-                print()
+                print(f"  {styler.bold('FINAL VERDICT')} : {v_badge}\n")
 
         # Stage 5: Decision Engine
         if delay:
@@ -786,21 +770,30 @@ class ProgressRenderer:
     def _render_live_evidence_panel(
         cls, claims: list[dict[str, Any]], styler: TerminalStyler
     ) -> None:
-        """Render live evidence retrieval status overview panel (Section 9)."""
+        """Render live evidence retrieval status overview panel (PRD Section 18)."""
         panel_lines = []
         for c in claims:
             idx = c.get("claim_index", 0) + 1
             ctype = c.get("content_type", "FACTUAL")
             if ctype == "FACTUAL":
-                ev_count = len(c.get("evidence", []))
-                if ev_count > 0:
-                    plural = "s" if ev_count > 1 else ""
-                    status_badge = f"{styler.green('✓')}  {ev_count} source{plural}"
+                ev_list = c.get("evidence", [])
+                kb_ev = [e for e in ev_list if e.get("evidence_source") == "PRIVATE_KB"]
+                ext_ev = [
+                    e for e in ev_list if e.get("evidence_source") != "PRIVATE_KB"
+                ]
+                if kb_ev:
+                    plural = "s" if len(kb_ev) > 1 else ""
+                    tag = styler.green("✓ PRIVATE KB")
+                    badge = f"{tag:<24} {len(kb_ev)} passage{plural}"
+                elif ext_ev:
+                    plural = "s" if len(ext_ev) > 1 else ""
+                    tag = styler.neon_cyan("→ EXTERNAL")
+                    badge = f"{tag:<24} {len(ext_ev)} passage{plural}"
                 else:
-                    status_badge = f"{styler.yellow('⚠')}  0 sources (INSUFFICIENT)"
+                    badge = f"{styler.yellow('? UNKNOWN'):<24} insufficient evidence"
             else:
-                status_badge = f"{styler.dim('○')}  non-verifiable ({ctype.lower()})"
-            panel_lines.append(f"Claim {idx:02d}  {status_badge}")
+                badge = f"{styler.dim('○ NON-FACTUAL'):<24} {ctype.lower()}"
+            panel_lines.append(f"Claim {idx:02d}  {badge}")
 
         print(
             styler.rounded_card(
@@ -1166,12 +1159,31 @@ class ResultRenderer:
                     rel_str = f"{rel:.4f}" if rel is not None else "NOT AVAILABLE"
                     ev_id = ev.get("id") or "N/A"
 
-                    out.append(f"  [{e_idx}] Source     : {src}")
-                    for ll in s.format_source_link(url, src):
-                        out.append(f"      {ll.strip()}")
-                    out.append(f'      Evidence   : "{snippet}"')
-                    prov_meta = f"ID: {ev_id} | Relevance: {rel_str}"
-                    out.append(f"      Provenance : {provenance} ({prov_meta})")
+                    is_kb = ev.get("evidence_source") == "PRIVATE_KB"
+                    doc_title = ev.get("document_title") or src
+                    c_idx = ev.get("chunk_index")
+                    chunk_meta = f"Chunk: #{c_idx} | " if c_idx is not None else ""
+
+                    if is_kb:
+                        kb_tag = s.neon_cyan("PRIVATE KNOWLEDGE BASE")
+                        out.append(f"  [{e_idx}] Source Type : {kb_tag}")
+                        out.append(f"      Document    : {doc_title}")
+                        if c_idx is not None:
+                            out.append(f"      Chunk       : #{c_idx}")
+                        out.append(f'      Evidence    : "{snippet}"')
+                        out.append(f"      Relevance   : {rel_str}")
+                        prov_tag = f"Local Document Store ({chunk_meta}ID: {ev_id})"
+                        out.append(f"      Provenance  : {prov_tag}")
+                    else:
+                        out.append(
+                            f"  [{e_idx}] Source Type : {s.bold('EXTERNAL SOURCE')}"
+                        )
+                        out.append(f"      Source      : {src}")
+                        for ll in s.format_source_link(url, src):
+                            out.append(f"      {ll.strip()}")
+                        out.append(f'      Evidence    : "{snippet}"')
+                        prov_meta = f"ID: {ev_id} | Relevance: {rel_str}"
+                        out.append(f"      Provenance  : {provenance} ({prov_meta})")
             else:
                 out.append(f"  Evidence   : {s.yellow('NOT AVAILABLE')}")
                 reason = c.get("unknown_reason") or "INSUFFICIENT_EVIDENCE"
@@ -1758,17 +1770,14 @@ class MenuController:
 
         nav_lines = [
             f" {s.bold('1')}  Verify AI Response",
-            f" {s.bold('2')}  Verify Text File",
-            f" {s.bold('3')}  History",
-            f" {s.bold('4')}  System Status",
+            f" {s.bold('2')}  Add Knowledge Document",
+            f" {s.bold('3')}  Manage Knowledge Base",
+            f" {s.bold('4')}  Verification History",
+            f" {s.bold('5')}  System Status",
             f" {s.bold('0')}  Exit",
         ]
         print(s.rounded_card("VERIFAI", nav_lines, width=36, accent="neon_cyan"))
-        print(
-            s.dim(
-                "Tip: Type 1-4, press [Enter] to run benchmark demo, or paste any prompt directly."  # noqa: E501
-            )
-        )
+        print(s.dim("Tip: Type 1-5, [Enter] to run demo, or paste prompt directly."))
         print()
 
     def verify_and_display_text(self, text: str) -> None:
@@ -2049,10 +2058,17 @@ class MenuController:
             )
         )
 
+        try:
+            kb_docs = asyncio.run(KnowledgeBaseService().list_documents())
+            kb_status = f"Namespace-Isolated ({len(kb_docs)} docs)"
+        except Exception:  # noqa: BLE001
+            kb_status = "Namespace-Isolated (Hermetic)"
+
         status_lines = [
             f"Backend Engine     : {s.bold('verifai-backend')} ({s.green('Healthy ✓')})",  # noqa: E501
             f"Claim Extractor    : Atomic Claim Decomposer ({s.green('Active ✓')})",
             f"Propositional NLP  : Multi-Class Classifier ({s.green('Active ✓')})",
+            f"Private KB Store   : {kb_status} ({s.green('Ready ✓')})",
             f"Evidence Index     : Local Inverted Index ({s.green('Ready ✓')})",
             f"Primary Judge      : DeterministicRuleJudge ({s.green('Active ✓')})",
             f"Secondary Judge    : SecondarySemanticJudge ({s.green('Active ✓')})",
@@ -2077,6 +2093,140 @@ class MenuController:
             input("Press Enter to return to main menu...")
         except (KeyboardInterrupt, EOFError):
             pass
+
+    def run_add_document_flow(self) -> None:
+        """Add a document to the private knowledge base (PRD Section 29)."""
+        s = self.styler
+        print()
+        print(s.box_card("ADD KNOWLEDGE DOCUMENT", width=64))
+        print("Provide a local file path (.txt, .md, .json) or paste content.")
+        print("Leave empty to cancel.\n")
+
+        try:
+            target = input("File path or text: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print()
+            return
+
+        if not target:
+            return
+
+        content = ""
+        filename = "document.txt"
+        target_path = Path(target)
+        if target_path.exists() and target_path.is_file():
+            try:
+                content = target_path.read_text(encoding="utf-8")
+                filename = target_path.name
+                print(f"Loaded {len(content)} characters from '{target_path}'.")
+            except (OSError, UnicodeDecodeError, ValueError) as e:
+                print(s.red(f"[ERROR] Could not read file: {e}"))
+                return
+        else:
+            content = target
+            filename = "manual_entry.txt"
+
+        try:
+            title_input = input(f"Document Title [default: {filename}]: ").strip()
+            title = title_input or filename
+            desc_input = input("Optional description: ").strip()
+            desc = desc_input or None
+        except (KeyboardInterrupt, EOFError):
+            print()
+            return
+
+        service = KnowledgeBaseService()
+        try:
+            doc = asyncio.run(
+                service.add_document(
+                    raw_content=content,
+                    filename=filename,
+                    title=title,
+                    description=desc,
+                )
+            )
+            print()
+            print(f"{s.green('✓ Document validated')}")
+            print(f"{s.green('✓ Text extracted')}")
+            print(f"{s.green('✓ Content hashed')}")
+            print(f"{s.green('✓ Chunks created')}")
+            print(f"{s.green('✓ Added to private Knowledge Base')}")
+            print()
+            print(f"Document : {doc.title} ({doc.filename})")
+            print(f"Chunks   : {len(doc.chunks) if doc.chunks else 0}")
+            print(f"Status   : {s.green('READY')}")
+            print()
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(s.red(f"[ERROR] Ingestion failed: {exc}\n"))
+
+    def run_manage_kb_flow(self) -> None:
+        """List and manage documents in the private knowledge base."""
+        s = self.styler
+        service = KnowledgeBaseService()
+        docs = asyncio.run(service.list_documents())
+
+        print()
+        print(s.box_card("PRIVATE KNOWLEDGE BASE", width=64))
+        if not docs:
+            print("No documents found in current private knowledge base namespace.")
+            print(s.dim("Use option [2] to add your first knowledge document.\n"))
+            return
+
+        print("Documents:")
+        print(s.divider("-", 64))
+        for idx, doc in enumerate(docs, 1):
+            c_count = len(doc.chunks) if doc.chunks else 0
+            created_str = (
+                doc.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if doc.created_at
+                else "N/A"
+            )
+            print(f"{idx:02d} {doc.title} ({doc.filename})")
+            print(f"   {c_count} chunk{'s' if c_count != 1 else ''}")
+            print(f"   Added: {created_str}")
+            print()
+
+        print(s.divider("-", 64))
+        print("Options: [D <#>] Delete document, [V <#>] View chunks, [Enter] Back")
+        try:
+            action = input("Choice: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print()
+            return
+
+        if not action or action.lower() in ("b", "back", "0"):
+            return
+
+        parts = action.split(maxsplit=1)
+        cmd = parts[0].upper()
+        if len(parts) > 1 and parts[1].isdigit():
+            target_idx = int(parts[1])
+            if 1 <= target_idx <= len(docs):
+                target_doc = docs[target_idx - 1]
+                if cmd == "D":
+                    confirm = (
+                        input(
+                            f"Delete '{target_doc.title}' and all its chunks? (y/N): "
+                        )
+                        .strip()
+                        .lower()
+                    )
+                    if confirm in ("y", "yes"):
+                        asyncio.run(service.delete_document(target_doc.id))
+                        del_msg = s.green(
+                            f"✓ '{target_doc.title}' deleted successfully.\n"
+                        )
+                        print(del_msg)
+                    else:
+                        print("Deletion cancelled.\n")
+                elif cmd == "V":
+                    print()
+                    print(s.box_card(f"CHUNKS: {target_doc.title}", width=64))
+                    for c_idx, c in enumerate(target_doc.chunks or [], 1):
+                        off_str = f"{c.start_offset}-{c.end_offset}"
+                        print(f"Chunk #{c_idx} (offset: {off_str}):")
+                        print(s.dim(c.text))
+                        print()
 
     def show_architecture_guide(self) -> None:
         """Display ELI-10 architecture and verification methodology."""
@@ -2169,24 +2319,35 @@ Key Principles:
 
             # Direct execution if user pressed Enter (runs reference demo)
             if choice == "":
-                print(
-                    f"\n{s.neon_cyan('Executing Full System Verification (ARPANET & Web mixture)...')}"  # noqa: E501
+                msg = s.neon_cyan(
+                    "Executing Full System Verification (ARPANET & Web mixture)..."
                 )
+                print(f"\n{msg}")
                 data, code = DemoRunner.run_case("mixed", styler=s)
                 if data and code == 0:
                     self.post_verification_drilldown(data)
             elif choice == "1":
                 self.run_custom_text_flow()
             elif choice == "2":
-                self.run_file_input_flow()
+                self.run_add_document_flow()
             elif choice == "3":
-                self.show_history_dashboard()
+                self.run_manage_kb_flow()
             elif choice == "4":
+                self.show_history_dashboard()
+            elif choice == "5":
                 self.show_system_status()
             elif choice in ("0", "exit", "quit", "q"):
                 print(f"\n{s.neon_cyan('Exiting VerifAI Console. Goodbye!')}")
                 return 0
             # Backward compatibility aliases for tests and power users
+            elif choice in ("file", "file_verify"):
+                self.run_file_input_flow()
+            elif choice in ("kb_add", "add_doc"):
+                self.run_add_document_flow()
+            elif choice in ("kb", "manage_kb"):
+                self.run_manage_kb_flow()
+            elif choice in ("history", "hist"):
+                self.show_history_dashboard()
             elif choice == "scenarios" or choice == "demos":
                 self.run_predefined_demos_menu()
             elif choice == "suite":
@@ -2204,7 +2365,8 @@ Key Principles:
                 # Single unrecognized token: present friendly notice
                 print(
                     s.yellow(
-                        f"Invalid choice '{choice}'. Enter 1-4, 0 to exit, or type/paste text directly."  # noqa: E501
+                        f"Invalid choice '{choice}'. "
+                        "Enter 1-5, 0 to exit, or type/paste text directly."
                     )
                 )
 

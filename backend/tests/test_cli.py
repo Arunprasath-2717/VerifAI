@@ -773,14 +773,18 @@ def test_live_evidence_retrieval_and_summary_flow(
     )
     captured = capsys.readouterr()
     assert "LIVE EVIDENCE RETRIEVAL" in captured.out
-    assert "Searching approved evidence sources..." in captured.out
-    assert "Source discovered" in captured.out
+    assert "Searching private knowledge base..." in captured.out
+    assert "Moving to external evidence retrieval" in captured.out
+    assert "Searching approved sources..." in captured.out
+    assert "Source found" in captured.out
     assert "Evidence retrieved" in captured.out
     assert "Eiffel Tower Geography" in captured.out
     assert "https://en.wikipedia.org/wiki/Eiffel_Tower" in captured.out
-    assert "Sending claim + evidence to independent judges" in captured.out
-    assert "DeterministicRuleJudge completed" in captured.out
-    assert "No sufficient evidence retrieved" in captured.out
+    assert "Independent judges evaluating..." in captured.out
+    assert "DeterministicRuleJudge" in captured.out
+    assert "Consensus" in captured.out
+    assert "KB insufficient" in captured.out
+    assert "Insufficient evidence" in captured.out
     assert "EVIDENCE SUMMARY" in captured.out
     assert "Claims analyzed       : 2" in captured.out
     assert "Factual claims        : 2" in captured.out
@@ -854,3 +858,116 @@ def test_claims_summary_section14_compliance() -> None:
     assert "Judge 1: [✗ CONTRADICTED] (DeterministicJudge)" in summary
     assert "Judge 2: [✗ CONTRADICTED] (SemanticJudge)" in summary
     assert "Final verdict: [✗ CONTRADICTED]" in summary
+
+
+def test_menu_controller_add_document_direct_text(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify MenuController.run_add_document_flow ingests raw text input."""
+    controller = MenuController()
+    controller.styler = TerminalStyler(force_color=False)
+
+    inputs = [
+        "Employees may work remotely up to three days per week under company policy.",
+        "Remote Work Policy",
+        "Guidelines for hybrid scheduling",
+    ]
+    with patch("builtins.input", side_effect=inputs):
+        controller.run_add_document_flow()
+
+    captured = capsys.readouterr()
+    assert "ADD KNOWLEDGE DOCUMENT" in captured.out
+    assert "✓ Document validated" in captured.out
+    assert "✓ Chunks created" in captured.out
+    assert "✓ Added to private Knowledge Base" in captured.out
+    assert "Remote Work Policy" in captured.out
+
+
+def test_menu_controller_add_document_from_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify MenuController.run_add_document_flow ingests content from a local file path."""
+    test_file = tmp_path / "engineering_guidelines.md"
+    test_file.write_text(
+        "All microservices must maintain at least 80% test coverage before release.",
+        encoding="utf-8",
+    )
+
+    controller = MenuController()
+    controller.styler = TerminalStyler(force_color=False)
+
+    inputs = [
+        str(test_file),
+        "Engineering Guidelines",
+        "CI/CD QA threshold rules",
+    ]
+    with patch("builtins.input", side_effect=inputs):
+        controller.run_add_document_flow()
+
+    captured = capsys.readouterr()
+    assert "Loaded" in captured.out
+    assert "✓ Added to private Knowledge Base" in captured.out
+    assert "Engineering Guidelines" in captured.out
+
+
+def test_menu_controller_manage_kb_view_and_delete(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify MenuController.run_manage_kb_flow displays documents and handles deletion."""
+    controller = MenuController()
+    controller.styler = TerminalStyler(force_color=False)
+
+    # 1. First add a test document to ensure list is non-empty
+    with patch(
+        "builtins.input",
+        side_effect=[
+            "Data encryption at rest uses AES-256 standard.",
+            "Security Baseline",
+            "Encryption standard",
+        ],
+    ):
+        controller.run_add_document_flow()
+
+    capsys.readouterr()  # flush output
+
+    # 2. Test viewing chunks
+    with patch("builtins.input", side_effect=["V 1"]):
+        controller.run_manage_kb_flow()
+
+    captured_view = capsys.readouterr()
+    assert "PRIVATE KNOWLEDGE BASE" in captured_view.out
+    assert "Security Baseline" in captured_view.out
+    assert "CHUNKS: Security Baseline" in captured_view.out
+    assert "AES-256" in captured_view.out
+
+    # 3. Test deleting document
+    with patch("builtins.input", side_effect=["D 1", "y"]):
+        controller.run_manage_kb_flow()
+
+    captured_del = capsys.readouterr()
+    assert "deleted successfully" in captured_del.out
+
+
+def test_interactive_menu_kb_routing(capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify selecting option 2 and 3 in main menu triggers corresponding KB workflows."""
+    controller = MenuController()
+    controller.styler = TerminalStyler(force_color=False)
+
+    # Sequence:
+    # 2 -> Add Knowledge Document -> empty input (cancels)
+    # 3 -> Manage Knowledge Base -> empty input (cancels)
+    # 0 -> Exit
+    inputs = [
+        "2",
+        "",
+        "3",
+        "",
+        "0",
+    ]
+    with patch("builtins.input", side_effect=inputs):
+        code = controller.run_interactive_menu()
+        assert code == 0
+
+    captured = capsys.readouterr()
+    assert "ADD KNOWLEDGE DOCUMENT" in captured.out
+    assert "PRIVATE KNOWLEDGE BASE" in captured.out

@@ -58,7 +58,8 @@ VerifAI/
 - **Phase 4 (Ingestion & Browser Extension):** **IMPLEMENTATION COMPLETE — AWAITING ARUN'S SIGN-OFF**
   - Payload Ingestion API (`POST /api/v1/ingest`, `GET /api/v1/ingest/{id}`) with SSRF perimeter.
   - Manifest V3 Chrome Extension with DOM auto-detection and dark glassmorphism popup.
-  - 1,020 hermetic automated tests (100% passing across backend and benchmark suites).
+  - Namespace-isolated Private Knowledge Base (KB) evidence provider with deterministic token overlap retrieval.
+  - 1,149 hermetic automated tests (100% passing across backend, benchmark, and KB suites).
 - **Phase 5 (Hardening, Integration & Delivery):** **LOCKED** pending Phase 4 formal sign-off.
 
 ---
@@ -97,6 +98,13 @@ Interactive documentation:
 - **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **OpenAPI Schema:** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
+
+### 3.4 Knowledge Base REST API Endpoints
+- `POST /api/v1/knowledge/documents` — Ingest document into owner namespace (validates format, limits, content hash).
+- `GET /api/v1/knowledge/documents` — List documents strictly isolated to requested owner namespace.
+- `GET /api/v1/knowledge/documents/{id}` — Retrieve document details and constituent text chunks.
+- `DELETE /api/v1/knowledge/documents/{id}` — Delete document and cascade delete all its chunks.
+- `POST /api/v1/knowledge/search` — Scored search across owner namespace chunks.
 
 ## Interactive Verification Console
 
@@ -148,9 +156,10 @@ When launched, VerifAI displays the cinematic 3D cyber-aesthetic command center:
 │ VERIFAI                          │
 ├──────────────────────────────────┤
 │  1  Verify AI Response           │
-│  2  Verify Text File             │
-│  3  History                      │
-│  4  System Status                │
+│  2  Add Knowledge Document       │
+│  3  Manage Knowledge Base        │
+│  4  Verification History         │
+│  5  System Status                │
 │  0  Exit                         │
 ╰──────────────────────────────────╯
 ```

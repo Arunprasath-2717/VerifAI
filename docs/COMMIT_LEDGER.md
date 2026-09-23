@@ -48,15 +48,17 @@
 | 33 | `710dbc1` | `Final` | `feat(cli): add mentor-ready verification demonstration console` | Mentor Demo Console | VERIFIED (1,099 tests) |
 | 34 | `79201f1` | `Final` | `feat(cli): add interactive mentor-ready verification console` | Interactive Console | VERIFIED (1,116 tests) |
 | 35 | `3186094` | `Final` | `feat(cli): create cinematic interactive verification terminal` | Interactive Command Center | VERIFIED (1,123 tests) |
-| 36 | `4b176d6` | `Final` | `feat(cli): add live evidence retrieval and source traceability` | Live Evidence Retrieval | VERIFIED (1,131 tests) |
+| 36 | `4b176d6` | `Final` | `feat(cli): add live evidence retrieval and source traceability` | Live Evidence Retrieval | VERIFIED & PUSHED |
+| 37 | `f7d2764` | `Final` | `feat(backend): add private KB-first evidence orchestration` | Private KB Orchestration | VERIFIED (1,145 tests) |
+| 38 | `f4c202f` | `Final` | `feat(cli): show KB and external evidence provenance` | Private KB Provenance & CLI | VERIFIED (1,149 tests) |
 
 ---
 
 ## 3. Commit Budget Metrics
 
-- **Total Commits Recorded:** 36 (35 pushed, 1 local)
+- **Total Commits Recorded:** 38 (36 pushed, 2 local)
 - **Target Ceiling:** 500
-- **Remaining Commit Budget:** 464
+- **Remaining Commit Budget:** 462
 
 
 
