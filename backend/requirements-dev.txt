@@ -1,0 +1,7 @@
+# VerifAI Backend Development and Testing Dependencies
+# Pinned for strict reproducibility on Python 3.14.7
+-r requirements.txt
+pytest==9.1.1
+httpx==0.28.1
+ruff==0.16.8
+mypy==2.3.1
