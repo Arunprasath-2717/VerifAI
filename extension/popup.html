@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VerifAI — Fact Checker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-group">
+        <div class="logo-badge">V</div>
+        <div>
+          <h1 class="title">VerifAI</h1>
+          <p class="subtitle">AI Trust & Hallucination Risk Engine</p>
+        </div>
+      </div>
+      <div id="backend-status" class="status-pill status-checking" title="Checking backend connection...">
+        <span class="status-dot"></span>
+        <span id="backend-status-text">Connecting...</span>
+      </div>
+    </header>
+
+    <!-- Main Ingestion & Input Card -->
+    <section class="card input-card">
+      <div class="card-header">
+        <label for="input-text" class="card-title">Content to Verify</label>
+        <button id="btn-detect" class="btn btn-secondary btn-sm" title="Capture text from current tab">
+          <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h7a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+          </svg>
+          Auto-Capture
+        </button>
+      </div>
+
+      <textarea
+        id="input-text"
+        rows="4"
+        placeholder="Paste AI-generated text or click 'Auto-Capture' from active page..."
+      ></textarea>
+
+      <div class="metadata-row">
+        <div class="field-group">
+          <label for="select-model" class="field-label">Model Context</label>
+          <select id="select-model" class="select-input">
+            <option value="auto">Auto-detect from page</option>
+            <option value="gpt-4o">OpenAI ChatGPT-4o</option>
+            <option value="claude-3-5-sonnet">Anthropic Claude 3.5</option>
+            <option value="gemini-1.5-pro">Google Gemini 1.5 Pro</option>
+            <option value="deepseek-v3">DeepSeek V3</option>
+            <option value="other">Other / Custom</option>
+          </select>
+        </div>
+
+        <div class="options-toggle">
+          <label class="checkbox-label" title="Enables safe Wikipedia/web fallback if local index lacks evidence">
+            <input type="checkbox" id="opt-live-search">
+            <span>Live Search Fallback</span>
+          </label>
+        </div>
+      </div>
+
+      <button id="btn-verify" class="btn btn-primary btn-block">
+        <span id="btn-verify-text">Verify with VerifAI</span>
+        <div id="btn-spinner" class="spinner hidden"></div>
+      </button>
+    </section>
+
+    <!-- Loading State -->
+    <div id="loading-container" class="loading-container hidden">
+      <div class="loading-pulse"></div>
+      <p id="loading-stage" class="loading-text">Decomposing into atomic claims...</p>
+    </div>
+
+    <!-- Results Section -->
+    <section id="results-card" class="card results-card hidden">
+      <div class="results-header">
+        <div>
+          <span class="results-eyebrow">Verification Outcome</span>
+          <h2 id="result-summary-title" class="results-title">Analysis Complete</h2>
+        </div>
+        <div id="trust-gauge" class="trust-badge">
+          <span id="trust-score-val" class="trust-score">--</span>
+          <span class="trust-label">Trust Score</span>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-pill metric-supported">
+          <span class="metric-count" id="count-supported">0</span>
+          <span class="metric-name">Supported</span>
+        </div>
+        <div class="metric-pill metric-contradicted">
+          <span class="metric-count" id="count-contradicted">0</span>
+          <span class="metric-name">Contradicted</span>
+        </div>
+        <div class="metric-pill metric-unknown">
+          <span class="metric-count" id="count-unknown">0</span>
+          <span class="metric-name">Unknown</span>
+        </div>
+        <div class="metric-pill metric-nonfactual">
+          <span class="metric-count" id="count-nonfactual">0</span>
+          <span class="metric-name">Non-Factual</span>
+        </div>
+      </div>
+
+      <p id="result-summary-text" class="summary-paragraph"></p>
+
+      <!-- Claim-by-Claim Breakdown -->
+      <div class="claims-section">
+        <h3 class="claims-header">Atomic Claims & Evidence</h3>
+        <div id="claims-list" class="claims-list"></div>
+      </div>
+    </section>
+
+    <!-- Error Banner -->
+    <div id="error-banner" class="error-banner hidden">
+      <span id="error-message">Error executing verification.</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>VerifAI v0.1.0 • Endpoint: <code>/api/v1/ingest</code></span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
