@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verifai-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://verifai:verifai_dev_secret@db:5432/verifai
+      - API_V1_STR=/api/v1
+      - VERIFAI_DEFAULT_OWNER_ID=default_dev_user
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - verifai-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: verifai-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=verifai
+      - POSTGRES_PASSWORD=verifai_dev_secret
+      - POSTGRES_DB=verifai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verifai -d verifai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - verifai-network
+
+networks:
+  verifai-network:
+    driver: bridge
+
+volumes:
+  pgdata:
