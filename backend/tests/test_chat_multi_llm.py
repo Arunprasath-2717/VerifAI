@@ -298,3 +298,57 @@ def test_history_purge_data_lifecycle(client: TestClient):
         ]
         == 0
     )
+
+
+def test_openrouter_groq_omniroute_provider_handling(client: TestClient):
+    """Verify that OpenRouter, Groq, and OmniRoute providers are dispatched accurately."""
+    token, user_id = _register_and_login(
+        client, "providers@example.com", "providers_user"
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    conv_resp = client.post(
+        "/api/v1/chat/conversations",
+        headers=headers,
+        json={"title": "Provider Dispatch Test"},
+    )
+    conv_id = conv_resp.json()["id"]
+
+    prompt_resp = client.post(
+        f"/api/v1/chat/conversations/{conv_id}/messages",
+        headers=headers,
+        json={
+            "prompt": "Hello from VerifAI",
+            "models": [
+                {
+                    "provider": "openrouter",
+                    "model_name": "meta-llama/llama-3.3-70b-instruct",
+                },
+                {"provider": "groq", "model_name": "openai/gpt-oss-20b"},
+                {"provider": "omniroute", "model_name": "gemini-3.7-flash"},
+            ],
+            "verify": False,
+        },
+    )
+    assert prompt_resp.status_code == 200
+    data = prompt_resp.json()
+    assert len(data["runs"]) == 3
+    providers = {r["provider"] for r in data["runs"]}
+    assert providers == {"openrouter", "groq", "omniroute"}
+    for run in data["runs"]:
+        prov = run["provider"]
+        if prov == "openrouter":
+            assert run["status"] in ("COMPLETED", "UNAVAILABLE")
+            if run["status"] == "COMPLETED":
+                assert isinstance(run["response"], str)
+                assert len(run["response"]) > 0
+        elif prov == "groq":
+            assert run["status"] in ("COMPLETED", "UNAVAILABLE")
+            if run["status"] == "COMPLETED":
+                assert isinstance(run["response"], str)
+                assert len(run["response"]) > 0
+        elif prov == "omniroute":
+            # OmniRoute returns FAILED (HTTP_402 Insufficient wallet balance) or UNAVAILABLE
+            assert run["status"] in ("FAILED", "UNAVAILABLE", "COMPLETED")
+            if run["status"] == "FAILED":
+                assert run["error_code"] == "HTTP_402"

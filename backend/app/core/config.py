@@ -91,6 +91,12 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: SecretStr | None = None
     GEMINI_API_KEY: SecretStr | None = None
     OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OPENROUTER_API_KEY: SecretStr | None = None
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    GROQ_API_KEY: SecretStr | None = None
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    OMNIROUTE_API_KEY: SecretStr | None = None
+    OMNIROUTE_BASE_URL: str = "https://api.cheaperinference.com/v1"
     DEFAULT_LLM_MODELS: list[str] = Field(
         default_factory=lambda: [
             "gpt-4o-mini",

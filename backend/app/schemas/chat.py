@@ -30,7 +30,10 @@ class LLMModelSelection(BaseModel):
     provider: str = Field(
         min_length=1,
         max_length=64,
-        description="Provider identifier: openai, anthropic, google, ollama, local",
+        description=(
+            "Provider identifier: openai, groq, openrouter, omniroute, anthropic, "
+            "google, ollama"
+        ),
     )
     model_name: str = Field(
         min_length=1,

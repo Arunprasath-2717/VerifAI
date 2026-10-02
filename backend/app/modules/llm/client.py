@@ -61,6 +61,18 @@ class RealLLMClient:
                 return await self._call_openai(
                     model_name, prompt, timeout_seconds, start_time
                 )
+            elif prov == "openrouter":
+                return await self._call_openrouter(
+                    model_name, prompt, timeout_seconds, start_time
+                )
+            elif prov == "groq":
+                return await self._call_groq(
+                    model_name, prompt, timeout_seconds, start_time
+                )
+            elif prov in ("omniroute", "cheaperinference"):
+                return await self._call_omniroute(
+                    model_name, prompt, timeout_seconds, start_time
+                )
             elif prov == "anthropic":
                 return await self._call_anthropic(
                     model_name, prompt, timeout_seconds, start_time
@@ -389,4 +401,246 @@ class RealLLMClient:
                     f"Cannot connect to Ollama daemon at '{base_url}'. "
                     "Is Ollama running?"
                 ),
+            )
+
+    async def _call_openrouter(
+        self,
+        model_name: str,
+        prompt: str,
+        timeout: float,
+        start_time: float,
+    ) -> LLMExecutionResult:
+        """Call OpenRouter API."""
+        api_key = (
+            self.settings.OPENROUTER_API_KEY.get_secret_value()
+            if self.settings.OPENROUTER_API_KEY
+            else None
+        )
+        base_url = self.settings.OPENROUTER_BASE_URL or "https://openrouter.ai/api/v1"
+
+        if not api_key:
+            elapsed = (time.monotonic() - start_time) * 1000.0
+            return LLMExecutionResult(
+                provider="openrouter",
+                model_name=model_name,
+                prompt=prompt,
+                status="UNAVAILABLE",
+                latency_ms=round(elapsed, 2),
+                error_code="CREDENTIALS_MISSING",
+                error_message="OPENROUTER_API_KEY is not configured on the server.",
+            )
+
+        headers: dict[str, str] = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "https://verifai.local",
+            "X-Title": "VerifAI",
+        }
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3,
+        }
+
+        url = f"{base_url.rstrip('/')}/chat/completions"
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            elapsed = (time.monotonic() - start_time) * 1000.0
+
+            if resp.status_code != 200:
+                return LLMExecutionResult(
+                    provider="openrouter",
+                    model_name=model_name,
+                    prompt=prompt,
+                    status="FAILED",
+                    latency_ms=round(elapsed, 2),
+                    error_code=f"HTTP_{resp.status_code}",
+                    error_message=(
+                        f"OpenRouter error ({resp.status_code}): {resp.text[:300]}"
+                    ),
+                )
+
+            data = resp.json()
+            choices = data.get("choices", [])
+            if not choices:
+                return LLMExecutionResult(
+                    provider="openrouter",
+                    model_name=model_name,
+                    prompt=prompt,
+                    status="FAILED",
+                    latency_ms=round(elapsed, 2),
+                    error_code="EMPTY_CHOICES",
+                    error_message="OpenRouter returned no completion choices.",
+                )
+
+            content = choices[0].get("message", {}).get("content", "")
+            return LLMExecutionResult(
+                provider="openrouter",
+                model_name=model_name,
+                prompt=prompt,
+                response=content,
+                status="COMPLETED",
+                model_version=data.get("model", model_name),
+                latency_ms=round(elapsed, 2),
+                metadata={"usage": data.get("usage")},
+            )
+
+    async def _call_groq(
+        self,
+        model_name: str,
+        prompt: str,
+        timeout: float,
+        start_time: float,
+    ) -> LLMExecutionResult:
+        """Call Groq Cloud API."""
+        api_key = (
+            self.settings.GROQ_API_KEY.get_secret_value()
+            if self.settings.GROQ_API_KEY
+            else None
+        )
+        base_url = self.settings.GROQ_BASE_URL or "https://api.groq.com/openai/v1"
+
+        if not api_key:
+            elapsed = (time.monotonic() - start_time) * 1000.0
+            return LLMExecutionResult(
+                provider="groq",
+                model_name=model_name,
+                prompt=prompt,
+                status="UNAVAILABLE",
+                latency_ms=round(elapsed, 2),
+                error_code="CREDENTIALS_MISSING",
+                error_message="GROQ_API_KEY is not configured on the server.",
+            )
+
+        headers: dict[str, str] = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3,
+        }
+
+        url = f"{base_url.rstrip('/')}/chat/completions"
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            elapsed = (time.monotonic() - start_time) * 1000.0
+
+            if resp.status_code != 200:
+                return LLMExecutionResult(
+                    provider="groq",
+                    model_name=model_name,
+                    prompt=prompt,
+                    status="FAILED",
+                    latency_ms=round(elapsed, 2),
+                    error_code=f"HTTP_{resp.status_code}",
+                    error_message=f"Groq error ({resp.status_code}): {resp.text[:300]}",
+                )
+
+            data = resp.json()
+            choices = data.get("choices", [])
+            if not choices:
+                return LLMExecutionResult(
+                    provider="groq",
+                    model_name=model_name,
+                    prompt=prompt,
+                    status="FAILED",
+                    latency_ms=round(elapsed, 2),
+                    error_code="EMPTY_CHOICES",
+                    error_message="Groq returned no completion choices.",
+                )
+
+            content = choices[0].get("message", {}).get("content", "")
+            return LLMExecutionResult(
+                provider="groq",
+                model_name=model_name,
+                prompt=prompt,
+                response=content,
+                status="COMPLETED",
+                model_version=data.get("model", model_name),
+                latency_ms=round(elapsed, 2),
+                metadata={"usage": data.get("usage")},
+            )
+
+    async def _call_omniroute(
+        self,
+        model_name: str,
+        prompt: str,
+        timeout: float,
+        start_time: float,
+    ) -> LLMExecutionResult:
+        """Call OmniRoute / CheaperInference Gateway API."""
+        api_key = (
+            self.settings.OMNIROUTE_API_KEY.get_secret_value()
+            if self.settings.OMNIROUTE_API_KEY
+            else None
+        )
+        base_url = (
+            self.settings.OMNIROUTE_BASE_URL or "https://api.cheaperinference.com/v1"
+        )
+
+        if not api_key:
+            elapsed = (time.monotonic() - start_time) * 1000.0
+            return LLMExecutionResult(
+                provider="omniroute",
+                model_name=model_name,
+                prompt=prompt,
+                status="UNAVAILABLE",
+                latency_ms=round(elapsed, 2),
+                error_code="CREDENTIALS_MISSING",
+                error_message="OMNIROUTE_API_KEY is not configured on the server.",
+            )
+
+        headers: dict[str, str] = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3,
+        }
+
+        url = f"{base_url.rstrip('/')}/chat/completions"
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            elapsed = (time.monotonic() - start_time) * 1000.0
+
+            if resp.status_code != 200:
+                return LLMExecutionResult(
+                    provider="omniroute",
+                    model_name=model_name,
+                    prompt=prompt,
+                    status="FAILED",
+                    latency_ms=round(elapsed, 2),
+                    error_code=f"HTTP_{resp.status_code}",
+                    error_message=(
+                        f"OmniRoute error ({resp.status_code}): {resp.text[:300]}"
+                    ),
+                )
+
+            data = resp.json()
+            choices = data.get("choices", [])
+            if not choices:
+                return LLMExecutionResult(
+                    provider="omniroute",
+                    model_name=model_name,
+                    prompt=prompt,
+                    status="FAILED",
+                    latency_ms=round(elapsed, 2),
+                    error_code="EMPTY_CHOICES",
+                    error_message="OmniRoute returned no completion choices.",
+                )
+
+            content = choices[0].get("message", {}).get("content", "")
+            return LLMExecutionResult(
+                provider="omniroute",
+                model_name=model_name,
+                prompt=prompt,
+                response=content,
+                status="COMPLETED",
+                model_version=data.get("model", model_name),
+                latency_ms=round(elapsed, 2),
+                metadata={"usage": data.get("usage")},
             )
