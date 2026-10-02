@@ -101,15 +101,100 @@ def create_access_token(
     return token, expires_in
 
 
+_GOOGLE_JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+_JWKS_CLIENT: jwt.PyJWKClient | None = None
+
+
+def get_jwks_client() -> jwt.PyJWKClient:
+    """Return singleton PyJWKClient configured with Google's public JWKS."""
+    global _JWKS_CLIENT
+    if _JWKS_CLIENT is None:
+        _JWKS_CLIENT = jwt.PyJWKClient(
+            _GOOGLE_JWKS_URL,
+            cache_keys=True,
+            max_cached_keys=16,
+        )
+    return _JWKS_CLIENT
+
+
+def verify_firebase_id_token(
+    token: str,
+    settings: Settings | None = None,
+) -> dict[str, Any]:
+    """Validate a Firebase Auth ID token against Google's public keys.
+
+    Validates:
+    - Algorithm is RS256
+    - Audience matches FIREBASE_PROJECT_ID
+    - Issuer matches https://securetoken.google.com/{FIREBASE_PROJECT_ID}
+    - Signature, expiration, and required subject
+    """
+    app_settings = settings or get_settings()
+    project_id = app_settings.FIREBASE_PROJECT_ID
+    issuer = f"https://securetoken.google.com/{project_id}"
+
+    try:
+        jwks_client = get_jwks_client()
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            audience=project_id,
+            issuer=issuer,
+            options={"require": ["sub", "iss", "aud", "exp", "iat"]},
+        )
+    except jwt.ExpiredSignatureError as exc:
+        raise UnauthorizedError(
+            message="Firebase access token has expired.",
+            details={"reason": "token_expired"},
+        ) from exc
+    except jwt.InvalidTokenError as exc:
+        raise UnauthorizedError(
+            message=f"Invalid Firebase access token: {str(exc)}",
+            details={"reason": "invalid_firebase_token"},
+        ) from exc
+    except Exception as exc:
+        raise UnauthorizedError(
+            message=f"Firebase token verification failed: {str(exc)}",
+            details={"reason": "firebase_verification_failed"},
+        ) from exc
+
+    subject = payload.get("sub")
+    if not subject or not str(subject).strip():
+        raise UnauthorizedError(
+            message="Firebase token missing subject (uid).",
+            details={"reason": "missing_subject"},
+        )
+
+    return payload
+
+
 def decode_access_token(
     token: str,
     settings: Settings | None = None,
 ) -> dict[str, Any]:
     """Validate JWT signature, expiration, issuer, audience, and subject claims.
 
-    Rejects unauthorized algorithms, expired tokens, or malformed payloads.
+    Supports both VerifAI internal HS256 tokens and Firebase Auth RS256 ID tokens.
     """
     app_settings = settings or get_settings()
+
+    # Detect algorithm from token header
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except Exception as exc:
+        raise UnauthorizedError(
+            message="Malformed or unparseable access token header.",
+            details={"reason": "unparseable_header"},
+        ) from exc
+
+    alg = unverified_header.get("alg")
+
+    # If RS256 and Firebase is enabled, route to Firebase verification
+    if alg == "RS256" and app_settings.FIREBASE_AUTH_ENABLED:
+        return verify_firebase_id_token(token, settings=app_settings)
+
     secret = app_settings.JWT_SECRET.get_secret_value()
 
     try:

@@ -355,3 +355,85 @@ async def test_rbac_require_roles_enforcement() -> None:
         await admin_checker(current_user=normal_user)
     with pytest.raises(ForbiddenError):
         await analyst_or_admin(current_user=normal_user)
+
+
+def test_firebase_auth_endpoint_and_token_exchange(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify that Firebase Auth ID tokens are exchanged and auto-provision user accounts."""
+    import app.api.v1.endpoints.auth as auth_endpoint
+
+    mock_payload = {
+        "sub": "firebase_user_abc123",
+        "email": "firebase_user@example.com",
+        "name": "Firebase User",
+        "email_verified": True,
+        "iss": "https://securetoken.google.com/verifai-22c4b",
+        "aud": "verifai-22c4b",
+    }
+    monkeypatch.setattr(
+        auth_endpoint, "verify_firebase_id_token", lambda token, settings: mock_payload
+    )
+
+    resp = client.post(
+        "/api/v1/auth/firebase",
+        json={"id_token": "valid.mock.firebase.token"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "access_token" in data
+    assert data["role"] == "USER"
+    expected_uuid = uuid.uuid5(uuid.NAMESPACE_URL, "firebase:firebase_user_abc123")
+    assert data["user_id"] == str(expected_uuid)
+
+    # Use returned token to access /auth/me
+    me_resp = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {data['access_token']}"},
+    )
+    assert me_resp.status_code == 200
+    me_data = me_resp.json()
+    assert me_data["email"] == "firebase_user@example.com"
+    assert me_data["id"] == str(expected_uuid)
+
+
+def test_firebase_direct_bearer_token_authentication(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify that endpoints accept raw Firebase ID tokens directly in Bearer authorization header."""
+    import app.core.security as core_security
+
+    mock_payload = {
+        "sub": "firebase_direct_user_456",
+        "email": "direct_firebase@example.com",
+        "name": "Direct User",
+        "email_verified": True,
+        "iss": "https://securetoken.google.com/verifai-22c4b",
+        "aud": "verifai-22c4b",
+    }
+    monkeypatch.setattr(
+        core_security,
+        "verify_firebase_id_token",
+        lambda token, settings: mock_payload,
+    )
+    # Mock jwt.get_unverified_header to report RS256 for this test token
+    orig_unverified_header = jwt.get_unverified_header
+    monkeypatch.setattr(
+        jwt,
+        "get_unverified_header",
+        lambda token: (
+            {"alg": "RS256", "kid": "mock_kid"}
+            if token.startswith("firebase.")
+            else orig_unverified_header(token)
+        ),
+    )
+
+    resp = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer firebase.raw.id.token"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    expected_uuid = uuid.uuid5(uuid.NAMESPACE_URL, "firebase:firebase_direct_user_456")
+    assert data["id"] == str(expected_uuid)
+    assert data["email"] == "direct_firebase@example.com"

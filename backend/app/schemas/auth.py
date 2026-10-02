@@ -129,3 +129,15 @@ class UserResponse(BaseModel):
     role: UserRole
     is_active: bool
     created_at: datetime
+
+
+class FirebaseAuthRequest(BaseModel):
+    """Payload containing Firebase ID token for authentication and synchronization."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id_token: str = Field(
+        ...,
+        min_length=10,
+        description="Firebase Auth ID Token (JWT RS256) issued by Google.",
+    )

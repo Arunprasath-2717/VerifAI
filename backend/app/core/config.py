@@ -65,6 +65,16 @@ class Settings(BaseSettings):
     JWT_AUDIENCE: str = "verifai-client"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
+    # Firebase Authentication Configuration
+    FIREBASE_AUTH_ENABLED: bool = True
+    FIREBASE_PROJECT_ID: str = "verifai-22c4b"
+    FIREBASE_API_KEY: str = "AIzaSyDag7_lFm6ayphrJUDYWK2EQmZmFdaU_5s"
+    FIREBASE_AUTH_DOMAIN: str = "verifai-22c4b.firebaseapp.com"
+    FIREBASE_STORAGE_BUCKET: str = "verifai-22c4b.firebasestorage.app"
+    FIREBASE_MESSAGING_SENDER_ID: str = "501647364420"
+    FIREBASE_APP_ID: str = "1:501647364420:web:9848f5dc7ba7d236704711"
+    FIREBASE_MEASUREMENT_ID: str = "G-4LPP8CZGG3"
+
     # Rate Limiting Configuration
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_ENABLED_IN_TEST: bool = False

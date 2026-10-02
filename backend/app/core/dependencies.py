@@ -3,6 +3,7 @@
 import logging
 import uuid
 from collections.abc import AsyncGenerator, Callable
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Depends
@@ -82,13 +83,20 @@ async def get_current_user(
     payload = decode_access_token(token, settings=settings)
 
     sub = payload.get("sub")
+    is_firebase_token = str(payload.get("iss", "")).startswith(
+        "https://securetoken.google.com"
+    )
+
     try:
         user_uuid = uuid.UUID(str(sub))
     except (ValueError, TypeError) as exc:
-        raise UnauthorizedError(
-            message="Token subject is not a valid user identifier.",
-            details={"sub": str(sub)},
-        ) from exc
+        if is_firebase_token:
+            user_uuid = uuid.uuid5(uuid.NAMESPACE_URL, f"firebase:{sub}")
+        else:
+            raise UnauthorizedError(
+                message="Token subject is not a valid user identifier.",
+                details={"sub": str(sub)},
+            ) from exc
 
     user: User | None = None
 
@@ -98,6 +106,27 @@ async def get_current_user(
         user = result.scalar_one_or_none()
     else:
         user = _EPHEMERAL_USERS.get(user_uuid)
+
+    if user is None and is_firebase_token:
+        # Auto-provision user account from validated Firebase ID token
+        email = str(payload.get("email") or f"{sub}@firebase.user")
+        username = str(payload.get("name") or email.split("@")[0]).replace(" ", "_")
+        user = User(
+            id=user_uuid,
+            email=email,
+            username=username,
+            hashed_password="",
+            role="USER",
+            is_active=True,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        if db is not None:
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        else:
+            _EPHEMERAL_USERS[user_uuid] = user
 
     if user is None:
         raise UnauthorizedError(

@@ -18,10 +18,12 @@ from app.core.security import (
     _EPHEMERAL_USERS_BY_USERNAME,
     create_access_token,
     hash_password,
+    verify_firebase_id_token,
     verify_password,
 )
 from app.models.user import User
 from app.schemas.auth import (
+    FirebaseAuthRequest,
     TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
@@ -214,4 +216,66 @@ async def get_me(
         role=UserRole(current_user.role),
         is_active=current_user.is_active,
         created_at=current_user.created_at,
+    )
+
+
+@router.post(
+    "/auth/firebase",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Authenticate via Firebase Auth",
+    description=(
+        "Validates a Google/Firebase ID token, synchronizes the user account, "
+        "and returns a VerifAI session token."
+    ),
+)
+async def authenticate_with_firebase(
+    request: FirebaseAuthRequest,
+    db: AsyncSession | None = Depends(get_optional_db_session),
+    settings: Settings = Depends(get_settings),
+) -> TokenResponse:
+    """Authenticate or synchronize user via Firebase Auth ID token."""
+    payload = verify_firebase_id_token(request.id_token, settings=settings)
+    sub = str(payload.get("sub"))
+    user_uuid = uuid.uuid5(uuid.NAMESPACE_URL, f"firebase:{sub}")
+
+    user: User | None = None
+    if db is not None:
+        stmt = select(User).where(User.id == user_uuid)
+        user = (await db.execute(stmt)).scalar_one_or_none()
+    else:
+        user = _EPHEMERAL_USERS.get(user_uuid)
+
+    if user is None:
+        email = str(payload.get("email") or f"{sub}@firebase.user")
+        username = str(payload.get("name") or email.split("@")[0]).replace(" ", "_")
+        user = User(
+            id=user_uuid,
+            email=email,
+            username=username,
+            hashed_password="",
+            role="USER",
+            is_active=True,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        if db is not None:
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        else:
+            _EPHEMERAL_USERS[user_uuid] = user
+
+    token, expires_in = create_access_token(
+        subject=user.id,
+        role=user.role,
+        settings=settings,
+    )
+
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        expires_in=expires_in,
+        role=UserRole(user.role),
+        user_id=user.id,
     )
