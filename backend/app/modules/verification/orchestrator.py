@@ -516,7 +516,7 @@ class VerificationOrchestrator:
 
         completed_at = datetime.now(UTC)
 
-        effective_owner = request.options.owner_id or "default_dev_user"
+        effective_owner = request.options.owner_id or "anonymous"
         # Step 7: Create VerificationJob Database Entity
         verification_job = VerificationJob(
             id=verification_id,

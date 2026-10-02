@@ -5,6 +5,20 @@ from app.schemas.auth import (
     UserResponse,
     UserRole,
 )
+from app.schemas.chat import (
+    AuditHistoryItem,
+    AuditHistoryResponse,
+    ChatPromptRequest,
+    ChatPromptResponse,
+    ConversationCreateRequest,
+    ConversationDetailResponse,
+    ConversationListResponse,
+    ConversationResponse,
+    LLMModelSelection,
+    LLMRunResponse,
+    MessageResponse,
+    UserDeleteDataResponse,
+)
 from app.schemas.verification import (
     AuditRecordSchema,
     ClaimResultSchema,
@@ -38,4 +52,16 @@ __all__ = [
     "VerificationOptions",
     "VerificationResponse",
     "VerificationStatus",
+    "ConversationCreateRequest",
+    "ConversationResponse",
+    "ConversationDetailResponse",
+    "ConversationListResponse",
+    "MessageResponse",
+    "LLMModelSelection",
+    "LLMRunResponse",
+    "ChatPromptRequest",
+    "ChatPromptResponse",
+    "UserDeleteDataResponse",
+    "AuditHistoryItem",
+    "AuditHistoryResponse",
 ]

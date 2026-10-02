@@ -216,7 +216,7 @@ class VerificationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     verification_id: uuid.UUID
-    owner_id: str = "default_dev_user"
+    owner_id: str
     status: str
     input_text: str
     query: str | None = None
@@ -236,3 +236,14 @@ class VerificationResponse(BaseModel):
     completed_at: datetime | None = None
     claims: list[ClaimResultSchema] = Field(default_factory=list)
     audit_trail: list[AuditRecordSchema] = Field(default_factory=list)
+
+
+class VerificationListResponse(BaseModel):
+    """Paginated list of verification records."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[VerificationResponse]
+    total: int
+    limit: int
+    offset: int

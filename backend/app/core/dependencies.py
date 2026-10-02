@@ -154,3 +154,63 @@ def require_roles(
         return current_user
 
     return _role_checker
+
+
+def resolve_effective_owner(
+    current_user: User | None,
+    client_owner_id: str | None,
+    settings: Settings,
+) -> str:
+    """Determine effective owner/namespace ID with strict security enforcement.
+
+    1. Authenticated non-admin: strictly forces user.id (rejects spoofing/IDOR).
+    2. Authenticated admin: allows inspecting target namespace or defaults to admin.id.
+    3. Unauthenticated: strictly forbidden in production; permitted only in dev/test.
+    """
+    if current_user is not None:
+        user_id_str = str(current_user.id)
+        role_str = (
+            current_user.role.value
+            if hasattr(current_user.role, "value")
+            else str(current_user.role)
+        )
+        if role_str == "ADMIN":
+            if client_owner_id and client_owner_id.strip():
+                return client_owner_id.strip()
+            return user_id_str
+
+        # Non-admin user: prevent IDOR/spoofing of another user's namespace
+        if (
+            client_owner_id
+            and client_owner_id.strip()
+            and client_owner_id.strip() != user_id_str
+        ):
+            logger.warning(
+                "IDOR attempt: User %s attempted to access namespace '%s'",
+                user_id_str,
+                client_owner_id,
+            )
+            raise ForbiddenError(
+                message=(
+                    "Cannot access or specify resources outside your user namespace."
+                ),
+                details={
+                    "user_id": user_id_str,
+                    "requested_owner_id": client_owner_id,
+                },
+            )
+        return user_id_str
+
+    # Unauthenticated path: strictly development/testing only
+    is_dev = (
+        settings.ENVIRONMENT in ("development", "test", "testing") or settings.DEBUG
+    )
+    if not is_dev:
+        raise UnauthorizedError(
+            message="Authentication required in production environment.",
+            details={"environment": settings.ENVIRONMENT},
+        )
+
+    if client_owner_id and client_owner_id.strip():
+        return client_owner_id.strip()
+    return settings.DEFAULT_OWNER_ID
