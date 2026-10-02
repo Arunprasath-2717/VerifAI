@@ -1,6 +1,7 @@
 """Comprehensive tests for authentication, Argon2id hashing, JWT, and RBAC."""
 
 import uuid
+from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -17,8 +18,6 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from collections.abc import Generator
-
 from app.models.user import User
 from app.schemas.auth import UserRole
 

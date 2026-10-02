@@ -1,6 +1,7 @@
 """Exhaustive tests for user ownership, namespace isolation, IDOR prevention, and RBAC."""
 
 import uuid
+from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,8 +11,6 @@ from app.core.security import (
     clear_ephemeral_users,
     create_access_token,
 )
-from collections.abc import Generator
-
 from app.models.user import User
 from app.modules.knowledge.service import clear_ephemeral_kb
 from app.schemas.auth import UserRole

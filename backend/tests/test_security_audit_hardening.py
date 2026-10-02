@@ -1,7 +1,6 @@
 """Security regression test suite covering file safety, injection isolation, headers, and rate limits."""
 
 import io
-
 from collections.abc import Generator
 
 import pytest
