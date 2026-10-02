@@ -4,7 +4,11 @@ import asyncio
 import logging
 
 from app.core.config import Settings, get_settings
-from app.modules.llm.client import LLMExecutionResult, RealLLMClient
+from app.modules.llm.client import (
+    LLMExecutionResult,
+    RealLLMClient,
+    sanitize_credential_text,
+)
 from app.schemas.chat import LLMModelSelection
 
 logger = logging.getLogger("verifai.llm.orchestrator")
@@ -43,11 +47,12 @@ class MultiLLMOrchestrator:
                     timeout_seconds=timeout,
                 )
             except Exception as exc:
+                clean_msg = sanitize_credential_text(str(exc))
                 logger.error(
                     "Unexpected error executing %s/%s: %s",
                     selection.provider,
                     selection.model_name,
-                    exc,
+                    clean_msg,
                 )
                 return LLMExecutionResult(
                     provider=selection.provider,
@@ -55,7 +60,7 @@ class MultiLLMOrchestrator:
                     prompt=prompt,
                     status="FAILED",
                     error_code="UNEXPECTED_EXECUTION_ERROR",
-                    error_message=str(exc),
+                    error_message=clean_msg,
                 )
 
         tasks = [_run_single(m) for m in models]

@@ -352,3 +352,32 @@ def test_openrouter_groq_omniroute_provider_handling(client: TestClient):
             assert run["status"] in ("FAILED", "UNAVAILABLE", "COMPLETED")
             if run["status"] == "FAILED":
                 assert run["error_code"] == "HTTP_402"
+
+
+def test_credential_redaction_and_leakage_prevention():
+    """Verify that credentials and tokens are strictly scrubbed from error messages and logs."""
+    from app.modules.llm.client import LLMExecutionResult, sanitize_credential_text
+
+    raw_error_message = (
+        "Failed request with Authorization: Bearer sk-or-v1-secret123 and "
+        "groq key gsk_mysecret456 and omniroute ci_live_secret789 and google AIzaSySecret012"
+    )
+
+    cleaned = sanitize_credential_text(raw_error_message)
+    assert cleaned is not None
+    assert "sk-or-v1-secret123" not in cleaned
+    assert "gsk_mysecret456" not in cleaned
+    assert "ci_live_secret789" not in cleaned
+    assert "AIzaSySecret012" not in cleaned
+    assert "[REDACTED_CREDENTIAL]" in cleaned
+
+    result = LLMExecutionResult(
+        provider="groq",
+        model_name="mock-model",
+        prompt="hello",
+        status="FAILED",
+        error_code="HTTP_401",
+        error_message="Unauthorized with key gsk_sample_secret_key_999",
+    )
+    assert "gsk_sample_secret_key_999" not in (result.error_message or "")
+    assert "[REDACTED_CREDENTIAL]" in (result.error_message or "")

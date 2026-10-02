@@ -63,7 +63,9 @@
 | **Milestone 13** | **Automated Integration & E2E Testing** | `backend/tests/test_chat_multi_llm.py`, `backend/tests/test_real_e2e_lifecycle.py` | 1,127 passed, 0 failed | VERIFIED | `d61be2c` |
 | **Milestone 14** | **Master Technical Guide & Contract Finalization** | `docs/FRONTEND_BACKEND_CONTRACT.md`, `docs/VERIFAI_COMPLETE_TECHNICAL_GUIDE.md`, `docs/COMMIT_LEDGER.md` | Dual Technical + ELI10 | VERIFIED | `61d073e` |
 | **Milestone 15** | **OpenRouter, Groq, and OmniRoute Integration** | `backend/app/core/config.py`, `backend/app/modules/llm/client.py`, `backend/app/schemas/chat.py` | 1 added / 1,128 total | VERIFIED | `2d42e0a` |
-| **Milestone 16** | **Firebase Authentication SDK & RS256 Backend Verification** | `frontend/src/firebase.js`, `frontend/src/services/authService.js`, `backend/app/core/security.py`, `backend/app/core/dependencies.py`, `backend/app/api/v1/endpoints/auth.py` | 2 added / 1,130 total | VERIFIED | `HEAD` |
+| **Milestone 16** | **Firebase Authentication SDK & RS256 Backend Verification** | `frontend/src/firebase.js`, `frontend/src/services/authService.js`, `backend/app/core/security.py`, `backend/app/core/dependencies.py`, `backend/app/api/v1/endpoints/auth.py` | 2 added / 1,130 total | VERIFIED | `d5a6a76` |
+| **Milestone 17** | **Credential Sanitization & Secret Leakage Prevention** | `backend/app/modules/llm/client.py`, `backend/app/modules/llm/service.py`, `backend/tests/test_chat_multi_llm.py` | 1 added / 1,131 total | VERIFIED | `HEAD` |
+
 
 ---
 
@@ -148,10 +150,10 @@ Release Target          : v1.0.0
 Git Branch              : Final
 Freeze Status           : FROZEN (Quality Gates Passed & Verified)
 Starting Commits        : 89
-Commits Added           : 17
-Final Commit Count      : 106
-Pytest Test Count       : 1,130 Passed (0 Failed, 0 Skipped, 0 Regressions)
-Security Hardening      : Argon2id, JWT HS256, Firebase RS256, RBAC, IDOR, SSRF, Rate Limiting
+Commits Added           : 18
+Final Commit Count      : 107
+Pytest Test Count       : 1,131 Passed (0 Failed, 0 Skipped, 0 Regressions)
+Security Hardening      : Argon2id, JWT HS256, Firebase RS256, Credential Redaction, RBAC, IDOR, SSRF, Rate Limiting
 Multi-LLM Capabilities : OpenAI, Anthropic, Gemini, Ollama, OpenRouter, Groq, OmniRoute
 Chat & Streaming        : Multi-turn Chat, Real-Time SSE Streams, Consensus Arbitration
 Persistence & Storage   : PostgreSQL 16 Alpine, Docker Compose, Volume Persistence

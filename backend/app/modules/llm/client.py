@@ -1,6 +1,7 @@
 """Real LLM Provider clients with strict absence of mock/fake runtime responses."""
 
 import logging
+import re
 import time
 from typing import Any
 
@@ -9,6 +10,18 @@ import httpx
 from app.core.config import Settings, get_settings
 
 logger = logging.getLogger("verifai.llm.client")
+
+_CREDENTIAL_PATTERN = re.compile(
+    r"(?:Bearer\s+[A-Za-z0-9_\-\.]+|sk-[A-Za-z0-9_\-\.]+|gsk_[A-Za-z0-9_\-\.]+|ci_live_[A-Za-z0-9_\-\.]+|AIzaSy[A-Za-z0-9_\-\.]+|key=[A-Za-z0-9_\-\.]+)",
+    re.IGNORECASE,
+)
+
+
+def sanitize_credential_text(text: str | None) -> str | None:
+    """Scrub sensitive API tokens and keys from error messages and logs."""
+    if not text:
+        return text
+    return _CREDENTIAL_PATTERN.sub("[REDACTED_CREDENTIAL]", text)
 
 
 class LLMExecutionResult:
@@ -35,7 +48,7 @@ class LLMExecutionResult:
         self.model_version = model_version
         self.latency_ms = latency_ms
         self.error_code = error_code
-        self.error_message = error_message
+        self.error_message = sanitize_credential_text(error_message)
         self.metadata = metadata or {}
 
 
