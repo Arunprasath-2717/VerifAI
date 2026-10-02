@@ -3,6 +3,7 @@
 from app.models.base import GUID, Base, TimestampMixin
 from app.models.ingestion import IngestedPayload
 from app.models.knowledge import KnowledgeChunk, KnowledgeDocument
+from app.models.user import User
 from app.models.verification import (
     AuditRecord,
     ExtractedClaim,
@@ -15,6 +16,7 @@ __all__ = [
     "Base",
     "GUID",
     "TimestampMixin",
+    "User",
     "VerificationJob",
     "ExtractedClaim",
     "RetrievedEvidence",

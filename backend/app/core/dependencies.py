@@ -1,12 +1,24 @@
 """Common dependency injection providers for FastAPI."""
 
-from collections.abc import AsyncGenerator
+import logging
+import uuid
+from collections.abc import AsyncGenerator, Callable
+from typing import Any
 
 from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_async_session as _get_async_session
+from app.core.errors import ForbiddenError, UnauthorizedError
+from app.core.security import _EPHEMERAL_USERS, decode_access_token
+from app.models.user import User
+from app.schemas.auth import UserRole
+
+logger = logging.getLogger("verifai.dependencies")
+http_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_settings(settings: Settings = Depends(get_settings)) -> Settings:
@@ -26,6 +38,25 @@ async def get_async_session(
 get_db_session = get_async_session
 
 
+async def get_optional_db_session(
+    settings: Settings = Depends(get_settings),
+) -> AsyncGenerator[AsyncSession | None, None]:
+    """Provide an async database session if configured, or None for ephemeral runs."""
+    if not settings.DATABASE_URL:
+        yield None
+        return
+
+    try:
+        async for session in _get_async_session():
+            yield session
+    except Exception as exc:
+        logger.warning(
+            "Could not establish database session: %s. Proceeding ephemerally.",
+            type(exc).__name__,
+        )
+        yield None
+
+
 def get_supabase_client(
     settings: Settings = Depends(get_settings),
 ):
@@ -33,3 +64,93 @@ def get_supabase_client(
     from app.core.supabase import SupabaseClient
 
     return SupabaseClient.from_settings(settings=settings)
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer_scheme),
+    db: AsyncSession | None = Depends(get_optional_db_session),
+    settings: Settings = Depends(get_settings),
+) -> User:
+    """Authenticate request using Bearer JWT token and resolve User entity."""
+    if not credentials or not credentials.credentials:
+        raise UnauthorizedError(
+            message="Authentication required. Please provide a valid Bearer token.",
+            details={"scheme": "Bearer"},
+        )
+
+    token = credentials.credentials.strip()
+    payload = decode_access_token(token, settings=settings)
+
+    sub = payload.get("sub")
+    try:
+        user_uuid = uuid.UUID(str(sub))
+    except (ValueError, TypeError) as exc:
+        raise UnauthorizedError(
+            message="Token subject is not a valid user identifier.",
+            details={"sub": str(sub)},
+        ) from exc
+
+    user: User | None = None
+
+    if db is not None:
+        stmt = select(User).where(User.id == user_uuid)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+    else:
+        user = _EPHEMERAL_USERS.get(user_uuid)
+
+    if user is None:
+        raise UnauthorizedError(
+            message="Authenticated user account does not exist.",
+            details={"user_id": str(user_uuid)},
+        )
+
+    if not user.is_active:
+        raise UnauthorizedError(
+            message="User account is deactivated.",
+            details={"user_id": str(user_uuid)},
+        )
+
+    return user
+
+
+async def get_optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer_scheme),
+    db: AsyncSession | None = Depends(get_optional_db_session),
+    settings: Settings = Depends(get_settings),
+) -> User | None:
+    """Resolve authenticated user if Bearer token present, otherwise None."""
+    if not credentials or not credentials.credentials:
+        return None
+    return await get_current_user(credentials=credentials, db=db, settings=settings)
+
+
+def require_roles(
+    allowed_roles: list[UserRole | str],
+) -> Callable[..., Any]:
+    """Dependency factory enforcing explicit Role-Based Access Control (RBAC)."""
+    normalized_roles = {
+        r.value if isinstance(r, UserRole) else str(r) for r in allowed_roles
+    }
+
+    async def _role_checker(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if current_user.role not in normalized_roles:
+            logger.warning(
+                "Access denied for user %s with role '%s'. Allowed: %s",
+                current_user.id,
+                current_user.role,
+                normalized_roles,
+            )
+            roles_str = ", ".join(sorted(normalized_roles))
+            raise ForbiddenError(
+                message=f"Insufficient permissions. Required role: {roles_str}",
+                details={
+                    "user_role": current_user.role,
+                    "allowed_roles": sorted(normalized_roles),
+                },
+            )
+        return current_user
+
+    return _role_checker

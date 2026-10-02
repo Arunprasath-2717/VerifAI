@@ -84,6 +84,81 @@ class ServiceUnavailableError(AppError):
         )
 
 
+class UnauthorizedError(AppError):
+    """Authentication failure or missing credentials."""
+
+    def __init__(
+        self,
+        message: str = "Authentication required",
+        details: Any = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="UNAUTHORIZED",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+        self.headers = dict(headers or {})
+        if "WWW-Authenticate" not in self.headers:
+            self.headers["WWW-Authenticate"] = "Bearer"
+
+
+class ForbiddenError(AppError):
+    """Permission denied or insufficient privileges."""
+
+    def __init__(
+        self,
+        message: str = "Access forbidden",
+        details: Any = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="FORBIDDEN",
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+        self.headers = dict(headers or {})
+
+
+class ConflictError(AppError):
+    """Resource conflict (e.g. duplicate username, email, or content hash)."""
+
+    def __init__(
+        self,
+        message: str = "Resource conflict",
+        details: Any = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="CONFLICT",
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+        self.headers = dict(headers or {})
+
+
+class RateLimitError(AppError):
+    """Rate limit exceeded."""
+
+    def __init__(
+        self,
+        message: str = "Too many requests. Please slow down.",
+        retry_after: int = 60,
+        details: Any = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="TOO_MANY_REQUESTS",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            details=details,
+        )
+        self.retry_after = retry_after
+        self.headers = {"Retry-After": str(retry_after)}
+
+
 def create_error_response(
     status_code: int,
     code: str,
@@ -117,12 +192,14 @@ async def app_error_handler(
 ) -> JSONResponse:
     """Handle custom application-level exceptions."""
     req_id = getattr(request.state, "request_id", None) or get_current_request_id()
+    headers = getattr(exc, "headers", None)
     return create_error_response(
         status_code=exc.status_code,
         code=exc.code,
         message=exc.message,
         request_id=req_id,
         details=exc.details,
+        headers=headers,
         header_name=header_name,
     )
 

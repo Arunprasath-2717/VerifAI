@@ -10,7 +10,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings loaded from environment variables and defaults."""
 
-    # Project Metadata
     PROJECT_NAME: str = "VerifAI"
     VERSION: str = "0.1.0"
     DESCRIPTION: str = (
@@ -51,6 +50,32 @@ class Settings(BaseSettings):
     DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_POOL_TIMEOUT: int = 30
     DATABASE_CONNECT_TIMEOUT: float = 3.0
+
+    # Authentication & JWT Configuration
+    JWT_SECRET: SecretStr = Field(
+        default=SecretStr(
+            "verifai_insecure_development_secret_key_change_in_production_32chars!"
+        ),
+        description=(
+            "Secret key for signing JWT tokens. Must be overridden in production."
+        ),
+    )
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ISSUER: str = "verifai-backend"
+    JWT_AUDIENCE: str = "verifai-client"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # Rate Limiting Configuration
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_ENABLED_IN_TEST: bool = False
+    RATE_LIMIT_LOGIN_PER_MINUTE: int = 10
+    RATE_LIMIT_REGISTER_PER_MINUTE: int = 5
+    RATE_LIMIT_VERIFY_PER_MINUTE: int = 30
+    RATE_LIMIT_KB_UPLOAD_PER_MINUTE: int = 20
+    RATE_LIMIT_KB_SEARCH_PER_MINUTE: int = 40
+
+    # Resource Concurrency Controls
+    MAX_CONCURRENT_VERIFICATIONS_PER_USER: int = 3
 
     # Verification Engine Configuration
     VERIFICATION_MAX_INPUT_CHARS: int = 20000
@@ -114,6 +139,18 @@ class Settings(BaseSettings):
                 f"Invalid LOG_LEVEL '{v}'. Must be one of: {', '.join(sorted(allowed))}"
             )
         return upper_v
+
+    @field_validator("JWT_ALGORITHM", mode="after")
+    @classmethod
+    def validate_jwt_algorithm(cls, v: str) -> str:
+        """Enforce strict whitelist of permitted cryptographic algorithms."""
+        allowed = {"HS256"}
+        if v not in allowed:
+            allowed_list = ", ".join(sorted(allowed))
+            raise ValueError(
+                f"Unsupported JWT_ALGORITHM '{v}'. Strictly permitted: {allowed_list}"
+            )
+        return v
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="after")
     @classmethod

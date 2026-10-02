@@ -1,5 +1,10 @@
-"""Schemas package."""
-
+from app.schemas.auth import (
+    TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+    UserRole,
+)
 from app.schemas.verification import (
     AuditRecordSchema,
     ClaimResultSchema,
@@ -22,7 +27,12 @@ __all__ = [
     "EvidenceSchema",
     "JudgeDecision",
     "JudgeEvaluationSchema",
+    "TokenResponse",
     "UnknownReason",
+    "UserLoginRequest",
+    "UserRegisterRequest",
+    "UserResponse",
+    "UserRole",
     "VerdictType",
     "VerificationCreateRequest",
     "VerificationOptions",
