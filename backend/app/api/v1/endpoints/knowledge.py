@@ -8,8 +8,12 @@ from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.dependencies import get_optional_current_user, get_optional_db_session
-from app.core.errors import AppError, ConflictError, ForbiddenError, UnauthorizedError
+from app.core.dependencies import (
+    get_optional_current_user,
+    get_optional_db_session,
+    resolve_effective_owner,
+)
+from app.core.errors import AppError, ConflictError
 from app.core.rate_limit import enforce_rate_limit
 from app.models.knowledge import KnowledgeDocument
 from app.models.user import User
@@ -32,62 +36,6 @@ from app.schemas.knowledge import (
 
 logger = logging.getLogger("verifai.api.knowledge")
 router = APIRouter()
-
-
-def resolve_effective_owner(
-    current_user: User | None,
-    client_owner_id: str | None,
-    settings: Settings,
-) -> str:
-    """Determine effective owner/namespace ID with strict security enforcement.
-
-    1. If authenticated and non-admin: strictly forces user.id (rejects spoofing).
-    2. If authenticated admin: allows inspecting target namespace or defaults
-       to admin.id.
-    3. If unauthenticated: strictly forbidden in production; permitted only in dev/test.
-    """
-    if current_user is not None:
-        user_id_str = str(current_user.id)
-        if current_user.role == "ADMIN":
-            if client_owner_id and client_owner_id.strip():
-                return client_owner_id.strip()
-            return user_id_str
-
-        # Non-admin user: prevent IDOR/spoofing of another user's namespace
-        if (
-            client_owner_id
-            and client_owner_id.strip()
-            and client_owner_id.strip() != user_id_str
-        ):
-            logger.warning(
-                "IDOR attempt: User %s attempted to access namespace '%s'",
-                user_id_str,
-                client_owner_id,
-            )
-            raise ForbiddenError(
-                message=(
-                    "Cannot access or specify documents outside your user namespace."
-                ),
-                details={
-                    "user_id": user_id_str,
-                    "requested_owner_id": client_owner_id,
-                },
-            )
-        return user_id_str
-
-    # Unauthenticated path: strictly development/testing only
-    is_dev = (
-        settings.ENVIRONMENT in ("development", "test", "testing") or settings.DEBUG
-    )
-    if not is_dev:
-        raise UnauthorizedError(
-            message="Authentication required to access Knowledge Base in production.",
-            details={"environment": settings.ENVIRONMENT},
-        )
-
-    if client_owner_id and client_owner_id.strip():
-        return client_owner_id.strip()
-    return settings.DEFAULT_OWNER_ID
 
 
 def _format_doc_response(doc: KnowledgeDocument) -> DocumentResponse:
