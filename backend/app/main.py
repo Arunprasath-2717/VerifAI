@@ -29,6 +29,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.ENVIRONMENT,
         settings.DEBUG,
     )
+
+    if settings.DATABASE_URL:
+        try:
+            from app.core.database import init_db
+
+            await init_db()
+            logger.info("Database schema initialized and verified.")
+        except Exception as exc:
+            logger.warning(
+                "Database schema auto-init skipped or failed: %s", type(exc).__name__
+            )
+
     yield
 
     # Shutdown lifecycle hook: Dispose engine and pool connections cleanly

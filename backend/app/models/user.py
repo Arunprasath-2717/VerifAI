@@ -1,8 +1,9 @@
 """SQLAlchemy 2.x domain model for User entity and RBAC."""
 
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Boolean, Index, String
+from sqlalchemy import Boolean, DateTime, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import GUID, Base, TimestampMixin
@@ -44,6 +45,10 @@ class User(Base, TimestampMixin):
         Boolean,
         default=True,
         nullable=False,
+    )
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
     )
 
     __table_args__ = (

@@ -34,7 +34,24 @@ class VerificationJob(Base, TimestampMixin):
     owner_id: Mapped[str] = mapped_column(
         String(128),
         nullable=False,
-        default="default_dev_user",
+        index=True,
+    )
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        ForeignKey("conversations.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    message_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        ForeignKey("messages.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    llm_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        ForeignKey("llm_runs.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
     input_text: Mapped[str] = mapped_column(

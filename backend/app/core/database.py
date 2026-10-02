@@ -161,3 +161,17 @@ async def check_database_connectivity(
             "configured": True,
             "status": "unavailable",
         }
+
+
+async def init_db(engine: AsyncEngine | None = None) -> None:
+    """Initialize database tables according to Declarative Base metadata.
+
+    Safe, idempotent operation using CREATE TABLE IF NOT EXISTS.
+    """
+    import app.models  # noqa: F401 - ensures all models are registered on Base.metadata
+    from app.models.base import Base
+
+    target_engine = engine or get_async_engine()
+    async with target_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables verified/created successfully.")

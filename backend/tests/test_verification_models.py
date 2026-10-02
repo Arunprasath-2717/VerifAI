@@ -32,6 +32,7 @@ def test_verification_job_instantiation() -> None:
     job_id = uuid.uuid4()
     job = VerificationJob(
         id=job_id,
+        owner_id="test_owner",
         input_text="Water is composed of hydrogen and oxygen.",
         content_type=ContentType.FACTUAL.value,
         status="PENDING",
@@ -152,6 +153,7 @@ def test_in_memory_sqlite_schema_creation_and_cascades() -> None:
 
     with Session(engine) as session:
         job = VerificationJob(
+            owner_id="test_owner",
             input_text="Sample input.",
             content_type="FACTUAL",
             status="COMPLETED",
