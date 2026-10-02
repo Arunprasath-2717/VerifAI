@@ -61,7 +61,8 @@
 | **Milestone 11** | **History Lifecycle & Cascade Purge** | `backend/app/api/v1/endpoints/history.py`, `backend/app/api/v1/endpoints/knowledge.py`, `backend/app/api/v1/api.py` | GDPR cascade purge | VERIFIED | `b62b7bb` |
 | **Milestone 12** | **Production Docker & Deployment Orchestration** | `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.env.example` | Multi-stage unprivileged | VERIFIED | `cc1f0b1` |
 | **Milestone 13** | **Automated Integration & E2E Testing** | `backend/tests/test_chat_multi_llm.py`, `backend/tests/test_real_e2e_lifecycle.py` | 1,127 passed, 0 failed | VERIFIED | `d61be2c` |
-| **Milestone 14** | **Master Technical Guide & Contract Finalization** | `docs/FRONTEND_BACKEND_CONTRACT.md`, `docs/VERIFAI_COMPLETE_TECHNICAL_GUIDE.md`, `docs/COMMIT_LEDGER.md` | Dual Technical + ELI10 | VERIFIED | `HEAD` |
+| **Milestone 14** | **Master Technical Guide & Contract Finalization** | `docs/FRONTEND_BACKEND_CONTRACT.md`, `docs/VERIFAI_COMPLETE_TECHNICAL_GUIDE.md`, `docs/COMMIT_LEDGER.md` | Dual Technical + ELI10 | VERIFIED | `61d073e` |
+| **Milestone 15** | **OpenRouter, Groq, and OmniRoute Integration** | `backend/app/core/config.py`, `backend/app/modules/llm/client.py`, `backend/app/schemas/chat.py` | 1 added / 1,128 total | VERIFIED | `2d42e0a` |
 
 ---
 
@@ -146,11 +147,11 @@ Release Target          : v1.0.0
 Git Branch              : Final
 Freeze Status           : FROZEN (Quality Gates Passed & Verified)
 Starting Commits        : 89
-Commits Added           : 14
-Final Commit Count      : 103
-Pytest Test Count       : 1,127 Passed (0 Failed, 0 Skipped, 0 Regressions)
+Commits Added           : 15
+Final Commit Count      : 104
+Pytest Test Count       : 1,128 Passed (0 Failed, 0 Skipped, 0 Regressions)
 Security Hardening      : Argon2id, JWT HS256, RBAC, IDOR, SSRF, Rate Limiting
-Multi-LLM Capabilities : OpenAI, Anthropic, Gemini, Ollama (1-3 parallel models)
+Multi-LLM Capabilities : OpenAI, Anthropic, Gemini, Ollama, OpenRouter, Groq, OmniRoute
 Chat & Streaming        : Multi-turn Chat, Real-Time SSE Streams, Consensus Arbitration
 Persistence & Storage   : PostgreSQL 16 Alpine, Docker Compose, Volume Persistence
 History & Privacy       : Verification History, Audit Trail, GDPR Full Purge
