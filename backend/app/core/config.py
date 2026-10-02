@@ -84,6 +84,24 @@ class Settings(BaseSettings):
     ENABLE_LIVE_SEARCH: bool = False
 
     # ===========================================================================
+    # LLM Provider & Multi-Model Execution Configuration
+    # ===========================================================================
+    OPENAI_API_KEY: SecretStr | None = None
+    OPENAI_BASE_URL: str | None = None
+    ANTHROPIC_API_KEY: SecretStr | None = None
+    GEMINI_API_KEY: SecretStr | None = None
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    DEFAULT_LLM_MODELS: list[str] = Field(
+        default_factory=lambda: [
+            "gpt-4o-mini",
+            "claude-3-5-sonnet",
+            "gemini-1.5-flash",
+        ]
+    )
+    MAX_LLMS_PER_PROMPT: int = 3
+    LLM_TIMEOUT_SECONDS: float = 30.0
+
+    # ===========================================================================
     # Knowledge Base (KB) Configuration
     # ===========================================================================
     DEFAULT_OWNER_ID: str = "default_dev_user"
