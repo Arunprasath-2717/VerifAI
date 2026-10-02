@@ -516,9 +516,11 @@ class VerificationOrchestrator:
 
         completed_at = datetime.now(UTC)
 
+        effective_owner = request.options.owner_id or "default_dev_user"
         # Step 7: Create VerificationJob Database Entity
         verification_job = VerificationJob(
             id=verification_id,
+            owner_id=effective_owner,
             input_text=request.text,
             query=request.query,
             status=VerificationStatus.COMPLETED.value,
@@ -641,6 +643,7 @@ class VerificationOrchestrator:
 
         return VerificationResponse(
             verification_id=verification_id,
+            owner_id=effective_owner,
             status=VerificationStatus.COMPLETED.value,
             input_text=request.text,
             query=request.query,

@@ -2,22 +2,23 @@
 
 import logging
 import uuid
-from collections.abc import AsyncGenerator
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.database import get_async_session as _get_async_session
-from app.core.errors import AppError
+from app.core.dependencies import get_optional_current_user, get_optional_db_session
+from app.core.errors import AppError, ConflictError, ForbiddenError, UnauthorizedError
+from app.core.rate_limit import enforce_rate_limit
 from app.models.knowledge import KnowledgeDocument
+from app.models.user import User
 from app.modules.knowledge.ingestion import (
     DuplicateDocumentError,
     IngestionValidationError,
 )
 from app.modules.knowledge.retriever import PrivateKBRetriever
-from app.modules.knowledge.service import KnowledgeBaseService, resolve_owner_id
+from app.modules.knowledge.service import KnowledgeBaseService
 from app.schemas.knowledge import (
     ChunkResponse,
     DocumentCreateRequest,
@@ -33,23 +34,60 @@ logger = logging.getLogger("verifai.api.knowledge")
 router = APIRouter()
 
 
-async def get_optional_db_session(
-    settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession | None, None]:
-    """Provide an async database session if configured, or None for ephemeral runs."""
-    if not settings.DATABASE_URL:
-        yield None
-        return
+def resolve_effective_owner(
+    current_user: User | None,
+    client_owner_id: str | None,
+    settings: Settings,
+) -> str:
+    """Determine effective owner/namespace ID with strict security enforcement.
 
-    try:
-        async for session in _get_async_session():
-            yield session
-    except Exception as exc:
-        logger.warning(
-            "Could not establish database session: %s. Proceeding ephemerally.",
-            type(exc).__name__,
+    1. If authenticated and non-admin: strictly forces user.id (rejects spoofing).
+    2. If authenticated admin: allows inspecting target namespace or defaults
+       to admin.id.
+    3. If unauthenticated: strictly forbidden in production; permitted only in dev/test.
+    """
+    if current_user is not None:
+        user_id_str = str(current_user.id)
+        if current_user.role == "ADMIN":
+            if client_owner_id and client_owner_id.strip():
+                return client_owner_id.strip()
+            return user_id_str
+
+        # Non-admin user: prevent IDOR/spoofing of another user's namespace
+        if (
+            client_owner_id
+            and client_owner_id.strip()
+            and client_owner_id.strip() != user_id_str
+        ):
+            logger.warning(
+                "IDOR attempt: User %s attempted to access namespace '%s'",
+                user_id_str,
+                client_owner_id,
+            )
+            raise ForbiddenError(
+                message=(
+                    "Cannot access or specify documents outside your user namespace."
+                ),
+                details={
+                    "user_id": user_id_str,
+                    "requested_owner_id": client_owner_id,
+                },
+            )
+        return user_id_str
+
+    # Unauthenticated path: strictly development/testing only
+    is_dev = (
+        settings.ENVIRONMENT in ("development", "test", "testing") or settings.DEBUG
+    )
+    if not is_dev:
+        raise UnauthorizedError(
+            message="Authentication required to access Knowledge Base in production.",
+            details={"environment": settings.ENVIRONMENT},
         )
-        yield None
+
+    if client_owner_id and client_owner_id.strip():
+        return client_owner_id.strip()
+    return settings.DEFAULT_OWNER_ID
 
 
 def _format_doc_response(doc: KnowledgeDocument) -> DocumentResponse:
@@ -81,10 +119,23 @@ def _format_doc_response(doc: KnowledgeDocument) -> DocumentResponse:
 )
 async def create_document(
     request: DocumentCreateRequest,
+    http_request: Request,
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentResponse:
     """Add a new document via text payload."""
+    effective_owner = resolve_effective_owner(current_user, request.owner_id, settings)
+
+    if settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request,
+            action="kb_upload",
+            limit=settings.RATE_LIMIT_KB_UPLOAD_PER_MINUTE,
+            user_id=effective_owner,
+            settings=settings,
+        )
+
     service = KnowledgeBaseService(db_session=db, settings=settings)
     try:
         doc = await service.add_document(
@@ -93,15 +144,75 @@ async def create_document(
             title=request.title,
             description=request.description,
             content_type=request.content_type,
-            owner_id=request.owner_id,
+            owner_id=effective_owner,
         )
         return _format_doc_response(doc)
     except DuplicateDocumentError as exc:
+        raise ConflictError(
+            message=str(exc),
+            details={"content_hash": getattr(exc, "content_hash", None)},
+        ) from exc
+    except IngestionValidationError as exc:
         raise AppError(
             message=str(exc),
-            code="CONFLICT",
-            status_code=status.HTTP_409_CONFLICT,
+            code="VALIDATION_ERROR",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         ) from exc
+
+
+@router.post(
+    "/knowledge/upload",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload Document to Knowledge Base (Multipart File)",
+    description="Uploads a text or markdown file directly into the owner namespace.",
+)
+async def upload_document_file(
+    http_request: Request,
+    file: UploadFile = File(...),
+    title: str | None = Form(default=None),
+    description: str | None = Form(default=None),
+    owner_id: str | None = Form(default=None),
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession | None = Depends(get_optional_db_session),
+    settings: Settings = Depends(get_settings),
+) -> DocumentResponse:
+    """Upload a raw document file."""
+    effective_owner = resolve_effective_owner(current_user, owner_id, settings)
+
+    if settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request,
+            action="kb_upload",
+            limit=settings.RATE_LIMIT_KB_UPLOAD_PER_MINUTE,
+            user_id=effective_owner,
+            settings=settings,
+        )
+
+    content_bytes = await file.read(settings.KB_MAX_DOCUMENT_BYTES + 1)
+    if len(content_bytes) > settings.KB_MAX_DOCUMENT_BYTES:
+        raise AppError(
+            message=(
+                f"File exceeds maximum size limit of "
+                f"{settings.KB_MAX_DOCUMENT_BYTES} bytes."
+            ),
+            code="VALIDATION_ERROR",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+
+    service = KnowledgeBaseService(db_session=db, settings=settings)
+    try:
+        doc = await service.add_document(
+            raw_content=content_bytes,
+            filename=file.filename or "upload.txt",
+            title=title or file.filename or "Uploaded Document",
+            description=description,
+            content_type=file.content_type,
+            owner_id=effective_owner,
+        )
+        return _format_doc_response(doc)
+    except DuplicateDocumentError as exc:
+        raise ConflictError(message=str(exc)) from exc
     except IngestionValidationError as exc:
         raise AppError(
             message=str(exc),
@@ -121,12 +232,13 @@ async def list_documents(
     owner_id: str | None = Query(
         default=None, description="Namespace/owner identifier"
     ),
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentListResponse:
     """List documents for a namespace."""
+    effective_owner = resolve_effective_owner(current_user, owner_id, settings)
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(owner_id, settings)
     docs = await service.list_documents(owner_id=effective_owner)
 
     return DocumentListResponse(
@@ -141,19 +253,20 @@ async def list_documents(
     response_model=DocumentDetailResponse,
     status_code=status.HTTP_200_OK,
     summary="Get Document Details and Chunks",
-    description="Retrieves document metadata along with all extracted text chunks.",
+    description="Retrieves document metadata along with all constituent text chunks.",
 )
 async def get_document_details(
     document_id: uuid.UUID,
     owner_id: str | None = Query(
         default=None, description="Namespace/owner identifier"
     ),
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentDetailResponse:
     """Retrieve a single document and its constituent chunks."""
+    effective_owner = resolve_effective_owner(current_user, owner_id, settings)
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(owner_id, settings)
     doc = await service.get_document(document_id=document_id, owner_id=effective_owner)
 
     chunk_responses = [
@@ -189,12 +302,13 @@ async def delete_document(
     owner_id: str | None = Query(
         default=None, description="Namespace/owner identifier"
     ),
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
     """Delete a document and its chunks."""
+    effective_owner = resolve_effective_owner(current_user, owner_id, settings)
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(owner_id, settings)
     await service.delete_document(document_id=document_id, owner_id=effective_owner)
     return {
         "status": "deleted",
@@ -212,12 +326,24 @@ async def delete_document(
 )
 async def search_knowledge_base(
     request: KnowledgeSearchRequest,
+    http_request: Request,
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
 ) -> KnowledgeSearchResponse:
     """Execute search against private knowledge base."""
+    effective_owner = resolve_effective_owner(current_user, request.owner_id, settings)
+
+    if settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request,
+            action="kb_search",
+            limit=settings.RATE_LIMIT_KB_SEARCH_PER_MINUTE,
+            user_id=effective_owner,
+            settings=settings,
+        )
+
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(request.owner_id, settings)
     retriever = PrivateKBRetriever(
         service=service, owner_id=effective_owner, settings=settings
     )

@@ -31,6 +31,12 @@ class VerificationJob(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
+    owner_id: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+        default="default_dev_user",
+        index=True,
+    )
     input_text: Mapped[str] = mapped_column(
         Text,
         nullable=False,
@@ -129,12 +135,15 @@ class VerificationJob(Base, TimestampMixin):
         order_by="AuditRecord.timestamp",
     )
 
-    __table_args__ = (Index("ix_verifications_status_created", "status", "created_at"),)
+    __table_args__ = (
+        Index("ix_verifications_status_created", "status", "created_at"),
+        Index("ix_verifications_owner_created", "owner_id", "created_at"),
+    )
 
     def __repr__(self) -> str:
         return (
-            f"<VerificationJob(id={self.id}, status='{self.status}', "
-            f"claims={self.total_claims})>"
+            f"<VerificationJob(id={self.id}, owner='{self.owner_id}', "
+            f"status='{self.status}', claims={self.total_claims})>"
         )
 
 

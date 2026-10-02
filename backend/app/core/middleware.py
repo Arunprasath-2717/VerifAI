@@ -51,6 +51,27 @@ class RequestIDMiddleware:
         token = request_id_ctx.set(request_id)
         scope.setdefault("state", {})["request_id"] = request_id
 
+        # Enforce maximum body size (10 MB) to prevent resource abuse
+        content_length_header = headers.get(b"content-length")
+        if content_length_header:
+            try:
+                content_length = int(content_length_header.decode("latin1"))
+                if content_length > 10 * 1024 * 1024:
+                    from app.core.errors import create_error_response
+
+                    err_res = create_error_response(
+                        status_code=413,
+                        code="PAYLOAD_TOO_LARGE",
+                        message="Request payload exceeds maximum allowed size of 10MB.",
+                        request_id=request_id,
+                        header_name=self.header_name,
+                    )
+                    await err_res(scope, receive, send)
+                    request_id_ctx.reset(token)
+                    return
+            except ValueError:
+                pass
+
         start_time = time.perf_counter()
         method = scope.get("method", "GET")
         path = scope.get("path", "")
@@ -62,6 +83,10 @@ class RequestIDMiddleware:
                 status_code = message.get("status", 200)
                 res_headers = MutableHeaders(scope=message)
                 res_headers[self.header_name] = request_id
+                res_headers["X-Content-Type-Options"] = "nosniff"
+                res_headers["X-Frame-Options"] = "DENY"
+                res_headers["X-XSS-Protection"] = "1; mode=block"
+                res_headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
             await send(message)
 
         try:

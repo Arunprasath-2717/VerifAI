@@ -216,6 +216,7 @@ class VerificationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     verification_id: uuid.UUID
+    owner_id: str = "default_dev_user"
     status: str
     input_text: str
     query: str | None = None
