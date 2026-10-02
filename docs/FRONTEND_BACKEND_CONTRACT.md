@@ -298,6 +298,110 @@ Executes search query against caller's private knowledge base.
 
 ---
 
+### 3.3 Chat & Multi-LLM Execution
+
+#### `POST /api/v1/chat/conversations`
+Create a new conversation thread owned by the authenticated caller.
+
+**Request Body:**
+```json
+{
+  "title": "Thermodynamics Analysis"
+}
+```
+**Response Body (`201 Created`):**
+```json
+{
+  "id": "7b3b64f1-6712-4f3b-8219-943e8ba7e101",
+  "owner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "title": "Thermodynamics Analysis",
+  "created_at": "2026-10-02T10:15:00Z",
+  "updated_at": "2026-10-02T10:15:00Z",
+  "message_count": 0
+}
+```
+
+#### `GET /api/v1/chat/conversations`
+List conversations owned by the authenticated caller.
+**Query Parameters:** `search` (string, optional), `limit` (int, default 20), `offset` (int, default 0).
+
+#### `GET /api/v1/chat/conversations/{id}`
+Retrieve a single conversation including all messages and model runs.
+
+#### `DELETE /api/v1/chat/conversations/{id}`
+Delete a conversation and cascade-delete its messages and associated LLM runs.
+
+#### `POST /api/v1/chat/conversations/{id}/messages`
+Send prompt to 1 to 3 selected models, stream or aggregate responses, and run verification.
+
+**Request Body:**
+```json
+{
+  "prompt": "What is the boiling point of pure water at sea level?",
+  "models": [
+    {"provider": "openai", "model_name": "gpt-4o-mini"},
+    {"provider": "anthropic", "model_name": "claude-3-5-sonnet"}
+  ],
+  "verify": true
+}
+```
+
+**Response Body (`200 OK`):**
+```json
+{
+  "conversation_id": "7b3b64f1-6712-4f3b-8219-943e8ba7e101",
+  "user_message_id": "9a1e4c3b-5511-47cc-9921-123456789abc",
+  "prompt": "What is the boiling point of pure water at sea level?",
+  "runs": [
+    {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "provider": "openai",
+      "model_name": "gpt-4o-mini",
+      "status": "COMPLETED",
+      "response": "Pure water boils at 100°C (212°F) under 1 atm.",
+      "latency_ms": 320.5,
+      "verification_id": "22222222-3333-4444-5555-666666666666"
+    }
+  ],
+  "cross_model_disagreement": false,
+  "disagreement_summary": null
+}
+```
+
+#### `POST /api/v1/chat/conversations/{id}/messages/stream` (SSE)
+Establishes a Server-Sent Events stream emitting real-time execution lifecycle events:
+- `REQUEST_ACCEPTED`: Model request validated and enqueued.
+- `MODEL_REQUEST_STARTED`: Dispatched to specific model.
+- `MODEL_RESPONSE_COMPLETED`: Model returned output.
+- `MODEL_FAILED`: Provider error or timeout.
+- `VERIFICATION_COMPLETED`: Verification pipeline completed across responses.
+- `COMPLETE`: Stream terminated.
+
+---
+
+### 3.4 History & Data Lifecycle API
+
+#### `GET /api/v1/history/verifications`
+Retrieve paginated, user-isolated verification history with optional query filters:
+`verdict` (`SUPPORTED`, `CONTRADICTED`, `UNKNOWN`), `job_status`, `start_date`, `end_date`, `search`, `limit`, `offset`.
+
+#### `GET /api/v1/history/verifications/{id}`
+Retrieve complete verification envelope for a single historical job.
+
+#### `DELETE /api/v1/history/verifications/{id}`
+Delete a single verification job and all cascaded claims, evidence, and judge logs.
+
+#### `GET /api/v1/history/conversations`
+List user-owned chat conversations with sequence pagination.
+
+#### `GET /api/v1/history/audit`
+Retrieve chronological audit log entries for user operations.
+
+#### `DELETE /api/v1/history/purge?confirm=true`
+Cascade-delete all user-owned data (GDPR / Data Lifecycle): conversations, messages, verifications, claims, evidence, knowledge documents, and chunks.
+
+---
+
 ## 4. Frontend Verification Workflow & Polling Model
 
 For standard verifications under 2,000 characters, `POST /api/v1/verification` responds synchronously in 50–300ms.
@@ -307,7 +411,7 @@ For asynchronous or long-form document verifications:
 2. **Immediate Return:** If backend accepts job asynchronously, response status is `PENDING` or `PROCESSING`.
 3. **Polling Strategy:**
    - Polling interval: Every `1.0` second for up to 30 seconds.
-   - Endpoint: `GET /api/v1/verification/{id}`.
+   - Endpoint: `GET /api/v1/verification/{id}` or `GET /api/v1/history/verifications/{id}`.
    - Stop Condition: `status == "COMPLETED"` or `status == "FAILED"`.
    - Exponential Backoff: Optional backoff (`1s`, `1.5s`, `2s`, `3s`).
 
