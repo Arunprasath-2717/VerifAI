@@ -2,7 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+from fastapi import FastAPI
 from starlette.testclient import TestClient
+
+from app.core.config import Settings, get_settings
 
 
 def test_versioned_health_check(client: TestClient) -> None:
@@ -18,8 +21,15 @@ def test_versioned_health_check(client: TestClient) -> None:
     assert data["request_id"] == response.headers["x-request-id"]
 
 
-def test_readiness_probe_returns_503_when_unready(client: TestClient) -> None:
+def test_readiness_probe_returns_503_when_unready(app: FastAPI, client: TestClient) -> None:
     """Verify readiness probe returns 503 and request ID when unconfigured."""
+    unconfigured_settings = Settings(
+        _env_file=None,
+        DATABASE_URL=None,
+        ENVIRONMENT="testing",
+        FIREBASE_AUTH_ENABLED=False,
+    )
+    app.dependency_overrides[get_settings] = lambda: unconfigured_settings
     response = client.get("/api/v1/ready")
     assert response.status_code == 503
     assert "x-request-id" in response.headers

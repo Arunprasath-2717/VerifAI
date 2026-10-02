@@ -1,4 +1,10 @@
-"""Common dependency injection providers for FastAPI."""
+"""Common dependency injection providers for FastAPI.
+
+Architecture note: DATABASE_URL is required. There is no in-memory ephemeral fallback
+in production paths. Any endpoint that requires persistence MUST receive a real
+DB session.
+For tests, use pytest fixtures with SQLite (aiosqlite) or a real test Postgres instance.
+"""
 
 import logging
 import uuid
@@ -9,12 +15,12 @@ from typing import Any
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_async_session as _get_async_session
 from app.core.errors import ForbiddenError, UnauthorizedError
-from app.core.security import _EPHEMERAL_USERS, decode_access_token
+from app.core.security import decode_access_token
 from app.models.user import User
 from app.schemas.auth import UserRole
 
@@ -28,51 +34,34 @@ def get_current_settings(settings: Settings = Depends(get_settings)) -> Settings
 
 
 async def get_async_session(
-    session_maker: async_sessionmaker[AsyncSession] | None = None,
+    session_maker: Any = None,
 ) -> AsyncGenerator[AsyncSession, None]:
-    """Provide an asynchronous database session as a FastAPI dependency."""
+    """Provide an asynchronous database session as a FastAPI dependency.
+
+    Requires DATABASE_URL to be configured. Raises a 500 if the database is
+    unreachable — there is no silent in-memory fallback.
+    """
     async for session in _get_async_session(session_maker=session_maker):
         yield session
 
 
-# Alias for backward compatibility
+# Alias for backward compatibility with existing endpoint imports
 get_db_session = get_async_session
-
-
-async def get_optional_db_session(
-    settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession | None, None]:
-    """Provide an async database session if configured, or None for ephemeral runs."""
-    if not settings.DATABASE_URL:
-        yield None
-        return
-
-    try:
-        async for session in _get_async_session():
-            yield session
-    except Exception as exc:
-        logger.warning(
-            "Could not establish database session: %s. Proceeding ephemerally.",
-            type(exc).__name__,
-        )
-        yield None
-
-
-def get_supabase_client(
-    settings: Settings = Depends(get_settings),
-):
-    """Provide configured SupabaseClient as a FastAPI dependency."""
-    from app.core.supabase import SupabaseClient
-
-    return SupabaseClient.from_settings(settings=settings)
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer_scheme),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> User:
-    """Authenticate request using Bearer JWT token and resolve User entity."""
+    """Authenticate request using Bearer JWT token and resolve User entity.
+
+    Supports two token types:
+    1. Firebase RS256 ID tokens (primary — production path).
+    2. VerifAI-issued HS256 session tokens (for Firebase-authenticated sessions).
+
+    Auto-provisions user accounts for first-time Firebase logins.
+    """
     if not credentials or not credentials.credentials:
         raise UnauthorizedError(
             message="Authentication required. Please provide a valid Bearer token.",
@@ -98,14 +87,9 @@ async def get_current_user(
                 details={"sub": str(sub)},
             ) from exc
 
-    user: User | None = None
-
-    if db is not None:
-        stmt = select(User).where(User.id == user_uuid)
-        result = await db.execute(stmt)
-        user = result.scalar_one_or_none()
-    else:
-        user = _EPHEMERAL_USERS.get(user_uuid)
+    stmt = select(User).where(User.id == user_uuid)
+    result = await db.execute(stmt)
+    user: User | None = result.scalar_one_or_none()
 
     if user is None and is_firebase_token:
         # Auto-provision user account from validated Firebase ID token
@@ -115,18 +99,15 @@ async def get_current_user(
             id=user_uuid,
             email=email,
             username=username,
-            hashed_password="",
+            hashed_password="",  # Firebase users have no local password
             role="USER",
             is_active=True,
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
         )
-        if db is not None:
-            db.add(user)
-            await db.commit()
-            await db.refresh(user)
-        else:
-            _EPHEMERAL_USERS[user_uuid] = user
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
 
     if user is None:
         raise UnauthorizedError(
@@ -145,7 +126,7 @@ async def get_current_user(
 
 async def get_optional_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer_scheme),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> User | None:
     """Resolve authenticated user if Bearer token present, otherwise None."""

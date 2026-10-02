@@ -144,12 +144,14 @@ class VerificationJob(Base, TimestampMixin):
         back_populates="verification",
         cascade="all, delete-orphan",
         order_by="ExtractedClaim.claim_index",
+        lazy="selectin",
     )
     audit_records: Mapped[list["AuditRecord"]] = relationship(
         "AuditRecord",
         back_populates="verification",
         cascade="all, delete-orphan",
         order_by="AuditRecord.timestamp",
+        lazy="selectin",
     )
 
     __table_args__ = (
@@ -257,11 +259,13 @@ class ExtractedClaim(Base, TimestampMixin):
         "RetrievedEvidence",
         back_populates="claim",
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
     judge_evaluations: Mapped[list["JudgeVerdict"]] = relationship(
         "JudgeVerdict",
         back_populates="claim",
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     __table_args__ = (

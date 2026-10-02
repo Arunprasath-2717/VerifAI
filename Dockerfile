@@ -22,7 +22,7 @@ RUN apt-get update && \
 
 # Install python dependencies
 COPY backend/requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --retries 5 --timeout 60 -r requirements.txt
 
 # Copy backend application source
 COPY backend /app/backend

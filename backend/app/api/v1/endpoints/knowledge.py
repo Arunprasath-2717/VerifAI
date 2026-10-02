@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings, get_settings
 from app.core.dependencies import (
     get_optional_current_user,
-    get_optional_db_session,
+    get_async_session,
     resolve_effective_owner,
 )
 from app.core.errors import AppError, ConflictError
@@ -69,7 +69,7 @@ async def create_document(
     request: DocumentCreateRequest,
     http_request: Request,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentResponse:
     """Add a new document via text payload."""
@@ -122,7 +122,7 @@ async def upload_document_file(
     description: str | None = Form(default=None),
     owner_id: str | None = Form(default=None),
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentResponse:
     """Upload a raw document file."""
@@ -181,7 +181,7 @@ async def list_documents(
         default=None, description="Namespace/owner identifier"
     ),
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentListResponse:
     """List documents for a namespace."""
@@ -209,7 +209,7 @@ async def get_document_details(
         default=None, description="Namespace/owner identifier"
     ),
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> DocumentDetailResponse:
     """Retrieve a single document and its constituent chunks."""
@@ -251,7 +251,7 @@ async def delete_document(
         default=None, description="Namespace/owner identifier"
     ),
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
     """Delete a document and its chunks."""
@@ -276,7 +276,7 @@ async def search_knowledge_base(
     request: KnowledgeSearchRequest,
     http_request: Request,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> KnowledgeSearchResponse:
     """Execute search against private knowledge base."""

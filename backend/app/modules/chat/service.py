@@ -1,6 +1,7 @@
 """Chat and Multi-LLM conversation service.
 
-Provides dual persistence (PostgreSQL / In-Memory).
+Architecture: A real database session (PostgreSQL) is required for all operations.
+There is no in-memory ephemeral fallback. Data is durable across restarts.
 """
 
 import logging
@@ -35,27 +36,16 @@ from app.schemas.verification import (
 
 logger = logging.getLogger("verifai.chat.service")
 
-# ==============================================================================
-# In-Memory Fallback Stores for Ephemeral / Hermetic Environments
-# ==============================================================================
-_EPHEMERAL_CONVERSATIONS: dict[str, dict[uuid.UUID, Conversation]] = defaultdict(dict)
-_EPHEMERAL_MESSAGES: dict[uuid.UUID, list[Message]] = defaultdict(list)
-_EPHEMERAL_LLM_RUNS: dict[uuid.UUID, list[LLMRun]] = defaultdict(list)
-
-
-def clear_ephemeral_chat() -> None:
-    """Reset all in-memory chat and conversation state."""
-    _EPHEMERAL_CONVERSATIONS.clear()
-    _EPHEMERAL_MESSAGES.clear()
-    _EPHEMERAL_LLM_RUNS.clear()
-
 
 class ChatService:
-    """Manages conversations, messages, multi-LLM runs, and linked verifications."""
+    """Manages conversations, messages, multi-LLM runs, and linked verifications.
+
+    Requires a valid AsyncSession — all state is persisted to PostgreSQL.
+    """
 
     def __init__(
         self,
-        db_session: AsyncSession | None = None,
+        db_session: AsyncSession,
         settings: Settings | None = None,
         llm_orchestrator: MultiLLMOrchestrator | None = None,
         verification_orchestrator: VerificationOrchestrator | None = None,
@@ -86,12 +76,9 @@ class ChatService:
             updated_at=datetime.now(UTC),
         )
 
-        if self.db is not None:
-            self.db.add(conv)
-            await self.db.commit()
-            await self.db.refresh(conv)
-        else:
-            _EPHEMERAL_CONVERSATIONS[owner_id][conv.id] = conv
+        self.db.add(conv)
+        await self.db.commit()
+        await self.db.refresh(conv)
 
         logger.info("Created conversation %s for owner %s", conv.id, owner_id)
         return conv
@@ -107,56 +94,33 @@ class ChatService:
         limit = max(1, min(100, limit))
         offset = max(0, offset)
 
-        if self.db is not None:
-            query = select(Conversation).where(Conversation.owner_id == owner_id)
-            if search:
-                query = query.where(Conversation.title.ilike(f"%{search.strip()}%"))
+        query = select(Conversation).where(Conversation.owner_id == owner_id)
+        if search:
+            query = query.where(Conversation.title.ilike(f"%{search.strip()}%"))
 
-            count_query = select(func.count()).select_from(query.subquery())
-            total = (await self.db.execute(count_query)).scalar_one()
+        count_query = select(func.count()).select_from(query.subquery())
+        total = (await self.db.execute(count_query)).scalar_one()
 
-            query = (
-                query.options(selectinload(Conversation.messages))
-                .order_by(desc(Conversation.updated_at))
-                .limit(limit)
-                .offset(offset)
+        query = (
+            query.options(selectinload(Conversation.messages))
+            .order_by(desc(Conversation.updated_at))
+            .limit(limit)
+            .offset(offset)
+        )
+        rows = (await self.db.execute(query)).scalars().all()
+
+        items = [
+            ConversationResponse(
+                id=c.id,
+                owner_id=c.owner_id,
+                title=c.title,
+                created_at=c.created_at,
+                updated_at=c.updated_at,
+                message_count=len(c.messages) if c.messages else 0,
             )
-            rows = (await self.db.execute(query)).scalars().all()
-
-            items = [
-                ConversationResponse(
-                    id=c.id,
-                    owner_id=c.owner_id,
-                    title=c.title,
-                    created_at=c.created_at,
-                    updated_at=c.updated_at,
-                    message_count=len(c.messages) if c.messages else 0,
-                )
-                for c in rows
-            ]
-            return items, total
-        else:
-            user_convs = list(_EPHEMERAL_CONVERSATIONS.get(owner_id, {}).values())
-            if search:
-                s_lower = search.strip().lower()
-                user_convs = [c for c in user_convs if s_lower in c.title.lower()]
-
-            user_convs.sort(key=lambda c: c.updated_at, reverse=True)
-            total = len(user_convs)
-            paged = user_convs[offset : offset + limit]
-
-            items = [
-                ConversationResponse(
-                    id=c.id,
-                    owner_id=c.owner_id,
-                    title=c.title,
-                    created_at=c.created_at,
-                    updated_at=c.updated_at,
-                    message_count=len(_EPHEMERAL_MESSAGES.get(c.id, [])),
-                )
-                for c in paged
-            ]
-            return items, total
+            for c in rows
+        ]
+        return items, total
 
     async def get_conversation(
         self,
@@ -164,173 +128,91 @@ class ChatService:
         owner_id: str,
     ) -> ConversationDetailResponse:
         """Fetch conversation details and messages, enforcing ownership."""
-        if self.db is not None:
-            query = (
-                select(Conversation)
-                .where(Conversation.id == conversation_id)
-                .options(
-                    selectinload(Conversation.messages).selectinload(Message.llm_runs)
-                )
+        query = (
+            select(Conversation)
+            .where(Conversation.id == conversation_id)
+            .options(
+                selectinload(Conversation.messages).selectinload(Message.llm_runs)
             )
-            conv = (await self.db.execute(query)).scalar_one_or_none()
-            if not conv:
-                raise NotFoundError(
-                    message=f"Conversation '{conversation_id}' not found.",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            if conv.owner_id != owner_id:
-                raise ForbiddenError(
-                    message="Access denied: You do not own this conversation.",
-                    details={"conversation_id": str(conversation_id)},
-                )
-
-            messages_out = [
-                MessageResponse(
-                    id=m.id,
-                    conversation_id=m.conversation_id,
-                    owner_id=m.owner_id,
-                    role=m.role,
-                    content=m.content,
-                    sequence_number=m.sequence_number,
-                    created_at=m.created_at,
-                    llm_runs=[
-                        LLMRunResponse(
-                            id=r.id,
-                            conversation_id=r.conversation_id,
-                            message_id=r.message_id,
-                            owner_id=r.owner_id,
-                            provider=r.provider,
-                            model_name=r.model_name,
-                            model_version=r.model_version,
-                            prompt=r.prompt,
-                            response=r.response,
-                            status=r.status,
-                            started_at=r.started_at,
-                            completed_at=r.completed_at,
-                            latency_ms=r.latency_ms,
-                            error_code=r.error_code,
-                            error_message=r.error_message,
-                        )
-                        for r in (m.llm_runs or [])
-                    ],
-                )
-                for m in conv.messages
-            ]
-
-            return ConversationDetailResponse(
-                id=conv.id,
-                owner_id=conv.owner_id,
-                title=conv.title,
-                created_at=conv.created_at,
-                updated_at=conv.updated_at,
-                messages=messages_out,
+        )
+        conv = (await self.db.execute(query)).scalar_one_or_none()
+        if not conv:
+            raise NotFoundError(
+                message=f"Conversation '{conversation_id}' not found.",
+                details={"conversation_id": str(conversation_id)},
             )
-        else:
-            conv = _EPHEMERAL_CONVERSATIONS.get(owner_id, {}).get(conversation_id)
-            if not conv:
-                for _other_owner, convs in _EPHEMERAL_CONVERSATIONS.items():
-                    if conversation_id in convs:
-                        raise ForbiddenError(
-                            message="Access denied: You do not own this conversation.",
-                            details={"conversation_id": str(conversation_id)},
-                        )
-                raise NotFoundError(
-                    message=f"Conversation '{conversation_id}' not found.",
-                    details={"conversation_id": str(conversation_id)},
-                )
+        if conv.owner_id != owner_id:
+            raise ForbiddenError(
+                message="Access denied: You do not own this conversation.",
+                details={"conversation_id": str(conversation_id)},
+            )
 
-            raw_msgs = _EPHEMERAL_MESSAGES.get(conversation_id, [])
-            messages_out = []
-            for m in raw_msgs:
-                runs = _EPHEMERAL_LLM_RUNS.get(m.id, [])
-                messages_out.append(
-                    MessageResponse(
-                        id=m.id,
-                        conversation_id=m.conversation_id,
-                        owner_id=m.owner_id,
-                        role=m.role,
-                        content=m.content,
-                        sequence_number=m.sequence_number,
-                        created_at=m.created_at,
-                        llm_runs=[
-                            LLMRunResponse(
-                                id=r.id,
-                                conversation_id=r.conversation_id,
-                                message_id=r.message_id,
-                                owner_id=r.owner_id,
-                                provider=r.provider,
-                                model_name=r.model_name,
-                                model_version=r.model_version,
-                                prompt=r.prompt,
-                                response=r.response,
-                                status=r.status,
-                                started_at=r.started_at,
-                                completed_at=r.completed_at,
-                                latency_ms=r.latency_ms,
-                                error_code=r.error_code,
-                                error_message=r.error_message,
-                            )
-                            for r in runs
-                        ],
+        messages_out = [
+            MessageResponse(
+                id=m.id,
+                conversation_id=m.conversation_id,
+                owner_id=m.owner_id,
+                role=m.role,
+                content=m.content,
+                sequence_number=m.sequence_number,
+                created_at=m.created_at,
+                llm_runs=[
+                    LLMRunResponse(
+                        id=r.id,
+                        conversation_id=r.conversation_id,
+                        message_id=r.message_id,
+                        owner_id=r.owner_id,
+                        provider=r.provider,
+                        model_name=r.model_name,
+                        model_version=r.model_version,
+                        prompt=r.prompt,
+                        response=r.response,
+                        status=r.status,
+                        started_at=r.started_at,
+                        completed_at=r.completed_at,
+                        latency_ms=r.latency_ms,
+                        error_code=r.error_code,
+                        error_message=r.error_message,
                     )
-                )
-
-            return ConversationDetailResponse(
-                id=conv.id,
-                owner_id=conv.owner_id,
-                title=conv.title,
-                created_at=conv.created_at,
-                updated_at=conv.updated_at,
-                messages=messages_out,
+                    for r in (m.llm_runs or [])
+                ],
             )
+            for m in conv.messages
+        ]
+
+        return ConversationDetailResponse(
+            id=conv.id,
+            owner_id=conv.owner_id,
+            title=conv.title,
+            created_at=conv.created_at,
+            updated_at=conv.updated_at,
+            messages=messages_out,
+        )
 
     async def delete_conversation(
         self,
         conversation_id: uuid.UUID,
         owner_id: str,
     ) -> bool:
-        """Delete conversation and all linked messages and runs."""
-        if self.db is not None:
-            conv = (
-                await self.db.execute(
-                    select(Conversation).where(Conversation.id == conversation_id)
-                )
-            ).scalar_one_or_none()
-            if not conv:
-                raise NotFoundError(
-                    message=f"Conversation '{conversation_id}' not found.",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            if conv.owner_id != owner_id:
-                raise ForbiddenError(
-                    message=(
-                        "Access denied: You cannot delete another user's conversation."
-                    ),
-                    details={"conversation_id": str(conversation_id)},
-                )
-            await self.db.delete(conv)
-            await self.db.commit()
-            return True
-        else:
-            if conversation_id not in _EPHEMERAL_CONVERSATIONS.get(owner_id, {}):
-                for _other_owner, convs in _EPHEMERAL_CONVERSATIONS.items():
-                    if conversation_id in convs:
-                        raise ForbiddenError(
-                            message=(
-                                "Access denied: You cannot delete another user's "
-                                "conversation."
-                            ),
-                            details={"conversation_id": str(conversation_id)},
-                        )
-                raise NotFoundError(
-                    message=f"Conversation '{conversation_id}' not found.",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            _EPHEMERAL_CONVERSATIONS[owner_id].pop(conversation_id, None)
-            msgs = _EPHEMERAL_MESSAGES.pop(conversation_id, [])
-            for m in msgs:
-                _EPHEMERAL_LLM_RUNS.pop(m.id, None)
-            return True
+        """Delete conversation and all linked messages and runs (cascade via FK)."""
+        conv = (
+            await self.db.execute(
+                select(Conversation).where(Conversation.id == conversation_id)
+            )
+        ).scalar_one_or_none()
+        if not conv:
+            raise NotFoundError(
+                message=f"Conversation '{conversation_id}' not found.",
+                details={"conversation_id": str(conversation_id)},
+            )
+        if conv.owner_id != owner_id:
+            raise ForbiddenError(
+                message="Access denied: You cannot delete another user's conversation.",
+                details={"conversation_id": str(conversation_id)},
+            )
+        await self.db.delete(conv)
+        await self.db.commit()
+        return True
 
     # ==========================================================================
     # Multi-LLM Execution & Verification Pipeline
@@ -343,67 +225,40 @@ class ChatService:
     ) -> ChatPromptResponse:
         """Execute prompt against 1 to 3 models, run verification, and persist."""
         # 1. Verify conversation ownership
-        if self.db is not None:
-            conv = (
-                await self.db.execute(
-                    select(Conversation).where(Conversation.id == conversation_id)
-                )
-            ).scalar_one_or_none()
-            if not conv:
-                raise NotFoundError(
-                    message=f"Conversation '{conversation_id}' not found.",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            if conv.owner_id != owner_id:
-                raise ForbiddenError(
-                    message=(
-                        "Access denied: Cannot post to another user's conversation."
-                    ),
-                    details={"conversation_id": str(conversation_id)},
-                )
-        else:
-            if conversation_id not in _EPHEMERAL_CONVERSATIONS.get(owner_id, {}):
-                for _other_owner, convs in _EPHEMERAL_CONVERSATIONS.items():
-                    if conversation_id in convs:
-                        raise ForbiddenError(
-                            message=(
-                                "Access denied: Cannot post to another user's "
-                                "conversation."
-                            ),
-                            details={"conversation_id": str(conversation_id)},
-                        )
-                raise NotFoundError(
-                    message=f"Conversation '{conversation_id}' not found.",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            conv = _EPHEMERAL_CONVERSATIONS[owner_id][conversation_id]
+        conv = (
+            await self.db.execute(
+                select(Conversation).where(Conversation.id == conversation_id)
+            )
+        ).scalar_one_or_none()
+        if not conv:
+            raise NotFoundError(
+                message=f"Conversation '{conversation_id}' not found.",
+                details={"conversation_id": str(conversation_id)},
+            )
+        if conv.owner_id != owner_id:
+            raise ForbiddenError(
+                message="Access denied: Cannot post to another user's conversation.",
+                details={"conversation_id": str(conversation_id)},
+            )
 
-        # 2. Record User Message
+        # 2. Determine next sequence number and record User Message
+        seq_stmt = select(
+            func.coalesce(func.max(Message.sequence_number), 0)
+        ).where(Message.conversation_id == conversation_id)
+        max_seq = (await self.db.execute(seq_stmt)).scalar_one()
+
         user_msg = Message(
             id=uuid.uuid4(),
             conversation_id=conversation_id,
             owner_id=owner_id,
             role="USER",
             content=request.prompt,
-            sequence_number=1,
+            sequence_number=max_seq + 1,
             created_at=datetime.now(UTC),
         )
-
-        if self.db is not None:
-            # Determine next sequence number
-            seq_stmt = select(
-                func.coalesce(func.max(Message.sequence_number), 0)
-            ).where(Message.conversation_id == conversation_id)
-            max_seq = (await self.db.execute(seq_stmt)).scalar_one()
-            user_msg.sequence_number = max_seq + 1
-            self.db.add(user_msg)
-            conv.updated_at = datetime.now(UTC)
-            await self.db.flush()
-        else:
-            existing_msgs = _EPHEMERAL_MESSAGES[conversation_id]
-            user_msg.sequence_number = len(existing_msgs) + 1
-            existing_msgs.append(user_msg)
-            conv.updated_at = datetime.now(UTC)
+        self.db.add(user_msg)
+        conv.updated_at = datetime.now(UTC)
+        await self.db.flush()
 
         # 3. Parallel Execution across 1 to 3 models
         exec_results = await self.llm_orchestrator.execute_models(
@@ -413,7 +268,6 @@ class ChatService:
 
         # 4. Process each model result and run shared verification engine
         runs_out: list[LLMRunResponse] = []
-        assistant_contents: list[str] = []
         model_verdicts: dict[str, list[str]] = defaultdict(list)
 
         for res in exec_results:
@@ -423,7 +277,6 @@ class ChatService:
 
             # Shared Verification Engine invocation
             if res.status == "COMPLETED" and res.response and request.verify:
-                assistant_contents.append(res.response)
                 v_options = request.options or VerificationOptions()
                 v_options.owner_id = owner_id
 
@@ -468,11 +321,7 @@ class ChatService:
                 error_message=res.error_message,
                 verification_id=verification_id,
             )
-
-            if self.db is not None:
-                self.db.add(llm_run_db)
-            else:
-                _EPHEMERAL_LLM_RUNS[user_msg.id].append(llm_run_db)
+            self.db.add(llm_run_db)
 
             runs_out.append(
                 LLMRunResponse(
@@ -513,8 +362,7 @@ class ChatService:
                     "contradictions)."
                 )
 
-        if self.db is not None:
-            await self.db.commit()
+        await self.db.commit()
 
         return ChatPromptResponse(
             conversation_id=conversation_id,
@@ -524,3 +372,38 @@ class ChatService:
             cross_model_disagreement=cross_disagreement,
             disagreement_summary=disagreement_summary,
         )
+
+
+def clear_ephemeral_chat() -> None:
+    """Clear chat tables for testing and teardowns."""
+    import asyncio
+    import concurrent.futures
+
+    from sqlalchemy import delete
+
+    from app.core.database import get_async_session_maker
+    from app.models.chat import Conversation, LLMRun, Message
+
+    async def _clean() -> None:
+        maker = get_async_session_maker()
+        async with maker() as session:
+            await session.execute(delete(LLMRun))
+            await session.execute(delete(Message))
+            await session.execute(delete(Conversation))
+            await session.commit()
+
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                pool.submit(asyncio.run, _clean()).result()
+        else:
+            asyncio.run(_clean())
+    except Exception:
+        pass
+
+

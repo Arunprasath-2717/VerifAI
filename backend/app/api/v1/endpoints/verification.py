@@ -1,4 +1,8 @@
-"""Verification pipeline endpoints with owner isolation, rate limiting, and RBAC."""
+"""Verification pipeline endpoints with owner isolation, rate limiting, and RBAC.
+
+Architecture: Database is required for all verification operations.
+There is no in-memory ephemeral fallback in production.
+"""
 
 import logging
 import uuid
@@ -9,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings, get_settings
-from app.core.dependencies import get_optional_current_user, get_optional_db_session
+from app.core.dependencies import get_async_session, get_optional_current_user
 from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.rate_limit import enforce_rate_limit, track_verification_concurrency
 from app.models.user import User
@@ -32,10 +36,6 @@ from app.schemas.verification import (
 
 logger = logging.getLogger("verifai.api.verification")
 router = APIRouter()
-
-# Bounded ephemeral in-memory cache for development/demo when DATABASE_URL is not set
-_EPHEMERAL_MAX_ENTRIES = 100
-_EPHEMERAL_JOBS: dict[uuid.UUID, VerificationResponse] = {}
 
 
 def _job_to_response(job: VerificationJob) -> VerificationResponse:
@@ -184,17 +184,17 @@ def resolve_verification_owner(
     description=(
         "Decomposes input text into atomic claims, retrieves verified evidence, "
         "runs independent judges with disagreement analysis, and returns an "
-        "auditable verification envelope."
+        "auditable verification envelope. Results are persisted to PostgreSQL."
     ),
 )
 async def create_verification(
     request: VerificationCreateRequest,
     http_request: Request,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> VerificationResponse:
-    """Execute end-to-end verification pipeline."""
+    """Execute end-to-end verification pipeline. Results are persisted to DB."""
     effective_owner = resolve_verification_owner(
         current_user=current_user,
         client_owner_id=request.options.owner_id,
@@ -220,12 +220,6 @@ async def create_verification(
         orchestrator = VerificationOrchestrator()
         response = await orchestrator.verify(request=request, db_session=db)
 
-    if db is None:
-        if len(_EPHEMERAL_JOBS) >= _EPHEMERAL_MAX_ENTRIES:
-            oldest_key = next(iter(_EPHEMERAL_JOBS))
-            _EPHEMERAL_JOBS.pop(oldest_key, None)
-        _EPHEMERAL_JOBS[response.verification_id] = response
-
     return response
 
 
@@ -236,31 +230,15 @@ async def create_verification(
     summary="Retrieve Verification Result",
     description=(
         "Fetches a completed verification job and its claims, evidence, "
-        "and audit trail. Enforces ownership authorization."
+        "and audit trail from PostgreSQL. Enforces ownership authorization."
     ),
 )
 async def get_verification(
     verification_id: uuid.UUID,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
 ) -> VerificationResponse:
-    """Retrieve an existing verification job by UUID."""
-    if db is None:
-        cached = _EPHEMERAL_JOBS.get(verification_id)
-        if cached is None:
-            raise NotFoundError(
-                message=f"Verification job {verification_id} not found.",
-                details={"verification_id": str(verification_id)},
-            )
-        # Check ownership authorization
-        if current_user is not None and current_user.role != "ADMIN":
-            if cached.owner_id != str(current_user.id):
-                raise ForbiddenError(
-                    message="Access denied: You do not own this verification job.",
-                    details={"verification_id": str(verification_id)},
-                )
-        return cached
-
+    """Retrieve an existing verification job by UUID from the database."""
     stmt = (
         select(VerificationJob)
         .options(
@@ -284,7 +262,7 @@ async def get_verification(
             details={"verification_id": str(verification_id)},
         )
 
-    # Check ownership authorization
+    # Enforce ownership authorization
     if current_user is not None and current_user.role != "ADMIN":
         if job.owner_id != str(current_user.id):
             raise ForbiddenError(
@@ -301,32 +279,23 @@ async def get_verification(
     status_code=status.HTTP_200_OK,
     summary="List Verification History",
     description=(
-        "Lists verification jobs for current user or all jobs for administrators."
+        "Lists verification jobs for current user or all jobs for administrators. "
+        "Results are ordered by creation date (newest first)."
     ),
 )
 async def list_verifications(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> list[VerificationResponse]:
-    """List historical verification jobs."""
+    """List historical verification jobs from the database."""
     effective_owner = resolve_verification_owner(
         current_user=current_user,
         client_owner_id=None,
         settings=settings,
     )
-
-    if db is None:
-        # Filter ephemeral jobs
-        if current_user is not None and current_user.role == "ADMIN":
-            matching = list(_EPHEMERAL_JOBS.values())
-        else:
-            matching = [
-                j for j in _EPHEMERAL_JOBS.values() if j.owner_id == effective_owner
-            ]
-        return matching[offset : offset + limit]
 
     stmt = (
         select(VerificationJob)

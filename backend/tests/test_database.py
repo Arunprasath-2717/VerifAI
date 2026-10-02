@@ -17,7 +17,7 @@ from app.core.dependencies import get_async_session
 
 def test_default_database_settings_unconfigured() -> None:
     """Verify that default settings have DATABASE_URL as None (unconfigured)."""
-    settings = Settings()
+    settings = Settings(_env_file=None)
     assert settings.DATABASE_URL is None
     assert settings.DATABASE_POOL_SIZE == 5
     assert settings.DATABASE_MAX_OVERFLOW == 10

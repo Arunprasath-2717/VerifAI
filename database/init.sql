@@ -239,3 +239,30 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_doc ON knowledge_chunks(document_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_owner ON knowledge_chunks(owner_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_owner_doc ON knowledge_chunks(owner_id, document_id);
+
+-- ------------------------------------------------------------------------------
+-- 5. INGESTION & CAPTURE
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ingested_payloads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source VARCHAR(32) NOT NULL DEFAULT 'CHROME_EXTENSION',
+    source_url TEXT,
+    model_name VARCHAR(128),
+    prompt TEXT,
+    captured_text TEXT NOT NULL,
+    session_id VARCHAR(128),
+    client_version VARCHAR(32),
+    capture_metadata JSONB,
+    status VARCHAR(32) NOT NULL DEFAULT 'RECEIVED',
+    verification_id UUID REFERENCES verifications(id) ON DELETE SET NULL,
+    error_message TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_ingested_payloads_source ON ingested_payloads(source);
+CREATE INDEX IF NOT EXISTS idx_ingested_payloads_status ON ingested_payloads(status);
+CREATE INDEX IF NOT EXISTS idx_ingested_payloads_session ON ingested_payloads(session_id);
+CREATE INDEX IF NOT EXISTS idx_ingested_payloads_verification ON ingested_payloads(verification_id);
+CREATE INDEX IF NOT EXISTS idx_ingested_payloads_created ON ingested_payloads(created_at);
+CREATE INDEX IF NOT EXISTS idx_ingested_payloads_source_status ON ingested_payloads(source, status);

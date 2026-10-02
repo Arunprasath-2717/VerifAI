@@ -2,7 +2,6 @@
 
 import logging
 import uuid
-from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, status
@@ -10,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.database import get_async_session as _get_async_session
+from app.core.dependencies import get_async_session
 from app.core.errors import BadRequestError, NotFoundError
 from app.models.ingestion import IngestedPayload
 from app.modules.evidence.security import is_safe_url
@@ -30,25 +29,6 @@ logger = logging.getLogger("verifai.api.ingestion")
 router = APIRouter()
 
 
-async def get_optional_db_session(
-    settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession | None, None]:
-    """Provide an async database session if configured, or None for ephemeral runs."""
-    if not settings.DATABASE_URL:
-        yield None
-        return
-
-    try:
-        async for session in _get_async_session():
-            yield session
-    except Exception as exc:
-        logger.warning(
-            "Could not establish database session: %s. Proceeding ephemerally.",
-            type(exc).__name__,
-        )
-        yield None
-
-
 @router.post(
     "/ingest",
     response_model=IngestionResponse,
@@ -57,12 +37,13 @@ async def get_optional_db_session(
     description=(
         "Receives captured AI-generated text from the Chrome extension or other "
         "clients, validates provenance and source URL, optionally executes "
-        "synchronous verification, and returns structured ingestion status."
+        "synchronous verification, and returns structured ingestion status. "
+        "All records are persisted to PostgreSQL."
     ),
 )
 async def ingest_payload(
     request: IngestionPayloadRequest,
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
 ) -> IngestionResponse:
     """Ingest AI response text and optionally execute verification."""
     ingestion_id = uuid.uuid4()
@@ -102,33 +83,32 @@ async def ingest_payload(
         except Exception as exc:
             logger.error("Verification execution failed during ingestion: %s", exc)
             ingestion_status = IngestionStatus.FAILED
-            error_message = f"Verification failed: {type(exc).__name__} - {exc}"
+            error_message = f"Verification failed: {type(exc).__name__}"
 
-    # Step 2: Persist ingestion record if database is available
-    if db is not None:
-        try:
-            payload_record = IngestedPayload(
-                id=ingestion_id,
-                source=request.source.value,
-                source_url=request.source_url,
-                model_name=request.model_name,
-                prompt=request.prompt,
-                captured_text=request.text,
-                session_id=request.session_id,
-                client_version=request.client_version,
-                capture_metadata=request.capture_metadata,
-                status=ingestion_status.value,
-                verification_id=verification_id,
-                error_message=error_message,
-            )
-            db.add(payload_record)
-            await db.commit()
-        except Exception as exc:
-            logger.warning(
-                "Failed to persist ingested payload record: %s. Rolling back.",
-                exc,
-            )
-            await db.rollback()
+    # Step 2: Persist ingestion record to database
+    try:
+        payload_record = IngestedPayload(
+            id=ingestion_id,
+            source=request.source.value,
+            source_url=request.source_url,
+            model_name=request.model_name,
+            prompt=request.prompt,
+            captured_text=request.text,
+            session_id=request.session_id,
+            client_version=request.client_version,
+            capture_metadata=request.capture_metadata,
+            status=ingestion_status.value,
+            verification_id=verification_id,
+            error_message=error_message,
+        )
+        db.add(payload_record)
+        await db.commit()
+    except Exception as exc:
+        logger.warning(
+            "Failed to persist ingested payload record: %s. Rolling back.",
+            type(exc).__name__,
+        )
+        await db.rollback()
 
     return IngestionResponse(
         ingestion_id=ingestion_id,
@@ -152,15 +132,9 @@ async def ingest_payload(
 )
 async def get_ingested_payload(
     ingestion_id: uuid.UUID,
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
 ) -> IngestionResponse:
     """Retrieve an ingested payload record by UUID."""
-    if db is None:
-        raise NotFoundError(
-            message=f"Ingested payload {ingestion_id} not found.",
-            details={"ingestion_id": str(ingestion_id)},
-        )
-
     stmt = select(IngestedPayload).where(IngestedPayload.id == ingestion_id)
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()

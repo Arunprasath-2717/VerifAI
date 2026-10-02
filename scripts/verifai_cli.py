@@ -38,7 +38,6 @@ if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
 from app.core.config import get_settings  # noqa: E402
-from app.core.supabase import SupabaseClient  # noqa: E402
 from app.modules.evidence.security import is_safe_url  # noqa: E402
 from app.modules.knowledge.service import KnowledgeBaseService  # noqa: E402
 from app.modules.verification.orchestrator import (  # noqa: E402
@@ -2046,16 +2045,10 @@ class MenuController:
         """Display product-oriented system status & diagnostics dashboard."""
         s = self.styler
         settings = get_settings()
-        supa = SupabaseClient.from_settings()
-
         db_status = (
-            "READY (Supabase / Remote)"
-            if supa.is_configured
-            else (
-                "READY (PostgreSQL)"
-                if settings.DATABASE_URL
-                else "READY (Hermetic In-Memory Mode)"
-            )
+            "READY (PostgreSQL)"
+            if settings.DATABASE_URL
+            else "NOT CONFIGURED"
         )
 
         try:
@@ -2170,6 +2163,10 @@ class MenuController:
         if not docs:
             print("No documents found in current private knowledge base namespace.")
             print(s.dim("Use option [2] to add your first knowledge document.\n"))
+            try:
+                input("Press Enter to return to main menu...")
+            except (KeyboardInterrupt, EOFError):
+                pass
             return
 
         print("Documents:")
@@ -2505,16 +2502,10 @@ def run_demo_all() -> int:
 def run_health_check() -> int:
     """Inspect backend system health and subsystems."""
     settings = get_settings()
-    supa = SupabaseClient.from_settings()
-
     db_status = (
-        "READY (Supabase / Remote)"
-        if supa.is_configured
-        else (
-            "READY (PostgreSQL)"
-            if settings.DATABASE_URL
-            else "NOT CONFIGURED (Hermetic In-Memory Mode)"
-        )
+        "READY (PostgreSQL)"
+        if settings.DATABASE_URL
+        else "NOT CONFIGURED"
     )
 
     print("============================================================")

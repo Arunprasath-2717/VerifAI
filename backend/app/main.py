@@ -30,16 +30,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.DEBUG,
     )
 
-    if settings.DATABASE_URL:
-        try:
-            from app.core.database import init_db
+    if not settings.DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL is not configured. "
+            "VerifAI requires a persistent PostgreSQL database."
+        )
 
-            await init_db()
-            logger.info("Database schema initialized and verified.")
-        except Exception as exc:
-            logger.warning(
-                "Database schema auto-init skipped or failed: %s", type(exc).__name__
-            )
+    try:
+        from app.core.database import init_db
+
+        await init_db()
+        logger.info("Database schema initialized and verified.")
+    except Exception as exc:
+        logger.warning(
+            "Database schema auto-init skipped or failed: %s", type(exc).__name__
+        )
 
     yield
 

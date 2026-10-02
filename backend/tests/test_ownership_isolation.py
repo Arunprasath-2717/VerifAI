@@ -271,7 +271,11 @@ def test_admin_can_inspect_cross_user_resources(client: TestClient) -> None:
     bob_job_id = v_res.json()["verification_id"]
 
     # Generate an ADMIN user and token
-    from app.core.security import _EPHEMERAL_USERS, hash_password
+    import asyncio
+    import concurrent.futures
+
+    from app.core.database import get_async_session_maker
+    from app.core.security import hash_password
 
     admin_id = uuid.uuid4()
     admin_user = User(
@@ -282,7 +286,15 @@ def test_admin_can_inspect_cross_user_resources(client: TestClient) -> None:
         role=UserRole.ADMIN.value,
         is_active=True,
     )
-    _EPHEMERAL_USERS[admin_id] = admin_user
+
+    async def _add_admin():
+        maker = get_async_session_maker()
+        async with maker() as session:
+            session.add(admin_user)
+            await session.commit()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        pool.submit(asyncio.run, _add_admin()).result()
 
     admin_token, _ = create_access_token(
         subject=admin_id,

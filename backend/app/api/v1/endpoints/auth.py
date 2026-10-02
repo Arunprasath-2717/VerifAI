@@ -1,4 +1,10 @@
-"""Authentication and user management endpoints."""
+"""Authentication and user management endpoints.
+
+Authentication architecture:
+- PRIMARY:  Firebase Auth RS256 JWT → POST /auth/firebase → VerifAI session token
+- RETAINED: Local email/password login (for users created before Firebase migration)
+- REMOVED:  Silent in-memory ephemeral fallbacks (database is required)
+"""
 
 import logging
 import uuid
@@ -9,13 +15,10 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.dependencies import get_current_user, get_optional_db_session
+from app.core.dependencies import get_async_session, get_current_user
 from app.core.errors import ConflictError, UnauthorizedError
 from app.core.rate_limit import enforce_rate_limit
 from app.core.security import (
-    _EPHEMERAL_USERS,
-    _EPHEMERAL_USERS_BY_EMAIL,
-    _EPHEMERAL_USERS_BY_USERNAME,
     create_access_token,
     hash_password,
     verify_firebase_id_token,
@@ -43,16 +46,16 @@ router = APIRouter()
     description=(
         "Registers a new user account with secure Argon2id password hashing. "
         "All registrations strictly default to the 'USER' role to prevent "
-        "privilege escalation."
+        "privilege escalation. Requires an active database connection."
     ),
 )
 async def register(
     request_data: UserRegisterRequest,
     http_request: Request,
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> UserResponse:
-    """Register a new user account."""
+    """Register a new user account with a password credential."""
     if settings.RATE_LIMIT_ENABLED:
         enforce_rate_limit(
             http_request,
@@ -65,29 +68,17 @@ async def register(
     email_clean = request_data.email.strip().lower()
     username_clean = request_data.username.strip()
 
-    # Check for duplicate user
-    if db is not None:
-        stmt = select(User).where(
-            or_(User.email == email_clean, User.username == username_clean)
+    # Check for duplicate email or username
+    stmt = select(User).where(
+        or_(User.email == email_clean, User.username == username_clean)
+    )
+    existing = (await db.execute(stmt)).scalar_one_or_none()
+    if existing:
+        field = "Email" if existing.email == email_clean else "Username"
+        raise ConflictError(
+            message=f"{field} is already registered.",
+            details={"field": field.lower()},
         )
-        existing = (await db.execute(stmt)).scalar_one_or_none()
-        if existing:
-            field = "Email" if existing.email == email_clean else "Username"
-            raise ConflictError(
-                message=f"{field} is already registered.",
-                details={"field": field.lower()},
-            )
-    else:
-        if email_clean in _EPHEMERAL_USERS_BY_EMAIL:
-            raise ConflictError(
-                message="Email is already registered.",
-                details={"field": "email"},
-            )
-        if username_clean in _EPHEMERAL_USERS_BY_USERNAME:
-            raise ConflictError(
-                message="Username is already registered.",
-                details={"field": "username"},
-            )
 
     # Hash password with Argon2id
     hashed = hash_password(request_data.password)
@@ -105,14 +96,9 @@ async def register(
     new_user.created_at = now
     new_user.updated_at = now
 
-    if db is not None:
-        db.add(new_user)
-        await db.commit()
-        await db.refresh(new_user)
-    else:
-        _EPHEMERAL_USERS[user_id] = new_user
-        _EPHEMERAL_USERS_BY_EMAIL[email_clean] = user_id
-        _EPHEMERAL_USERS_BY_USERNAME[username_clean] = user_id
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
 
     logger.info("New user registered: %s (%s)", username_clean, user_id)
     return UserResponse(
@@ -129,15 +115,16 @@ async def register(
     "/auth/login",
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
-    summary="Authenticate User and Obtain JWT Token",
+    summary="Authenticate User and Obtain Session Token",
     description=(
-        "Authenticates credentials and returns a signed HS256 JWT access token."
+        "Authenticates email/password credentials and returns a signed JWT session token. "
+        "For Firebase-based auth, use POST /auth/firebase instead."
     ),
 )
 async def login(
     login_data: UserLoginRequest,
     http_request: Request,
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> TokenResponse:
     """Authenticate user with email/username and password."""
@@ -151,22 +138,14 @@ async def login(
         )
 
     identifier = login_data.email_or_username.strip()
-    user: User | None = None
 
-    if db is not None:
-        stmt = select(User).where(
-            or_(
-                User.email == identifier.lower(),
-                User.username == identifier,
-            )
+    stmt = select(User).where(
+        or_(
+            User.email == identifier.lower(),
+            User.username == identifier,
         )
-        user = (await db.execute(stmt)).scalar_one_or_none()
-    else:
-        user_id = _EPHEMERAL_USERS_BY_EMAIL.get(identifier.lower())
-        if not user_id:
-            user_id = _EPHEMERAL_USERS_BY_USERNAME.get(identifier)
-        if user_id:
-            user = _EPHEMERAL_USERS.get(user_id)
+    )
+    user: User | None = (await db.execute(stmt)).scalar_one_or_none()
 
     # Constant-time verification check
     if not user or not verify_password(login_data.password, user.hashed_password):
@@ -223,48 +202,65 @@ async def get_me(
     "/auth/firebase",
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
-    summary="Authenticate via Firebase Auth",
+    summary="Authenticate via Firebase Auth (PRIMARY)",
     description=(
-        "Validates a Google/Firebase ID token, synchronizes the user account, "
-        "and returns a VerifAI session token."
+        "Validates a Google/Firebase ID token (RS256), synchronizes the user account "
+        "to the PostgreSQL users table (auto-provisioning on first login), "
+        "and returns a VerifAI session token. "
+        "This is the PRIMARY authentication path for all clients."
     ),
 )
 async def authenticate_with_firebase(
     request: FirebaseAuthRequest,
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> TokenResponse:
-    """Authenticate or synchronize user via Firebase Auth ID token."""
+    """Authenticate or synchronize user via Firebase Auth ID token.
+
+    Flow:
+    1. Verify the Firebase ID token signature against Google JWKS.
+    2. Compute deterministic UUIDv5 from firebase:{uid} for FK compatibility.
+    3. Upsert user record in PostgreSQL.
+    4. Return a VerifAI-issued session token (HS256, short-lived).
+    """
     payload = verify_firebase_id_token(request.id_token, settings=settings)
     sub = str(payload.get("sub"))
     user_uuid = uuid.uuid5(uuid.NAMESPACE_URL, f"firebase:{sub}")
 
-    user: User | None = None
-    if db is not None:
-        stmt = select(User).where(User.id == user_uuid)
-        user = (await db.execute(stmt)).scalar_one_or_none()
-    else:
-        user = _EPHEMERAL_USERS.get(user_uuid)
+    stmt = select(User).where(User.id == user_uuid)
+    user: User | None = (await db.execute(stmt)).scalar_one_or_none()
 
     if user is None:
+        # First Firebase login — auto-provision account
         email = str(payload.get("email") or f"{sub}@firebase.user")
         username = str(payload.get("name") or email.split("@")[0]).replace(" ", "_")
+        # Ensure username uniqueness by appending suffix if necessary
+        base_username = username[:48]  # leave room for suffix
+        stmt_uname = select(User).where(User.username == base_username)
+        conflict = (await db.execute(stmt_uname)).scalar_one_or_none()
+        if conflict:
+            base_username = f"{base_username}_{str(user_uuid)[:8]}"
+
         user = User(
             id=user_uuid,
             email=email,
-            username=username,
-            hashed_password="",
+            username=base_username,
+            hashed_password="",  # Firebase users have no local password
             role="USER",
             is_active=True,
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
         )
-        if db is not None:
-            db.add(user)
-            await db.commit()
-            await db.refresh(user)
-        else:
-            _EPHEMERAL_USERS[user_uuid] = user
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        logger.info(
+            "Auto-provisioned Firebase user: %s (%s)", user.username, user_uuid
+        )
+    else:
+        # Update last_login_at on each successful Firebase auth
+        user.last_login_at = datetime.now(UTC)
+        await db.commit()
 
     token, expires_in = create_access_token(
         subject=user.id,

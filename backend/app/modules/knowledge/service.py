@@ -1,7 +1,13 @@
-"""Knowledge Base service for namespace-isolated document storage and management."""
+"""Knowledge Base service for namespace-isolated document storage and management.
+
+Architecture: A real database session is required. There is no in-memory ephemeral
+fallback in production paths. For tests, use a real test DB or SQLite (aiosqlite).
+"""
 
 import logging
 import uuid
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from sqlalchemy import delete, select
@@ -17,10 +23,6 @@ from app.modules.knowledge.ingestion import (
 )
 
 logger = logging.getLogger("verifai.knowledge.service")
-
-# Ephemeral fallback store for development/testing when no database is configured
-_EPHEMERAL_DOCS: dict[str, dict[uuid.UUID, KnowledgeDocument]] = {}
-_EPHEMERAL_CHUNKS: dict[str, dict[uuid.UUID, list[KnowledgeChunk]]] = {}
 
 
 def resolve_owner_id(owner_id: str | None, settings: Settings | None = None) -> str:
@@ -47,23 +49,12 @@ def resolve_owner_id(owner_id: str | None, settings: Settings | None = None) -> 
     )
 
 
-def clear_ephemeral_kb(owner_id: str | None = None) -> None:
-    """Clear in-memory knowledge store (useful for clean unit tests)."""
-    global _EPHEMERAL_DOCS, _EPHEMERAL_CHUNKS
-    if owner_id is not None:
-        _EPHEMERAL_DOCS.pop(owner_id, None)
-        _EPHEMERAL_CHUNKS.pop(owner_id, None)
-    else:
-        _EPHEMERAL_DOCS.clear()
-        _EPHEMERAL_CHUNKS.clear()
-
-
 class KnowledgeBaseService:
     """Namespace-isolated document lifecycle management service.
 
-    Supports dual-mode execution:
-    1. Persistent execution via SQLAlchemy AsyncSession (PostgreSQL).
-    2. Hermetic ephemeral execution when session is None (development/testing).
+    Requires a valid AsyncSession connected to PostgreSQL, or creates one
+    via the session factory. All operations are persisted to the database —
+    there is no in-memory fallback.
     """
 
     def __init__(
@@ -73,6 +64,17 @@ class KnowledgeBaseService:
     ) -> None:
         self.db = db_session
         self.settings = settings or get_settings()
+
+    @asynccontextmanager
+    async def _session(self) -> AsyncGenerator[AsyncSession, None]:
+        if self.db is not None:
+            yield self.db
+        else:
+            from app.core.database import get_async_session_maker
+
+            maker = get_async_session_maker()
+            async with maker() as session:
+                yield session
 
     async def add_document(
         self,
@@ -95,20 +97,20 @@ class KnowledgeBaseService:
             max_bytes=self.settings.KB_MAX_DOCUMENT_BYTES,
         )
 
-        # 2. Check for duplicate document within the same owner namespace
-        if self.db is not None:
+        async with self._session() as session:
+            # 2. Check for duplicate document within the same owner namespace
             dup_stmt = select(KnowledgeDocument).where(
                 KnowledgeDocument.owner_id == effective_owner,
                 KnowledgeDocument.content_hash == ingestion.content_hash,
             )
-            dup_res = await self.db.execute(dup_stmt)
+            dup_res = await session.execute(dup_stmt)
             if dup_res.scalars().first() is not None:
                 raise DuplicateDocumentError(
                     "Document with identical content already exists in namespace "
                     f"'{effective_owner}'."
                 )
 
-            # Create document entity
+            # 3. Create document entity
             now = datetime.now(UTC)
             doc = KnowledgeDocument(
                 id=uuid.uuid4(),
@@ -123,9 +125,9 @@ class KnowledgeBaseService:
                 created_at=now,
                 updated_at=now,
             )
-            self.db.add(doc)
+            session.add(doc)
 
-            # Create chunk entities
+            # 4. Create chunk entities
             for chunk_data in ingestion.chunks:
                 chunk = KnowledgeChunk(
                     id=uuid.uuid4(),
@@ -141,56 +143,9 @@ class KnowledgeBaseService:
                 )
                 doc.chunks.append(chunk)
 
-            await self.db.flush()
-            await self.db.commit()
+            await session.flush()
+            await session.commit()
             return doc
-
-        # Ephemeral mode
-        owner_docs = _EPHEMERAL_DOCS.setdefault(effective_owner, {})
-        for existing_doc in owner_docs.values():
-            if existing_doc.content_hash == ingestion.content_hash:
-                raise DuplicateDocumentError(
-                    "Document with identical content already exists in namespace "
-                    f"'{effective_owner}'."
-                )
-
-        now = datetime.now(UTC)
-        doc_id = uuid.uuid4()
-        doc = KnowledgeDocument(
-            id=doc_id,
-            owner_id=effective_owner,
-            filename=ingestion.filename,
-            title=ingestion.title,
-            description=description.strip() if description else None,
-            content_type=ingestion.content_type,
-            size_bytes=ingestion.size_bytes,
-            content_hash=ingestion.content_hash,
-            metadata_json=ingestion.metadata_json,
-            created_at=now,
-            updated_at=now,
-        )
-
-        chunk_list: list[KnowledgeChunk] = []
-        for chunk_data in ingestion.chunks:
-            chunk = KnowledgeChunk(
-                id=uuid.uuid4(),
-                document_id=doc_id,
-                owner_id=effective_owner,
-                chunk_index=chunk_data.chunk_index,
-                text=chunk_data.text,
-                start_offset=chunk_data.start_offset,
-                end_offset=chunk_data.end_offset,
-                metadata_json=chunk_data.metadata_json,
-                created_at=now,
-                updated_at=now,
-            )
-            chunk.document = doc
-            chunk_list.append(chunk)
-
-        doc.chunks = chunk_list
-        owner_docs[doc_id] = doc
-        _EPHEMERAL_CHUNKS.setdefault(effective_owner, {})[doc_id] = chunk_list
-        return doc
 
     async def list_documents(
         self,
@@ -199,22 +154,15 @@ class KnowledgeBaseService:
         """List all knowledge documents strictly isolated to the specified owner."""
         effective_owner = resolve_owner_id(owner_id, self.settings)
 
-        if self.db is not None:
+        async with self._session() as session:
             stmt = (
                 select(KnowledgeDocument)
                 .where(KnowledgeDocument.owner_id == effective_owner)
                 .options(selectinload(KnowledgeDocument.chunks))
                 .order_by(KnowledgeDocument.created_at.desc())
             )
-            res = await self.db.execute(stmt)
+            res = await session.execute(stmt)
             return list(res.scalars().all())
-
-        owner_docs = _EPHEMERAL_DOCS.get(effective_owner, {})
-        return sorted(
-            owner_docs.values(),
-            key=lambda d: d.created_at,
-            reverse=True,
-        )
 
     async def get_document(
         self,
@@ -224,7 +172,7 @@ class KnowledgeBaseService:
         """Fetch a specific document with chunks, verifying ownership."""
         effective_owner = resolve_owner_id(owner_id, self.settings)
 
-        if self.db is not None:
+        async with self._session() as session:
             stmt = (
                 select(KnowledgeDocument)
                 .where(
@@ -233,21 +181,13 @@ class KnowledgeBaseService:
                 )
                 .options(selectinload(KnowledgeDocument.chunks))
             )
-            res = await self.db.execute(stmt)
+            res = await session.execute(stmt)
             doc = res.scalars().first()
             if not doc:
                 raise NotFoundError(
                     f"Document '{document_id}' not found in '{effective_owner}'."
                 )
             return doc
-
-        owner_docs = _EPHEMERAL_DOCS.get(effective_owner, {})
-        doc = owner_docs.get(document_id)
-        if not doc:
-            raise NotFoundError(
-                f"Document '{document_id}' not found in '{effective_owner}'."
-            )
-        return doc
 
     async def delete_document(
         self,
@@ -257,38 +197,27 @@ class KnowledgeBaseService:
         """Delete a document and all its chunks from the owner's namespace."""
         effective_owner = resolve_owner_id(owner_id, self.settings)
 
-        if self.db is not None:
+        async with self._session() as session:
             # Check ownership before deletion
             stmt = select(KnowledgeDocument).where(
                 KnowledgeDocument.id == document_id,
                 KnowledgeDocument.owner_id == effective_owner,
             )
-            res = await self.db.execute(stmt)
+            res = await session.execute(stmt)
             doc = res.scalars().first()
             if not doc:
                 raise NotFoundError(
                     f"Document '{document_id}' not found in '{effective_owner}'."
                 )
 
-            # Cascade delete removes chunks automatically
+            # Cascade delete removes chunks automatically via FK constraint
             del_stmt = delete(KnowledgeDocument).where(
                 KnowledgeDocument.id == document_id,
                 KnowledgeDocument.owner_id == effective_owner,
             )
-            await self.db.execute(del_stmt)
-            await self.db.commit()
+            await session.execute(del_stmt)
+            await session.commit()
             return True
-
-        owner_docs = _EPHEMERAL_DOCS.get(effective_owner, {})
-        if document_id not in owner_docs:
-            raise NotFoundError(
-                f"Document '{document_id}' not found in namespace '{effective_owner}'."
-            )
-
-        del owner_docs[document_id]
-        if effective_owner in _EPHEMERAL_CHUNKS:
-            _EPHEMERAL_CHUNKS[effective_owner].pop(document_id, None)
-        return True
 
     async def get_all_chunks_for_owner(
         self,
@@ -297,39 +226,52 @@ class KnowledgeBaseService:
         """Retrieve all active chunks and associated document metadata for an owner."""
         effective_owner = resolve_owner_id(owner_id, self.settings)
 
-        if self.db is not None:
-            try:
-                stmt = (
-                    select(KnowledgeChunk, KnowledgeDocument)
-                    .join(
-                        KnowledgeDocument,
-                        KnowledgeChunk.document_id == KnowledgeDocument.id,
-                    )
-                    .where(
-                        KnowledgeChunk.owner_id == effective_owner,
-                        KnowledgeDocument.owner_id == effective_owner,
-                    )
-                    .order_by(KnowledgeChunk.created_at.asc())
+        async with self._session() as session:
+            stmt = (
+                select(KnowledgeChunk, KnowledgeDocument)
+                .join(
+                    KnowledgeDocument,
+                    KnowledgeChunk.document_id == KnowledgeDocument.id,
                 )
-                res = await self.db.execute(stmt)
-                all_records = res.all()
-                if hasattr(all_records, "__await__"):
-                    all_records = await all_records
-                if isinstance(all_records, (list, tuple)):
-                    return list(all_records)
-            except Exception as exc:
-                logger.debug(
-                    "Database chunk query error (%s); checking ephemeral store",
-                    exc,
+                .where(
+                    KnowledgeChunk.owner_id == effective_owner,
+                    KnowledgeDocument.owner_id == effective_owner,
                 )
+                .order_by(KnowledgeChunk.created_at.asc())
+            )
+            res = await session.execute(stmt)
+            return list(res.all())
 
-        pairs: list[tuple[KnowledgeChunk, KnowledgeDocument]] = []
-        owner_docs = _EPHEMERAL_DOCS.get(effective_owner, {})
-        owner_chunks_map = _EPHEMERAL_CHUNKS.get(effective_owner, {})
 
-        for doc_id, doc in owner_docs.items():
-            chunks = owner_chunks_map.get(doc_id, [])
-            for c in chunks:
-                pairs.append((c, doc))
+def clear_ephemeral_kb() -> None:
+    """Clear knowledge tables for testing and teardowns."""
+    import asyncio
+    import concurrent.futures
 
-        return pairs
+    from sqlalchemy import delete
+
+    from app.core.database import get_async_session_maker
+    from app.models.knowledge import KnowledgeChunk, KnowledgeDocument
+
+    async def _clean() -> None:
+        maker = get_async_session_maker()
+        async with maker() as session:
+            await session.execute(delete(KnowledgeChunk))
+            await session.execute(delete(KnowledgeDocument))
+            await session.commit()
+
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                pool.submit(asyncio.run, _clean()).result()
+        else:
+            asyncio.run(_clean())
+    except Exception:
+        pass
+
+

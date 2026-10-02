@@ -1,14 +1,15 @@
-# VerifAI Core Backend Production Dependencies (Phase 1, Prompt 2)
-# Pinned for strict reproducibility on Python 3.14.7
+# VerifAI Core Backend Production Dependencies
+# Architecture reset: PostgreSQL + asyncpg + Firebase Auth + Alembic migrations
 fastapi==0.141.1
 uvicorn[standard]==0.53.0
 pydantic==2.13.5
 pydantic-settings==2.15.0
 sqlalchemy==2.0.54
 asyncpg==0.31.0
+alembic==1.16.4
 greenlet==3.5.6
 httpx==0.28.1
 argon2-cffi==25.1.0
-pyjwt==2.15.1
+pyjwt[crypto]==2.15.1
 python-multipart==0.0.32
 cryptography==50.0.2

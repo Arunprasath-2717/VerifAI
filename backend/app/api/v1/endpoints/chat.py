@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings, get_settings
 from app.core.dependencies import (
     get_optional_current_user,
-    get_optional_db_session,
+    get_async_session,
     resolve_effective_owner,
 )
 from app.core.rate_limit import enforce_rate_limit
@@ -43,7 +43,7 @@ async def create_conversation(
     request_data: ConversationCreateRequest,
     http_request: Request,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> ConversationResponse:
     """Create a new conversation owned by the authenticated caller."""
@@ -85,7 +85,7 @@ async def list_conversations(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> ConversationListResponse:
     """List conversations for the current user with pagination and search."""
@@ -114,7 +114,7 @@ async def list_conversations(
 async def get_conversation(
     conversation_id: uuid.UUID,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> ConversationDetailResponse:
     """Retrieve full conversation details and linked model runs."""
@@ -134,7 +134,7 @@ async def get_conversation(
 async def delete_conversation(
     conversation_id: uuid.UUID,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
     """Delete a conversation thread and all cascaded children."""
@@ -157,7 +157,7 @@ async def send_prompt(
     request_data: ChatPromptRequest,
     http_request: Request,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> ChatPromptResponse:
     """Dispatch user prompt to up to 3 selected LLMs, run verification, and record."""
@@ -189,7 +189,7 @@ async def stream_prompt(
     request_data: ChatPromptRequest,
     http_request: Request,
     current_user: User | None = Depends(get_optional_current_user),
-    db: AsyncSession | None = Depends(get_optional_db_session),
+    db: AsyncSession = Depends(get_async_session),
     settings: Settings = Depends(get_settings),
 ) -> StreamingResponse:
     """Stream truthful execution lifecycle events to the frontend via SSE."""

@@ -27,6 +27,33 @@ from scripts.verifai_cli import (
 )
 
 
+@pytest.fixture(autouse=True)
+def clean_kb_documents() -> None:
+    """Ensure clean knowledge base state for each CLI test."""
+    import asyncio
+
+    from sqlalchemy import delete
+
+    from app.core.database import get_async_session_maker
+    from app.models.knowledge import KnowledgeDocument
+
+    async def _clean():
+        maker = get_async_session_maker()
+        async with maker() as session:
+            await session.execute(delete(KnowledgeDocument))
+            await session.commit()
+
+    try:
+        asyncio.run(_clean())
+    except Exception:
+        pass
+    yield
+    try:
+        asyncio.run(_clean())
+    except Exception:
+        pass
+
+
 def test_cli_parser_help(capsys: pytest.CaptureFixture[str]) -> None:
     """Verify CLI parser generates help documentation."""
     parser = build_parser()

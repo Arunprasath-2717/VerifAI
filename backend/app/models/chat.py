@@ -49,12 +49,14 @@ class Conversation(Base, TimestampMixin):
         back_populates="conversation",
         cascade="all, delete-orphan",
         order_by="Message.sequence_number",
+        lazy="selectin",
     )
     llm_runs: Mapped[list["LLMRun"]] = relationship(
         "LLMRun",
         back_populates="conversation",
         cascade="all, delete-orphan",
         order_by="LLMRun.started_at",
+        lazy="selectin",
     )
 
     __table_args__ = (

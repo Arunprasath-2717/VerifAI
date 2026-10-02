@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.endpoints.ingestion import get_optional_db_session
+from app.core.dependencies import get_async_session
 from app.main import create_app
 from app.models.ingestion import IngestedPayload
 
@@ -151,7 +151,7 @@ class TestIngestionEndpoint:
         async def override_db():
             yield mock_session
 
-        app.dependency_overrides[get_optional_db_session] = override_db
+        app.dependency_overrides[get_async_session] = override_db
         test_client = TestClient(app)
 
         payload = {

@@ -10,7 +10,6 @@ import jwt
 
 from app.core.config import Settings, get_settings
 from app.core.errors import UnauthorizedError
-from app.models.user import User
 from app.schemas.auth import UserRole
 
 logger = logging.getLogger("verifai.security")
@@ -24,17 +23,7 @@ _PASSWORD_HASHER = argon2.PasswordHasher(
     type=argon2.Type.ID,
 )
 
-# Ephemeral user store for development/testing when running without database
-_EPHEMERAL_USERS: dict[uuid.UUID, User] = {}
-_EPHEMERAL_USERS_BY_EMAIL: dict[str, uuid.UUID] = {}
-_EPHEMERAL_USERS_BY_USERNAME: dict[str, uuid.UUID] = {}
 
-
-def clear_ephemeral_users() -> None:
-    """Clear in-memory user registry for hermetic testing."""
-    _EPHEMERAL_USERS.clear()
-    _EPHEMERAL_USERS_BY_EMAIL.clear()
-    _EPHEMERAL_USERS_BY_USERNAME.clear()
 
 
 def hash_password(password: str) -> str:
@@ -230,3 +219,36 @@ def decode_access_token(
         )
 
     return payload
+
+
+def clear_ephemeral_users() -> None:
+    """Clear users table for testing and teardowns."""
+    import asyncio
+    import concurrent.futures
+
+    from sqlalchemy import delete
+
+    from app.core.database import get_async_session_maker
+    from app.models.user import User
+
+    async def _clean() -> None:
+        maker = get_async_session_maker()
+        async with maker() as session:
+            await session.execute(delete(User))
+            await session.commit()
+
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                pool.submit(asyncio.run, _clean()).result()
+        else:
+            asyncio.run(_clean())
+    except Exception:
+        pass
+
+
