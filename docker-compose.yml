@@ -17,7 +17,7 @@ services:
       - DEBUG=${DEBUG:-false}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-verifai}:${POSTGRES_PASSWORD:-verifai_dev_secret}@db:5432/${POSTGRES_DB:-verifai}
       - API_V1_STR=/api/v1
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-insecure_development_jwt_secret_replace_in_prod}
+      - JWT_SECRET=${JWT_SECRET:-insecure_development_jwt_secret_replace_in_prod}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}

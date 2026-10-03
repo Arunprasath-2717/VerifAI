@@ -3,8 +3,12 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+INSECURE_DEV_JWT_SECRET: str = (
+    "verifai_insecure_development_secret_key_change_in_production_32chars!"
+)
 
 
 class Settings(BaseSettings):
@@ -68,18 +72,25 @@ class Settings(BaseSettings):
     # Internal JWT for session tokens issued after Firebase verification
     # NOTE: These are VerifAI-issued session tokens, NOT Firebase tokens.
     JWT_SECRET: SecretStr = Field(
-        default=SecretStr(
-            "verifai_insecure_development_secret_key_change_in_production_32chars!"
-        ),
+        default=SecretStr(INSECURE_DEV_JWT_SECRET),
         description=(
             "Secret key for signing session JWT tokens. "
-            "Must be overridden in production."
+            "Must be overridden in production with a high-entropy secret (>=32 chars)."
         ),
     )
     JWT_ALGORITHM: str = "HS256"
     JWT_ISSUER: str = "verifai-backend"
     JWT_AUDIENCE: str = "verifai-client"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # Trusted Reverse Proxy IP Configuration
+    FORWARDED_ALLOW_IPS: list[str] = Field(
+        default_factory=list,
+        description=(
+            "List of trusted reverse proxy IP addresses or CIDR blocks. "
+            "If empty, X-Forwarded-For headers are ignored and socket IP is used."
+        ),
+    )
 
     # Rate Limiting Configuration
     RATE_LIMIT_ENABLED: bool = True
@@ -204,6 +215,37 @@ class Settings(BaseSettings):
                 "(e.g. postgresql+asyncpg://...)"
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_production_security_invariants(self) -> "Settings":
+        """Enforce fail-closed production security invariants."""
+        if self.ENVIRONMENT in ("production", "staging"):
+            # 1. JWT_SECRET must be explicitly configured and non-default
+            secret = self.JWT_SECRET.get_secret_value() if self.JWT_SECRET else ""
+            if not secret or not secret.strip():
+                raise ValueError(
+                    f"FATAL: JWT_SECRET must be configured and non-empty in "
+                    f"'{self.ENVIRONMENT}' environment."
+                )
+            if secret == INSECURE_DEV_JWT_SECRET or "insecure_development" in secret:
+                raise ValueError(
+                    f"FATAL: Default development JWT_SECRET is strictly forbidden in "
+                    f"'{self.ENVIRONMENT}' environment. You must provide a secure, "
+                    f"high-entropy secret via JWT_SECRET environment variable."
+                )
+            if len(secret) < 32:
+                raise ValueError(
+                    f"FATAL: JWT_SECRET must be at least 32 characters long in "
+                    f"'{self.ENVIRONMENT}' environment (got {len(secret)} characters)."
+                )
+
+            # 2. DEBUG must not be True in production
+            if self.DEBUG:
+                raise ValueError(
+                    f"FATAL: DEBUG mode cannot be enabled when ENVIRONMENT is "
+                    f"'{self.ENVIRONMENT}'."
+                )
+        return self
 
     model_config = SettingsConfigDict(
         # Search for .env in backend/ first (Docker / CI), then repo root.

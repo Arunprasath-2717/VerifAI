@@ -613,7 +613,11 @@ def test_resolve_owner_id_production_gating():
     dev_settings = Settings(ENVIRONMENT="development", DEFAULT_OWNER_ID="dev_user")
     assert resolve_owner_id(None, dev_settings) == "dev_user"
 
-    prod_settings = Settings(ENVIRONMENT="production", DEBUG=False)
+    prod_settings = Settings(
+        ENVIRONMENT="production",
+        DEBUG=False,
+        JWT_SECRET="valid_production_secret_32_characters_min!",
+    )
     with pytest.raises(
         ValueError, match="Namespace/owner ID is strictly required in production"
     ):
