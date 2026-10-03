@@ -240,7 +240,10 @@ class KnowledgeBaseService:
                 .order_by(KnowledgeChunk.created_at.asc())
             )
             res = await session.execute(stmt)
-            return list(res.all())
+            rows = res.all()
+            if hasattr(rows, "__iter__"):
+                return [(r[0], r[1]) for r in rows]
+            return []
 
 
 def clear_ephemeral_kb() -> None:
@@ -273,5 +276,3 @@ def clear_ephemeral_kb() -> None:
             asyncio.run(_clean())
     except Exception:
         pass
-
-

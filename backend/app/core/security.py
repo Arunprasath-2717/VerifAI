@@ -24,8 +24,6 @@ _PASSWORD_HASHER = argon2.PasswordHasher(
 )
 
 
-
-
 def hash_password(password: str) -> str:
     """Hash plaintext password using Argon2id with unique cryptographic salt."""
     if not password or not isinstance(password, str):
@@ -250,5 +248,3 @@ def clear_ephemeral_users() -> None:
             asyncio.run(_clean())
     except Exception:
         pass
-
-

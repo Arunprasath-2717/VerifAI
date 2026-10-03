@@ -1,11 +1,11 @@
 """History, search/filtering, and user data lifecycle API endpoints.
 
-Architecture: All operations require a real database session. There is no in-memory fallback.
+Architecture: All operations require a real database session; no in-memory fallback.
 """
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -73,9 +73,7 @@ async def list_verification_history(
     """Retrieve filtered, paginated verification history owned by caller."""
     effective_owner = resolve_effective_owner(current_user, None, settings)
 
-    query = select(VerificationJob).where(
-        VerificationJob.owner_id == effective_owner
-    )
+    query = select(VerificationJob).where(VerificationJob.owner_id == effective_owner)
     if verdict:
         query = query.where(
             VerificationJob.claims.any(
@@ -214,9 +212,7 @@ async def list_audit_history(
         )
         for r in records
     ]
-    return AuditHistoryResponse(
-        total=total, limit=limit, offset=offset, items=items
-    )
+    return AuditHistoryResponse(total=total, limit=limit, offset=offset, items=items)
 
 
 @router.get(
@@ -328,9 +324,7 @@ async def purge_all_user_data(
 
     # 3. Delete knowledge documents (cascades to chunks via FK)
     kb_res = await db.execute(
-        delete(KnowledgeDocument).where(
-            KnowledgeDocument.owner_id == effective_owner
-        )
+        delete(KnowledgeDocument).where(KnowledgeDocument.owner_id == effective_owner)
     )
     del_docs = int(getattr(kb_res, "rowcount", 0) or 0)
 

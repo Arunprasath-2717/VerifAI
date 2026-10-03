@@ -72,13 +72,22 @@ All four in-memory ephemeral fallback dictionaries have been eliminated from pro
 - **Configuration Files**:
   - `backend/alembic.ini`
   - `backend/alembic/env.py` (properly unwraps Pydantic `SecretStr` for `DATABASE_URL`).
-  - `backend/alembic/versions/71a0d5fb5012_baseline_schema.py`
-- **Schema Alignment**:
-  - `database/init.sql` and SQLAlchemy ORM models (`User`, `VerificationJob`, `ExtractedClaim`, `RetrievedEvidence`, `JudgeVerdict`, `KnowledgeDocument`, `KnowledgeChunk`, `Conversation`, `Message`, `LLMRun`, `AuditRecord`, `IngestedPayload`) are completely synchronized.
-  - Added `is_verified` to `User` ORM model.
-  - Added `ingested_payloads` table to `database/init.sql`.
+  - `backend/alembic/versions/d57e9de0b8e6_create_initial_schema.py` (complete schema baseline tested from clean DB).
+- **Schema Alignment & Fresh DB Verification**:
+  - Fully tested on completely isolated clean container `verifai-postgres-audit` on port 5433 with dedicated volume.
+  - Mutual circular FK constraints (`llm_runs` <-> `verifications`) resolved via explicit post-table `op.create_foreign_key`.
   - Added `lazy="selectin"` to ORM relationships across verification, chat, and knowledge models to prevent async `MissingGreenlet` exceptions.
   - `alembic check` command reports: **`No new upgrade operations detected.` (Zero drift)**.
+  - Persistence verified across PostgreSQL container restart with 100% data integrity and verified CASCADE deletion rules.
+
+---
+
+## 6. SOLID & Object-Oriented Architecture (Milestone 19)
+
+- **Repository Pattern**: Introduced `backend/app/repositories/` (`UserRepository`, `ConversationRepository`, `VerificationRepository`, `KnowledgeRepository`) ensuring clean abstraction between persistence and business domains.
+- **Pluggable LLM Strategy Pattern**: Extracted `BaseLLMProvider` interface and `LLMProviderRegistry` with 7 dedicated provider adapters (`OpenAIProvider`, `OpenRouterProvider`, `GroqProvider`, `OmniRouteProvider`, `AnthropicProvider`, `GeminiProvider`, `OllamaProvider`), closing `RealLLMClient` to modifications.
+- **Service Layer Segregation**: Extracted `AuthenticationService` to coordinate identity without database coupling.
+- **Documentation**: See `docs/SOLID_ARCHITECTURE_REVIEW.md` for complete S-O-L-I-D evaluation.
 
 ---
 

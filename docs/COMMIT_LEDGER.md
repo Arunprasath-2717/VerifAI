@@ -64,8 +64,8 @@
 | **Milestone 14** | **Master Technical Guide & Contract Finalization** | `docs/FRONTEND_BACKEND_CONTRACT.md`, `docs/VERIFAI_COMPLETE_TECHNICAL_GUIDE.md`, `docs/COMMIT_LEDGER.md` | Dual Technical + ELI10 | VERIFIED | `61d073e` |
 | **Milestone 15** | **OpenRouter, Groq, and OmniRoute Integration** | `backend/app/core/config.py`, `backend/app/modules/llm/client.py`, `backend/app/schemas/chat.py` | 1 added / 1,128 total | VERIFIED | `2d42e0a` |
 | **Milestone 16** | **Firebase Authentication SDK & RS256 Backend Verification** | `frontend/src/firebase.js`, `frontend/src/services/authService.js`, `backend/app/core/security.py`, `backend/app/core/dependencies.py`, `backend/app/api/v1/endpoints/auth.py` | 2 added / 1,130 total | VERIFIED | `d5a6a76` |
-| **Milestone 17** | **Credential Sanitization & Secret Leakage Prevention** | `backend/app/modules/llm/client.py`, `backend/app/modules/llm/service.py`, `backend/tests/test_chat_multi_llm.py` | 1 added / 1,131 total | VERIFIED | `d121bc8` |
 | **Milestone 18** | **Principal Architecture Reset: Supabase Purge, PostgreSQL Hardening, Alembic & Ephemeral Elimination** | `backend/app/core/`, `backend/app/api/v1/endpoints/`, `backend/alembic/`, `backend/requirements.txt`, `database/init.sql` | 1,127 passed / 1,127 total | VERIFIED | `c1e749c` |
+| **Milestone 19** | **SOLID & OOP Refactoring: Repositories Layer, LLM Provider Strategy & Isolated DB Persistence Acceptance** | `backend/app/repositories/`, `backend/app/modules/llm/providers/`, `backend/app/modules/auth/`, `backend/alembic/versions/` | 1,127 passed / 1,127 total | VERIFIED | `HEAD` |
 
 
 ---

@@ -37,7 +37,10 @@ def get_async_engine(settings: Settings | None = None) -> AsyncEngine:
         current_loop = None
 
     if _engine is not None:
-        if _engine_loop is not None and (_engine_loop.is_closed() or (current_loop is not None and _engine_loop is not current_loop)):
+        if _engine_loop is not None and (
+            _engine_loop.is_closed()
+            or (current_loop is not None and _engine_loop is not current_loop)
+        ):
             _engine = None
             _session_maker = None
         else:
@@ -76,7 +79,11 @@ def get_async_session_maker(
     """Create or return the configured async session factory."""
     global _session_maker
     target_engine = engine or get_async_engine()
-    if _session_maker is not None and engine is None and getattr(_session_maker, "kw", {}).get("bind") is target_engine:
+    if (
+        _session_maker is not None
+        and engine is None
+        and getattr(_session_maker, "kw", {}).get("bind") is target_engine
+    ):
         return _session_maker
 
     _session_maker = async_sessionmaker(

@@ -12,18 +12,18 @@ VerifAI is an intelligent verification and evaluation system engineered to detec
 
 ## 1. System Overview & Architecture
 
-VerifAI is designed as a high-throughput **Modular Monolith** powered by **Python and FastAPI**, backed by **Supabase PostgreSQL** via asynchronous SQLAlchemy 2.x and `asyncpg`.
+VerifAI is designed as a high-throughput **Modular Monolith** powered by **Python and FastAPI**, backed by **PostgreSQL 16** via asynchronous SQLAlchemy 2.x and `asyncpg`.
 
 ```
 VerifAI/
 ├── backend/          # Core FastAPI modular monolith & async persistence
 │   ├── app/          # Application package (core, api/v1, modules, models, schemas)
-│   ├── tests/        # Deterministic hermetic test suite (959 unit, integration & matrix tests)
+│   ├── tests/        # Deterministic hermetic test suite (959+ unit, integration & matrix tests)
 │   ├── pyproject.toml# Tooling configuration (pytest, ruff, mypy)
 │   ├── requirements.txt      # Pinned production dependencies
 │   ├── requirements-dev.txt  # Development & test tooling dependencies
 │   └── requirements-lock.txt # Frozen reproducible dependency lockfile
-├── database/         # Supabase PostgreSQL schema, migrations, and seeds
+├── database/         # PostgreSQL schema, migrations, and seeds
 ├── scripts/          # Automation, utilities, and live smoke test runners
 │   ├── verify.py     # Standalone CLI demonstration and verification runner
 │   └── smoke_test.py # 8-checkpoint automated live application smoke test
@@ -271,8 +271,7 @@ All errors conform to RFC-7807 compliant structure:
 ## 6. Locked Architectural Boundaries
 
 Per approved Architecture Decision Records (ADR-001 through ADR-010):
-- **Verification Authority:** Arun is the single source of verification truth. The backend owns 100% of verification orchestration.
-- **Authentication Deferral:** Supabase Auth is deferred to Future Enhancements (ADR-003 Addendum).
+- **Authentication:** Unified JWT and optional Firebase Auth token verification with local PostgreSQL user auto-provisioning (ADR-003 Addendum).
 - **AI Models:** Local open-source models only (ADR-004).
 - **SSRF Defense:** Strict pre-persistence validation of client-submitted URLs (ADR-010).
 - **Out of Scope for Core MVP:** React dashboard and Model Context Protocol (MCP) are designated as future integration surfaces (ADR-006).

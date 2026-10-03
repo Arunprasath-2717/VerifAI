@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import Settings, get_settings
 from app.core.dependencies import get_async_session
 from app.core.errors import BadRequestError, NotFoundError
 from app.models.ingestion import IngestedPayload

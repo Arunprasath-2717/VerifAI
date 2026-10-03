@@ -12,8 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.dependencies import (
-    get_optional_current_user,
     get_async_session,
+    get_optional_current_user,
     resolve_effective_owner,
 )
 from app.core.rate_limit import enforce_rate_limit

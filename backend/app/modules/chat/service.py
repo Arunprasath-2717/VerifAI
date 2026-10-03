@@ -131,9 +131,7 @@ class ChatService:
         query = (
             select(Conversation)
             .where(Conversation.id == conversation_id)
-            .options(
-                selectinload(Conversation.messages).selectinload(Message.llm_runs)
-            )
+            .options(selectinload(Conversation.messages).selectinload(Message.llm_runs))
         )
         conv = (await self.db.execute(query)).scalar_one_or_none()
         if not conv:
@@ -242,9 +240,9 @@ class ChatService:
             )
 
         # 2. Determine next sequence number and record User Message
-        seq_stmt = select(
-            func.coalesce(func.max(Message.sequence_number), 0)
-        ).where(Message.conversation_id == conversation_id)
+        seq_stmt = select(func.coalesce(func.max(Message.sequence_number), 0)).where(
+            Message.conversation_id == conversation_id
+        )
         max_seq = (await self.db.execute(seq_stmt)).scalar_one()
 
         user_msg = Message(
@@ -405,5 +403,3 @@ def clear_ephemeral_chat() -> None:
             asyncio.run(_clean())
     except Exception:
         pass
-
-

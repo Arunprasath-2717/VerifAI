@@ -72,7 +72,8 @@ class Settings(BaseSettings):
             "verifai_insecure_development_secret_key_change_in_production_32chars!"
         ),
         description=(
-            "Secret key for signing session JWT tokens. Must be overridden in production."
+            "Secret key for signing session JWT tokens. "
+            "Must be overridden in production."
         ),
     )
     JWT_ALGORITHM: str = "HS256"

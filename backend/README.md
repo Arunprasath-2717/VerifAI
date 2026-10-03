@@ -240,8 +240,7 @@ All application errors, HTTP exceptions, validation errors, and unexpected serve
 ## 11. Scope Boundaries — What is Intentionally NOT Implemented in Phase 1 Prompt 3
 
 To maintain strict compliance with project governance:
-- **Domain Tables & Migrations:** No verification, job, or domain tables; Alembic migrations deferred to future prompts.
-- **Authentication:** Supabase Auth JWT verification remains deferred to Future Enhancements.
+- **Authentication:** Local PostgreSQL authentication and Firebase Auth JWT verification implemented.
 - **pgvector Implementation:** The `pgvector` extension is a future prerequisite for Phase 4 knowledge-base ingestion.
 - **Verification Engine & AI Models:** No claim extraction, LLM judge execution, or hallucination risk scoring.
 - **External Logging Services:** No external logging platforms (Datadog, Sentry, ELK); standard-library logging only.

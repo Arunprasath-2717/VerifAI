@@ -1,4 +1,4 @@
-"""Hermetic unit tests for live evidence retrievers and Supabase integration."""
+"""Hermetic unit tests for live evidence retrievers (Tavily, Wikipedia)."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
