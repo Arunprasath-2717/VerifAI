@@ -32,7 +32,7 @@ All Supabase code, clients, packages, environment keys, and test references have
 | `backend/requirements.txt` | **AUDITED** | No Supabase SDK or client dependencies exist. |
 | `backend/.env` & `.env.example` | **PURGED** | All Supabase keys removed. Configured for local Docker PostgreSQL. |
 | `backend/tests/test_live_retrievers.py` | **CLEANED** | Removed Supabase unit tests; all 1,127 tests pass. |
-| `scripts/verifai_cli.py` | **CLEANED** | Purged `SupabaseClient` imports and subcommands. |
+| `scripts/verifai_cli.py` | **REMOVED** | CLI interface purged to prepare cleanly for Web Dashboard. |
 
 ---
 

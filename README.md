@@ -18,32 +18,30 @@ VerifAI is designed as a high-throughput **Modular Monolith** powered by **Pytho
 VerifAI/
 ├── backend/          # Core FastAPI modular monolith & async persistence
 │   ├── app/          # Application package (core, api/v1, modules, models, schemas)
-│   ├── tests/        # Deterministic hermetic test suite (959+ unit, integration & matrix tests)
+│   ├── tests/        # Deterministic hermetic test suite (1,164+ unit, integration & matrix tests)
 │   ├── pyproject.toml# Tooling configuration (pytest, ruff, mypy)
 │   ├── requirements.txt      # Pinned production dependencies
 │   ├── requirements-dev.txt  # Development & test tooling dependencies
 │   └── requirements-lock.txt # Frozen reproducible dependency lockfile
 ├── database/         # PostgreSQL schema, migrations, and seeds
 ├── scripts/          # Automation, utilities, and live smoke test runners
-│   ├── verify.py     # Standalone CLI demonstration and verification runner
-│   └── smoke_test.py # 8-checkpoint automated live application smoke test
-├── extension/        # Chrome Manifest V3 browser extension (Phase 4)
+│   ├── smoke_test.py # 8-checkpoint automated live application smoke test
+│   └── demo_verification.py # Live verification runner for API scenarios
+├── extension/        # Chrome Manifest V3 browser extension (Secondary client)
 │   ├── manifest.json # MV3 permissions, host matching, and action declaration
 │   ├── content.js    # Multi-LLM DOM auto-detection (ChatGPT, Claude, Gemini, DeepSeek)
 │   ├── background.js # Service worker and context menu verification relay
 │   ├── popup.html    # Glassmorphism extension popup interface
 │   ├── popup.css     # Design tokens, animations, and responsive popup layout
 │   └── popup.js      # Backend communication, health polling, and verification rendering
-├── docs/             # Architecture Decision Records (ADRs) & governance ledgers
-│   ├── IMPLEMENTATION_ROADMAP.md # Multi-phase execution roadmap
-│   ├── PHASE_STATUS.md           # Phase progression & verification status
-│   ├── ARCHITECTURE_DECISIONS.md # Locked ADR-001 through ADR-010
-│   ├── COMMIT_LEDGER.md          # 500-commit budget ledger & tracking
-│   └── SIGN_OFF_REGISTER.md      # Gate check sign-off registry
+├── docs/             # Technical architecture guides & Architecture Decision Records (ADRs)
+│   ├── ARCHITECTURE_DECISIONS.md # Locked ADR-001 through ADR-011
+│   ├── FRONTEND_BACKEND_CONTRACT.md # Contract specification for Web Dashboard
+│   ├── VERIFAI_COMPLETE_TECHNICAL_GUIDE.md # Exhaustive technical architecture guide
+│   └── API_SECURITY_MATRIX.md   # Security, rate limit, and auth governance matrix
 ├── .github/workflows/# Continuous integration pipelines
 │   └── backend-ci.yml# Multi-version Python verification workflow
-├── frontend/         # Web dashboard (future integration surface; out of scope for MVP)
-├── mcp/              # Model Context Protocol integrations (future integration surface)
+├── frontend/         # Web dashboard (Primary user-facing client)
 └── benchmark/        # Hallucination benchmark datasets & evaluators (Phase 2)
 ```
 
@@ -106,140 +104,69 @@ Interactive documentation:
 - `DELETE /api/v1/knowledge/documents/{id}` — Delete document and cascade delete all its chunks.
 - `POST /api/v1/knowledge/search` — Scored search across owner namespace chunks.
 
-## Interactive Verification Console
+## 4. Product Interfaces & Client Architecture
 
-The repository includes a cinematic, 3D-styled terminal verification command center (`scripts/verifai_cli.py`) for live demonstrations, auditing, and interactive testing.
+VerifAI is structured around an authentic client-server separation where the backend and verification engine serve as the single source of truth:
 
-### Start Backend
-```bash
-# Terminal 1: Launch FastAPI verification server
-PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-### Launch Interactive Console
-```bash
-# Terminal 2: Launch interactive console
-.venv/bin/python scripts/verifai_cli.py
-
-# Or explicitly:
-.venv/bin/python scripts/verifai_cli.py interactive
-```
-
-When launched, VerifAI displays the cinematic 3D cyber-aesthetic command center:
 ```text
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║        ██╗   ██╗ ███████╗ ██████╗  ██╗ ███████╗  █████╗  ██╗         ║
-║        ██║   ██║ ██╔════╝ ██╔══██╗ ██║ ██╔════╝ ██╔══██╗ ██║         ║
-║        ██║   ██║ █████╗   ██████╔╝ ██║ █████╗   ███████║ ██║         ║
-║        ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗ ██║ ██╔══╝   ██╔══██║ ██║         ║
-║         ╚████╔╝  ███████╗ ██║  ██║ ██║ ██║      ██║  ██║ ██║         ║
-║          ╚═══╝   ╚══════╝ ╚═╝  ╚═╝ ╚═╝ ╚═╝      ╚═╝  ╚═╝ ╚═╝         ║
-║                                                                      ║
-║          CROSS-GENERATION CONSISTENCY VERIFICATION                   ║
-║              TRUTH  •  EVIDENCE  •  TRACEABILITY                     ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
-
-╭──────────╮     ╭──────────────╮     ╭──────────────╮
-│  INPUT   │ ──▶ │ CLAIM        │ ──▶ │ CLASSIFY     │
-│    ✓     │     │ EXTRACTION ✓ │     │      ✓       │
-╰──────────╯     ╰──────────────╯     ╰──────────────╯
-                                             │        
-                                             ▼        
-╭──────────────╮     ╭──────────────╮     ╭──────────────╮
-│   DECISION   │ ◀── │ MULTI-JUDGE  │ ◀── │   EVIDENCE   │
-│      ✓       │     │      ✓       │     │      ✓       │
-╰──────────────╯     ╰──────────────╯     ╰──────────────╯
-
-╭──────────────────────────────────╮
-│ VERIFAI                          │
-├──────────────────────────────────┤
-│  1  Verify AI Response           │
-│  2  Add Knowledge Document       │
-│  3  Manage Knowledge Base        │
-│  4  Verification History         │
-│  5  System Status                │
-│  0  Exit                         │
-╰──────────────────────────────────╯
+AUTHENTIC WEB DASHBOARD (Primary Client)
+        │
+        ▼ (REST API & Real SSE Lifecycle)
+   FASTAPI API (Modular Monolith)
+        │
+        ▼ (Pipeline Execution & Consensus Arbitration)
+VERIFICATION ENGINE
 ```
 
-### Run Direct CLI Commands
-```bash
-# Verify custom assertion:
-.venv/bin/python scripts/verifai_cli.py verify "Water freezes at 0 degrees Celsius."
+### 4.1 Client Surface Taxonomy
+- **PRIMARY:** **Web Dashboard** (`frontend/`) — The primary user-facing client interface consuming the FastAPI REST endpoints and truthful SSE verification lifecycle streaming.
+- **SECONDARY:** **Chrome Extension** (`extension/`) — Browser companion extension for in-situ verification of LLM responses across web chat interfaces.
+- **FUTURE / OUT OF SCOPE:** Terminal CLI and Model Context Protocol (MCP) integrations.
 
-# Verify text from file:
-.venv/bin/python scripts/verifai_cli.py verify --file path/to/input.txt
-
-# Run specific demo case:
-.venv/bin/python scripts/verifai_cli.py demo --case mixed
-
-# Run batch test suite across all 11 curated scenarios:
-.venv/bin/python scripts/verifai_cli.py demo --all
-
-# Inspect system health:
-.venv/bin/python scripts/verifai_cli.py health
-
-# Compact summary output:
-.venv/bin/python scripts/verifai_cli.py demo --case supported --compact
-
-# Output raw structured JSON:
-.venv/bin/python scripts/verifai_cli.py verify "Water freezes at 0C." --json
-```
-
-### Output Sections Explained
-- **PIPELINE PROGRESS:** Real-time visual progress indicators across the 5 internal stages: claim extraction, propositional taxonomy classification, verified evidence retrieval, dual-judge consensus evaluation, and decision engine arbitration.
-- **VERIFICATION RESULT:** Top-level scorecard displaying verification ID, completion status, processing duration, claim counts (total, factual, non-factual), and verdict totals (`SUPPORTED`, `CONTRADICTED`, `UNKNOWN`, `NON-VERIFIABLE`).
-- **TRUST SCORE & CALIBRATION:** Calibrated graphical gauge (e.g. `[████████████████████] 100.0%`) or `[N/A]` with `Calibration: NOT_CALIBRATED` when uncalibrated. Never fabricates values.
-- **CLAIM BREAKDOWN:** Every discrete atomic claim deconstructed from input with source offsets, propositional type, verifiability, and verdict badge.
-- **DRILL-DOWN OPTIONS:**
-  - `[V]` **Evidence:** Retrieved source titles, URLs, snippet passages, retriever provenance, and relevance scores.
-  - `[J]` **Judges:** Independent evaluations from `DeterministicRuleJudge` and `SecondarySemanticJudge`, consensus arbitration, and degradation flags.
-  - `[A]` **Audit:** Timestamped event trail and component latency trace.
-  - `[R]` **Raw JSON:** Full backend verification response envelope.
-  - `[Enter]` **Back:** Return to main menu.
-- **SECURITY & PROMPT ISOLATION:** Displays `Prompt Isolation: PASSED` when adversarial instructions (e.g. *"Ignore all previous instructions..."*) are neutralized and isolated as untrusted data while evaluating the underlying factual statement objectively.
-
-### Chrome Extension Installation
+### 4.2 Chrome Extension Setup
 1. Open Chrome / Chromium and navigate to `chrome://extensions/`.
-2. Enable **Developer mode** toggle in top-right corner.
+2. Enable the **Developer mode** toggle in the top-right corner.
 3. Click **Load unpacked** and select the `extension/` directory from this repository.
 4. Pin the **VerifAI** icon to your toolbar.
-5. Open any LLM interface (ChatGPT, Claude, Gemini, DeepSeek, Perplexity) and click the extension icon to verify responses.
+5. Open any LLM interface (ChatGPT, Claude, Gemini, DeepSeek, Perplexity) and click the extension icon to verify responses against the running backend (`http://127.0.0.1:8000`).
 
 ---
 
-## 4. Verification Suite & Quality Assurance
+## 5. Verification Suite & Quality Assurance
 
 VerifAI enforces a zero-regression, hermetic quality gate:
 
-### 4.1 Execute Test Suite (1,116 Tests)
+### 5.1 Execute Test Suite (1,164 Tests)
 ```bash
 .venv/bin/pytest -v
 ```
 
-### 4.2 Linting and Formatting
+### 5.2 Linting and Formatting
 ```bash
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
 ```
 
-### 4.3 Static Type Checking
+### 5.3 Static Type Checking
 ```bash
-.venv/bin/mypy backend/app backend/tests
+.venv/bin/mypy backend/app
 ```
 
-### 4.4 Automated Live Application Smoke Test
+### 5.4 Automated Live Application Smoke Test
 ```bash
 .venv/bin/python scripts/smoke_test.py
 ```
 
+### 5.5 End-to-End API Demonstration Runner
+```bash
+.venv/bin/python scripts/demo_verification.py
+```
+
 ---
 
-## 5. API Contracts & Architecture Standards
+## 6. API Contracts & Architecture Standards
 
-### 5.1 Versioned Endpoints Under `/api/v1`
+### 6.1 Versioned Endpoints Under `/api/v1`
 - **Liveness Probe (`GET /api/v1/health`):**
   Returns HTTP 200 with `{status: "live", service: "verifai-backend", version: "0.1.0", request_id: "..."}`.
 - **Readiness Probe (`GET /api/v1/ready`):**
@@ -252,8 +179,10 @@ VerifAI enforces a zero-regression, hermetic quality gate:
   Executes end-to-end claim extraction, evidence retrieval, multi-judge evaluation, and trust score calculation.
 - **Verification Result (`GET /api/v1/verification/{id}`):**
   Retrieves completed verification job and full audit trail by UUID.
+- **Real-Time Streaming Lifecycle (`POST /api/v1/chat/conversations/{id}/messages/stream`):**
+  Streams genuine Server-Sent Events (SSE) for conversation lifecycle milestones and pipeline progression.
 
-### 5.2 Unified JSON Error Envelope
+### 6.2 Unified JSON Error Envelope
 All errors conform to RFC-7807 compliant structure:
 ```json
 {
@@ -268,11 +197,11 @@ All errors conform to RFC-7807 compliant structure:
 
 ---
 
-## 6. Locked Architectural Boundaries
+## 7. Product Client & Architectural Boundaries
 
-Per approved Architecture Decision Records (ADR-001 through ADR-010):
-- **Authentication:** Unified JWT and optional Firebase Auth token verification with local PostgreSQL user auto-provisioning (ADR-003 Addendum).
-- **AI Models:** Local open-source models only (ADR-004).
-- **SSRF Defense:** Strict pre-persistence validation of client-submitted URLs (ADR-010).
-- **Out of Scope for Core MVP:** React dashboard and Model Context Protocol (MCP) are designated as future integration surfaces (ADR-006).
+Per approved Architecture Decision Records (ADR-001 through ADR-011):
+- **Client Architecture:** Web Dashboard is the primary product surface; Chrome Extension is the active secondary companion; CLI is deprecated and out of scope.
+- **Verification Engine Invariant:** All truth evaluations, claim classifications, evidence retrievals, and trust calibrations occur strictly server-side in the verification engine. No client-side mock results, fake timers, or fabricated trust scores are permitted.
+- **Authentication:** Unified JWT and Firebase Auth token verification with local PostgreSQL user auto-provisioning.
+- **SSRF Defense:** Strict pre-persistence validation of client-submitted URLs via `is_safe_url`.
 - **Branch Governance:** All active work occurs on `Final`. Pushes to `main` are strictly forbidden until verified release.

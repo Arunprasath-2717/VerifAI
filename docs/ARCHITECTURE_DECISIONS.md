@@ -78,7 +78,7 @@
 
 ## ADR-009: In-Memory Evidence Retriever as Hermetic Development Harness
 - **Status:** Accepted (Locked)
-- **Context:** Phase 3 verification pipeline requires hermetic, deterministic execution without external network dependencies or live vector databases. `LocalPassageRetriever` supplies in-memory passages for unit tests, CI, and local CLI demonstrations.
+- **Context:** Phase 3 verification pipeline requires hermetic, deterministic execution without external network dependencies or live vector databases. `LocalPassageRetriever` supplies in-memory passages for unit tests, CI, and local demonstration runners.
 - **Decision:** `LocalPassageRetriever` is designated strictly as a development and testing harness. Its known behavior—including sparse coverage and false-contradiction outcomes when unrelated numeric values co-occur across matching lexical tokens—is formally accepted as a development-only constraint.
 - **Consequences:** 
   - All outputs from this retriever are marked with `retriever_name = "LOCAL_PASSAGE_INDEX"`.
@@ -121,7 +121,7 @@
   4. **KB-First Evidence Orchestration:** For each verifiable factual claim, the orchestrator searches the private KB first. When sufficient relevant KB evidence is retrieved (`KBSufficiencyStatus.KB_RELEVANT`), external retrieval is skipped by default. External retrieval is triggered only when KB evidence is insufficient or when corroboration mode (`force_external_retrieval=True`) is explicitly requested.
   5. **Configurable Retrieval Thresholds:** Retrieval scoring applies deterministic token overlap and length-normalized similarity. Relevance thresholds (`KB_RELEVANCE_THRESHOLD`, default 0.15) and token overlap minimums (`KB_MIN_OVERLAP_TOKENS`, default 2) are configurable via application settings and per-request overrides.
   6. **Zero Blind Trust & Prompt Injection Defense:** All KB passages are treated as untrusted evidence data. Passages are quarantined inside `<untrusted_evidence>` XML boundaries with closing tag sanitization to prevent prompt breakout attacks.
-  7. **Full Provenance Transparency:** Every evidence item tracks its origin (`evidence_source: PRIVATE_KB | EXTERNAL`), document identifier, chunk index, document title, and relevance score, displayed clearly across REST API responses and the interactive CLI console.
+  7. **Full Provenance Transparency:** Every evidence item tracks its origin (`evidence_source: PRIVATE_KB | EXTERNAL`), document identifier, chunk index, document title, and relevance score, displayed clearly across REST API responses and client interfaces.
 - **Consequences:**
   - Guarantees deterministic, private-first verification without data leakage to external search engines.
   - Allows seamless addition of future evidence providers (web, papers, APIs).
