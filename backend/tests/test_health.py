@@ -21,7 +21,9 @@ def test_versioned_health_check(client: TestClient) -> None:
     assert data["request_id"] == response.headers["x-request-id"]
 
 
-def test_readiness_probe_returns_503_when_unready(app: FastAPI, client: TestClient) -> None:
+def test_readiness_probe_returns_503_when_unready(
+    app: FastAPI, client: TestClient
+) -> None:
     """Verify readiness probe returns 503 and request ID when unconfigured."""
     unconfigured_settings = Settings(
         _env_file=None,

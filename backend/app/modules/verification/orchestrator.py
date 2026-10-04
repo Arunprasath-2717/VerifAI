@@ -7,6 +7,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import Settings, get_settings
+from app.core.errors import ServiceUnavailableError
 from app.models.verification import (
     AuditRecord,
     ExtractedClaim,
@@ -62,7 +64,9 @@ class VerificationOrchestrator:
         tie_breaker_judge: BaseJudge | None = None,
         disagreement_engine: DisagreementEngine | None = None,
         decision_engine: DecisionEngine | None = None,
+        settings: Settings | None = None,
     ) -> None:
+        self.settings = settings or get_settings()
         self.extractor = extractor or DeterministicClaimExtractor()
         self.classifier = classifier or ContentClassifier()
         self.retriever = retriever or LocalPassageRetriever()
@@ -548,7 +552,15 @@ class VerificationOrchestrator:
         verification_job.claims = db_claims
         verification_job.audit_records = audit_records
 
-        # Step 8: Database Persistence (if session provided)
+        # Step 8: Database Persistence
+        is_production = self.settings.ENVIRONMENT in ("production", "staging")
+
+        if db_session is None and is_production:
+            raise ServiceUnavailableError(
+                "Database persistence is required in production; "
+                "ephemeral execution is prohibited."
+            )
+
         if db_session is not None:
             try:
                 db_session.add(verification_job)
@@ -560,8 +572,12 @@ class VerificationOrchestrator:
                     message="Verification job saved to database.",
                 )
             except Exception as db_exc:
-                logger.warning("Database persistence failed: %s", db_exc)
+                logger.error("Database persistence failed: %s", db_exc)
                 await db_session.rollback()
+                if is_production:
+                    raise ServiceUnavailableError(
+                        f"Database persistence failed: {type(db_exc).__name__}"
+                    ) from db_exc
                 log_audit(
                     stage="PERSISTENCE",
                     event_type="DEGRADED_EXECUTION",

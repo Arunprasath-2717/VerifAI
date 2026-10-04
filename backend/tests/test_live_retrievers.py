@@ -364,4 +364,3 @@ async def test_live_retriever_all_tiers_exhausted_returns_empty() -> None:
 
     results = await chain.retrieve("Obscure claim with no evidence")
     assert results == []
-
