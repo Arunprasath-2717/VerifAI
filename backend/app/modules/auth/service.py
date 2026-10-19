@@ -41,7 +41,9 @@ class AuthenticationService:
         self.user_repo = user_repository
         self.settings = settings or get_settings()
         self.token_verifier = token_verifier or verify_firebase_id_token
-        self.consent_repo = consent_repository or UserConsentRepository(user_repository.session)
+        self.consent_repo = consent_repository or UserConsentRepository(
+            user_repository.session
+        )
 
     async def register_user(
         self,
@@ -49,10 +51,11 @@ class AuthenticationService:
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> UserResponse:
-        """Register a new user account with Argon2id password hashing and mandatory consent."""
+        """Register a new user account with Argon2id hashing and mandatory consent."""
         if not getattr(request, "terms_accepted", False):
             raise BadRequestError(
-                message="You must read and agree to the Terms & Conditions and Privacy Policy.",
+                message="You must read and agree to the Terms & Conditions "
+                "and Privacy Policy.",
                 details={"field": "terms_accepted"},
             )
 
@@ -98,7 +101,9 @@ class AuthenticationService:
                 user_agent=user_agent,
             )
         except Exception as exc:
-            logger.error("Failed to persist user consent for user %s: %s", created_user.id, exc)
+            logger.error(
+                "Failed to persist user consent for user %s: %s", created_user.id, exc
+            )
             # Remove created user to prevent orphaned account without recorded consent
             try:
                 await self.user_repo.session.delete(created_user)
@@ -106,7 +111,8 @@ class AuthenticationService:
             except Exception:
                 pass
             raise AppError(
-                message="Failed to persist mandatory legal consent. Registration aborted.",
+                message="Failed to persist mandatory legal consent. "
+                "Registration aborted.",
                 code="CONSENT_PERSISTENCE_FAILED",
                 status_code=500,
                 details={"reason": "consent_persistence_failed"},
@@ -169,7 +175,8 @@ class AuthenticationService:
         """Verify Firebase RS256 token, resolve identity, and issue session token."""
         if is_signup and not terms_accepted:
             raise BadRequestError(
-                message="You must read and agree to the Terms & Conditions and Privacy Policy.",
+                message="You must read and agree to the Terms & Conditions "
+                "and Privacy Policy.",
                 details={"field": "terms_accepted"},
             )
 
@@ -202,13 +209,16 @@ class AuthenticationService:
                 except Exception:
                     pass
                 raise BadRequestError(
-                    message="You must read and agree to the Terms & Conditions and Privacy Policy.",
+                    message="You must read and agree to the Terms & Conditions "
+                    "and Privacy Policy.",
                     details={"field": "terms_accepted"},
                 )
 
             try:
                 provider_id = payload.get("firebase", {}).get("sign_in_provider", "")
-                action_source = "google_sso" if "google" in provider_id else "signup_form"
+                action_source = (
+                    "google_sso" if "google" in provider_id else "signup_form"
+                )
                 await self.consent_repo.record_consent(
                     user_id=user.id,
                     terms_version=self.settings.TERMS_VERSION,
@@ -218,7 +228,9 @@ class AuthenticationService:
                     user_agent=user_agent,
                 )
             except Exception as exc:
-                logger.error("Failed to persist consent for Firebase user %s: %s", user.id, exc)
+                logger.error(
+                    "Failed to persist consent for Firebase user %s: %s", user.id, exc
+                )
                 try:
                     await self.user_repo.session.delete(user)
                     await self.user_repo.session.commit()
@@ -288,4 +300,3 @@ class AuthenticationService:
     async def get_user_consents(self, user_id: uuid.UUID) -> list[UserConsent]:
         """Retrieve user consent records strictly isolated to the specified user."""
         return await self.consent_repo.get_by_user_id(user_id)
-

@@ -56,7 +56,9 @@ class UserRegisterRequest(BaseModel):
     @classmethod
     def validate_terms_accepted(cls, v: bool) -> bool:
         if not v:
-            raise ValueError("You must read and agree to the Terms & Conditions and Privacy Policy.")
+            raise ValueError(
+                "You must read and agree to the Terms & Conditions and Privacy Policy."
+            )
         return v
 
     @field_validator("email", mode="after")
@@ -159,11 +161,13 @@ class FirebaseAuthRequest(BaseModel):
     )
     terms_accepted: bool | None = Field(
         default=None,
-        description="Whether user explicitly consented to Terms and Privacy Policy on signup.",
+        description=(
+            "Whether user explicitly consented to Terms and Privacy Policy on signup."
+        ),
     )
     is_signup: bool = Field(
         default=False,
-        description="Whether this request originates from the new account registration flow.",
+        description=(
+            "Whether this request originates from the new account registration flow."
+        ),
     )
-
-
