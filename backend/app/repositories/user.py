@@ -84,6 +84,15 @@ class UserRepository:
             if email
             else f"firebase_{firebase_uid[:12]}@verifai.internal"
         )
+
+        # Check if account with matching email already exists
+        existing_by_email = await self.get_by_email(user_email)
+        if existing_by_email:
+            existing_by_email.last_login_at = datetime.now(UTC)
+            existing_by_email.is_verified = True
+            await self.session.commit()
+            return existing_by_email, False
+
         base_username = (
             display_name.strip().replace(" ", "_")
             if display_name
@@ -122,7 +131,7 @@ class UserRepository:
         except Exception:
             await self.session.rollback()
             # If concurrent request already inserted the user, retrieve it
-            retried = await self.get_by_id(deterministic_id)
+            retried = await self.get_by_id(deterministic_id) or await self.get_by_email(user_email)
             if retried:
                 return retried, False
             raise

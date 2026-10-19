@@ -130,6 +130,7 @@ def test_user_registration_success(client: TestClient) -> None:
         "email": "researcher@example.com",
         "username": "researcher_01",
         "password": "StrongPassword2026!",
+        "terms_accepted": True,
     }
     response = client.post("/api/v1/auth/register", json=payload)
     assert response.status_code == 201
@@ -152,6 +153,7 @@ def test_user_registration_validation_rules(client: TestClient) -> None:
             "email": "not-an-email",
             "username": "valid_user",
             "password": "Pass12345678!",
+            "terms_accepted": True,
         },
     )
     assert r1.status_code == 422
@@ -159,7 +161,7 @@ def test_user_registration_validation_rules(client: TestClient) -> None:
     # Username too short
     r2 = client.post(
         "/api/v1/auth/register",
-        json={"email": "u@test.com", "username": "ab", "password": "Pass12345678!"},
+        json={"email": "u@test.com", "username": "ab", "password": "Pass12345678!", "terms_accepted": True},
     )
     assert r2.status_code == 422
 
@@ -170,6 +172,7 @@ def test_user_registration_validation_rules(client: TestClient) -> None:
             "email": "u@test.com",
             "username": "valid_user",
             "password": "PasswordOnly",
+            "terms_accepted": True,
         },
     )
     assert r3.status_code == 422
@@ -181,6 +184,7 @@ def test_user_registration_validation_rules(client: TestClient) -> None:
             "email": "u@test.com",
             "username": "valid_user",
             "password": "123456789012",
+            "terms_accepted": True,
         },
     )
     assert r4.status_code == 422
@@ -192,6 +196,7 @@ def test_user_registration_duplicate_conflict(client: TestClient) -> None:
         "email": "duplicate@example.com",
         "username": "duplicate_user",
         "password": "ValidPassword123!",
+        "terms_accepted": True,
     }
     r1 = client.post("/api/v1/auth/register", json=payload)
     assert r1.status_code == 201
@@ -203,6 +208,7 @@ def test_user_registration_duplicate_conflict(client: TestClient) -> None:
             "email": "duplicate@example.com",
             "username": "other_username",
             "password": "ValidPassword123!",
+            "terms_accepted": True,
         },
     )
     assert r2.status_code == 409
@@ -215,6 +221,7 @@ def test_user_registration_duplicate_conflict(client: TestClient) -> None:
             "email": "other@example.com",
             "username": "duplicate_user",
             "password": "ValidPassword123!",
+            "terms_accepted": True,
         },
     )
     assert r3.status_code == 409
@@ -227,6 +234,7 @@ def test_login_and_me_lifecycle(client: TestClient) -> None:
         "email": "lifecycle@example.com",
         "username": "lifecycle_user",
         "password": "SecretPassword2026!",
+        "terms_accepted": True,
     }
     client.post("/api/v1/auth/register", json=reg_payload)
 
@@ -256,6 +264,7 @@ def test_login_with_email(client: TestClient) -> None:
         "email": "email_login@example.com",
         "username": "email_user",
         "password": "SecretPassword2026!",
+        "terms_accepted": True,
     }
     client.post("/api/v1/auth/register", json=reg_payload)
 

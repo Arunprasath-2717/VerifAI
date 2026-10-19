@@ -5,6 +5,7 @@ from app.models.chat import Conversation, LLMRun, Message
 from app.models.ingestion import IngestedPayload
 from app.models.knowledge import KnowledgeChunk, KnowledgeDocument
 from app.models.user import User
+from app.models.user_consent import UserConsent
 from app.models.verification import (
     AuditRecord,
     ExtractedClaim,
@@ -18,6 +19,7 @@ __all__ = [
     "GUID",
     "TimestampMixin",
     "User",
+    "UserConsent",
     "Conversation",
     "Message",
     "LLMRun",

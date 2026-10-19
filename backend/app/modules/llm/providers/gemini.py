@@ -87,6 +87,7 @@ class GeminiProvider(BaseLLMProvider):
 
             parts = candidates[0].get("content", {}).get("parts", [])
             text_result = "".join(p.get("text", "") for p in parts)
+            usage_meta = data.get("usageMetadata", {})
             return LLMExecutionResult(
                 provider="google",
                 model_name=model_name,
@@ -95,4 +96,5 @@ class GeminiProvider(BaseLLMProvider):
                 status="COMPLETED",
                 model_version=model_name,
                 latency_ms=round(elapsed, 2),
+                metadata={"usage": usage_meta},
             )

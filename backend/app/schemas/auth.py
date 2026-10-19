@@ -47,6 +47,17 @@ class UserRegisterRequest(BaseModel):
         max_length=128,
         description="Password (min 8 chars, containing at least 1 letter and 1 digit).",
     )
+    terms_accepted: bool = Field(
+        ...,
+        description="Explicit acceptance of Terms & Conditions and Privacy Policy.",
+    )
+
+    @field_validator("terms_accepted", mode="after")
+    @classmethod
+    def validate_terms_accepted(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("You must read and agree to the Terms & Conditions and Privacy Policy.")
+        return v
 
     @field_validator("email", mode="after")
     @classmethod
@@ -134,10 +145,51 @@ class UserResponse(BaseModel):
 class FirebaseAuthRequest(BaseModel):
     """Payload containing Firebase ID token for authentication and synchronization."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     id_token: str = Field(
         ...,
         min_length=10,
         description="Firebase Auth ID Token (JWT RS256) issued by Google.",
     )
+    display_name: str | None = Field(
+        default=None,
+        max_length=128,
+        description="Optional user display name provided during registration.",
+    )
+    terms_accepted: bool | None = Field(
+        default=None,
+        description="Whether user explicitly consented to Terms and Privacy Policy on signup.",
+    )
+    is_signup: bool = Field(
+        default=False,
+        description="Whether this request originates from the new account registration flow.",
+    )
+
+
+class GoogleAuthRequest(BaseModel):
+    """Payload for Google SSO authentication and auto-provisioning."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    email: str = Field(
+        ...,
+        min_length=5,
+        max_length=255,
+        description="Google verified email address.",
+    )
+    name: str | None = Field(
+        default=None,
+        max_length=128,
+        description="Google user display name.",
+    )
+    google_id: str | None = Field(
+        default=None,
+        max_length=128,
+        description="Google sub or account identifier.",
+    )
+    id_token: str | None = Field(
+        default=None,
+        description="Optional Google or Firebase ID token.",
+    )
+

@@ -318,6 +318,7 @@ class ChatService:
                 error_code=res.error_code,
                 error_message=res.error_message,
                 verification_id=verification_id,
+                metadata_json=res.metadata or {},
             )
             self.db.add(llm_run_db)
 

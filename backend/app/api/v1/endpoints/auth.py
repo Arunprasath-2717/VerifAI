@@ -20,6 +20,7 @@ from app.modules.auth.service import AuthenticationService
 from app.repositories.user import UserRepository
 from app.schemas.auth import (
     FirebaseAuthRequest,
+    GoogleAuthRequest,
     TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
@@ -70,7 +71,12 @@ async def register(
             settings=settings,
         )
 
-    return await auth_service.register_user(request_data)
+    ip_address = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
+    return await auth_service.register_user(
+        request_data, ip_address=ip_address, user_agent=user_agent
+    )
 
 
 @router.post(
@@ -137,8 +143,43 @@ async def get_me(
 )
 async def authenticate_with_firebase(
     request: FirebaseAuthRequest,
+    http_request: Request,
     auth_service: AuthenticationService = Depends(get_auth_service),
 ) -> TokenResponse:
     """Authenticate or synchronize user via Firebase Auth ID token."""
-    token_response, _ = await auth_service.authenticate_firebase(request.id_token)
+    ip_address = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
+    token_response, _ = await auth_service.authenticate_firebase(
+        request.id_token,
+        display_name=request.display_name,
+        terms_accepted=request.terms_accepted,
+        is_signup=request.is_signup,
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
     return token_response
+
+
+@router.post(
+    "/auth/google",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Authenticate via Google SSO",
+    description=(
+        "Authenticates or auto-provisions a user account via Google SSO, "
+        "and returns a signed VerifAI session token."
+    ),
+)
+async def authenticate_with_google(
+    request: GoogleAuthRequest,
+    auth_service: AuthenticationService = Depends(get_auth_service),
+) -> TokenResponse:
+    """Authenticate or synchronize user via Google SSO."""
+    return await auth_service.authenticate_google(
+        email=request.email,
+        name=request.name,
+        google_id=request.google_id,
+        id_token=request.id_token,
+    )
+

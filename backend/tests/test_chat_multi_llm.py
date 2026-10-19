@@ -25,7 +25,7 @@ def _register_and_login(
     """Helper to register and login a test user, returning (token, user_id)."""
     reg_res = client.post(
         "/api/v1/auth/register",
-        json={"email": email, "username": username, "password": "StrongPassword2026!"},
+        json={"email": email, "username": username, "password": "StrongPassword2026!", "terms_accepted": True},
     )
     assert reg_res.status_code == 201
     user_id = reg_res.json()["id"]

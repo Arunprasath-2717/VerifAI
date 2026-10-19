@@ -43,6 +43,7 @@ def test_full_real_system_e2e_lifecycle(client: TestClient):
             "email": "dr_alice@verifai-research.org",
             "username": "dr_alice",
             "password": "SecureLabPassword2026!",
+            "terms_accepted": True,
         },
     )
     assert reg_a.status_code == 201, reg_a.text
@@ -165,6 +166,7 @@ def test_full_real_system_e2e_lifecycle(client: TestClient):
             "email": "dr_bob@external-agency.gov",
             "username": "dr_bob",
             "password": "DifferentPassword2026!",
+            "terms_accepted": True,
         },
     )
     assert reg_b.status_code == 201

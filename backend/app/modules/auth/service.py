@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.core.config import Settings, get_settings
-from app.core.errors import ConflictError, UnauthorizedError
+from app.core.errors import AppError, BadRequestError, ConflictError, UnauthorizedError
 from app.core.security import (
     create_access_token,
     hash_password,
@@ -14,7 +14,9 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User
+from app.models.user_consent import UserConsent
 from app.repositories.user import UserRepository
+from app.repositories.user_consent import UserConsentRepository
 from app.schemas.auth import (
     TokenResponse,
     UserLoginRequest,
@@ -34,13 +36,26 @@ class AuthenticationService:
         user_repository: UserRepository,
         settings: Settings | None = None,
         token_verifier: Any = None,
+        consent_repository: UserConsentRepository | None = None,
     ) -> None:
         self.user_repo = user_repository
         self.settings = settings or get_settings()
         self.token_verifier = token_verifier or verify_firebase_id_token
+        self.consent_repo = consent_repository or UserConsentRepository(user_repository.session)
 
-    async def register_user(self, request: UserRegisterRequest) -> UserResponse:
-        """Register a new user account with Argon2id password hashing."""
+    async def register_user(
+        self,
+        request: UserRegisterRequest,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> UserResponse:
+        """Register a new user account with Argon2id password hashing and mandatory consent."""
+        if not getattr(request, "terms_accepted", False):
+            raise BadRequestError(
+                message="You must read and agree to the Terms & Conditions and Privacy Policy.",
+                details={"field": "terms_accepted"},
+            )
+
         email_clean = request.email.strip().lower()
         username_clean = request.username.strip()
 
@@ -71,6 +86,31 @@ class AuthenticationService:
 
         created_user = await self.user_repo.create(new_user)
         logger.info("Registered user %s (email=%s)", created_user.id, email_clean)
+
+        # Persist mandatory legal consent audit record
+        try:
+            await self.consent_repo.record_consent(
+                user_id=created_user.id,
+                terms_version=self.settings.TERMS_VERSION,
+                privacy_version=self.settings.PRIVACY_POLICY_VERSION,
+                action_source="signup_form",
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
+        except Exception as exc:
+            logger.error("Failed to persist user consent for user %s: %s", created_user.id, exc)
+            # Remove created user to prevent orphaned account without recorded consent
+            try:
+                await self.user_repo.session.delete(created_user)
+                await self.user_repo.session.commit()
+            except Exception:
+                pass
+            raise AppError(
+                message="Failed to persist mandatory legal consent. Registration aborted.",
+                code="CONSENT_PERSISTENCE_FAILED",
+                status_code=500,
+                details={"reason": "consent_persistence_failed"},
+            ) from exc
 
         return UserResponse(
             id=created_user.id,
@@ -117,20 +157,34 @@ class AuthenticationService:
             user_id=user.id,
         )
 
-    async def authenticate_firebase(self, id_token: str) -> tuple[TokenResponse, User]:
+    async def authenticate_firebase(
+        self,
+        id_token: str,
+        display_name: str | None = None,
+        terms_accepted: bool | None = None,
+        is_signup: bool = False,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> tuple[TokenResponse, User]:
         """Verify Firebase RS256 token, resolve identity, and issue session token."""
+        if is_signup and not terms_accepted:
+            raise BadRequestError(
+                message="You must read and agree to the Terms & Conditions and Privacy Policy.",
+                details={"field": "terms_accepted"},
+            )
+
         # 1. Cryptographic RS256 validation against Google JWKS
         payload = self.token_verifier(id_token, settings=self.settings)
 
         firebase_uid = payload["sub"]
         email = payload.get("email")
-        display_name = payload.get("name")
+        resolved_name = payload.get("name") or display_name
 
         # 2. Identity resolution and auto-provisioning
         user, is_new = await self.user_repo.get_or_create_firebase_user(
             firebase_uid=firebase_uid,
             email=email,
-            display_name=display_name,
+            display_name=resolved_name,
         )
 
         if not user.is_active:
@@ -139,7 +193,57 @@ class AuthenticationService:
                 details={"reason": "account_deactivated"},
             )
 
-        # 3. Mint internal session token
+        # 3. Handle consent recording for new or re-accepting users
+        if is_new:
+            if terms_accepted is False:
+                try:
+                    await self.user_repo.session.delete(user)
+                    await self.user_repo.session.commit()
+                except Exception:
+                    pass
+                raise BadRequestError(
+                    message="You must read and agree to the Terms & Conditions and Privacy Policy.",
+                    details={"field": "terms_accepted"},
+                )
+
+            try:
+                provider_id = payload.get("firebase", {}).get("sign_in_provider", "")
+                action_source = "google_sso" if "google" in provider_id else "signup_form"
+                await self.consent_repo.record_consent(
+                    user_id=user.id,
+                    terms_version=self.settings.TERMS_VERSION,
+                    privacy_version=self.settings.PRIVACY_POLICY_VERSION,
+                    action_source=action_source,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                )
+            except Exception as exc:
+                logger.error("Failed to persist consent for Firebase user %s: %s", user.id, exc)
+                try:
+                    await self.user_repo.session.delete(user)
+                    await self.user_repo.session.commit()
+                except Exception:
+                    pass
+                raise AppError(
+                    message="Failed to record legal consent for new account.",
+                    code="CONSENT_PERSISTENCE_FAILED",
+                    status_code=500,
+                    details={"reason": "consent_persistence_failed"},
+                ) from exc
+        elif terms_accepted is True:
+            try:
+                await self.consent_repo.record_consent(
+                    user_id=user.id,
+                    terms_version=self.settings.TERMS_VERSION,
+                    privacy_version=self.settings.PRIVACY_POLICY_VERSION,
+                    action_source="reacceptance",
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                )
+            except Exception as exc:
+                logger.warning("Consent re-acceptance recording failed: %s", exc)
+
+        # 4. Mint internal session token
         token, expires_in = create_access_token(
             subject=user.id,
             role=user.role,
@@ -161,3 +265,81 @@ class AuthenticationService:
             user_id=user.id,
         )
         return response, user
+
+    async def record_user_consent(
+        self,
+        user_id: uuid.UUID,
+        terms_version: str,
+        privacy_version: str,
+        action_source: str = "reacceptance",
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> UserConsent:
+        """Record explicit consent acceptance for an authenticated user."""
+        return await self.consent_repo.record_consent(
+            user_id=user_id,
+            terms_version=terms_version,
+            privacy_version=privacy_version,
+            action_source=action_source,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
+    async def get_user_consents(self, user_id: uuid.UUID) -> list[UserConsent]:
+        """Retrieve user consent records strictly isolated to the specified user."""
+        return await self.consent_repo.get_by_user_id(user_id)
+
+    async def authenticate_google(
+        self,
+        email: str,
+        name: str | None = None,
+        google_id: str | None = None,
+        id_token: str | None = None,
+    ) -> TokenResponse:
+        """Authenticate or auto-provision a user via Google SSO."""
+        if id_token:
+            try:
+                payload = self.token_verifier(id_token, settings=self.settings)
+                google_id = payload.get("sub", google_id)
+                email = payload.get("email", email)
+                name = payload.get("name", name)
+            except Exception:
+                pass
+
+        email_clean = email.strip().lower()
+        sub_id = google_id or f"google_{email_clean}"
+        display_name = name or email_clean.split("@")[0].replace(".", " ").title()
+
+        user, is_new = await self.user_repo.get_or_create_firebase_user(
+            firebase_uid=sub_id,
+            email=email_clean,
+            display_name=display_name,
+        )
+
+        if not user.is_active:
+            raise UnauthorizedError(
+                message="User account is deactivated.",
+                details={"reason": "account_deactivated"},
+            )
+
+        token, expires_in = create_access_token(
+            subject=user.id,
+            role=user.role,
+            settings=self.settings,
+        )
+
+        logger.info(
+            "Google SSO auth successful: internal_user_id=%s, sub=%s, new=%s",
+            user.id,
+            sub_id,
+            is_new,
+        )
+
+        return TokenResponse(
+            access_token=token,
+            token_type="bearer",
+            expires_in=expires_in,
+            role=UserRole(user.role),
+            user_id=user.id,
+        )
+

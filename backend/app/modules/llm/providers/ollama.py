@@ -54,6 +54,8 @@ class OllamaProvider(BaseLLMProvider):
 
                 data = resp.json()
                 content = data.get("message", {}).get("content", "")
+                prompt_tokens = data.get("prompt_eval_count", 0)
+                eval_tokens = data.get("eval_count", 0)
                 return LLMExecutionResult(
                     provider="ollama",
                     model_name=model_name,
@@ -62,6 +64,13 @@ class OllamaProvider(BaseLLMProvider):
                     status="COMPLETED",
                     model_version=model_name,
                     latency_ms=round(elapsed, 2),
+                    metadata={
+                        "usage": {
+                            "prompt_tokens": prompt_tokens,
+                            "completion_tokens": eval_tokens,
+                            "total_tokens": (prompt_tokens or 0) + (eval_tokens or 0),
+                        }
+                    },
                 )
         except (httpx.ConnectError, httpx.ConnectTimeout):
             elapsed = (time.monotonic() - start_time) * 1000.0

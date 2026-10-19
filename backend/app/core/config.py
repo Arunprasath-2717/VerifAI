@@ -62,12 +62,25 @@ class Settings(BaseSettings):
     # Authentication — Firebase Auth (RS256 via Google JWKS)
     # ===========================================================================
     FIREBASE_AUTH_ENABLED: bool = True
+    FIREBASE_API_KEY: str = "AIzaSyDag7_lFm6ayphrJUDYWK2EQmZmFdaU_5s"
     FIREBASE_PROJECT_ID: str = "verifai-22c4b"
     FIREBASE_AUTH_DOMAIN: str = "verifai-22c4b.firebaseapp.com"
     FIREBASE_STORAGE_BUCKET: str = "verifai-22c4b.firebasestorage.app"
     FIREBASE_MESSAGING_SENDER_ID: str = "501647364420"
     FIREBASE_APP_ID: str = "1:501647364420:web:9848f5dc7ba7d236704711"
     FIREBASE_MEASUREMENT_ID: str = "G-4LPP8CZGG3"
+
+    # ===========================================================================
+    # Legal & Compliance Configuration
+    # Authoritative versions and effective dates for Terms & Privacy Policy
+    # ===========================================================================
+    TERMS_VERSION: str = "2026.1"
+    PRIVACY_POLICY_VERSION: str = "2026.1"
+    TERMS_EFFECTIVE_DATE: str = "October 10, 2026"
+    PRIVACY_EFFECTIVE_DATE: str = "October 10, 2026"
+    LEGAL_CONTACT_EMAIL: str = "[CONFIGURED_LEGAL_CONTACT_EMAIL]"
+    GOVERNING_LAW: str = "[CONFIGURED_GOVERNING_JURISDICTION_PLACEHOLDER]"
+    MINIMUM_AGE_REQUIREMENT: str = "[CONFIGURED_MINIMUM_AGE_PLACEHOLDER]"
 
     # Internal JWT for session tokens issued after Firebase verification
     # NOTE: These are VerifAI-issued session tokens, NOT Firebase tokens.
