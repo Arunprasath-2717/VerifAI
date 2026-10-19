@@ -6,7 +6,13 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.core.config import Settings, get_settings
-from app.core.errors import AppError, BadRequestError, ConflictError, UnauthorizedError
+from app.core.errors import (
+    AppError,
+    BadRequestError,
+    ConflictError,
+    ForbiddenError,
+    UnauthorizedError,
+)
 from app.core.security import (
     create_access_token,
     hash_password,
@@ -172,14 +178,14 @@ class AuthenticationService:
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> tuple[TokenResponse, User]:
-        """Verify Firebase RS256 token, resolve identity, and issue session token."""
-        if is_signup and not terms_accepted:
-            raise BadRequestError(
-                message="You must read and agree to the Terms & Conditions "
-                "and Privacy Policy.",
-                details={"field": "terms_accepted"},
-            )
+        """Verify Firebase RS256 token, resolve identity, and issue session token.
 
+        Consent is enforced on the server before any account is provisioned:
+        - A new account must be created with ``terms_accepted=True``.
+        - An existing account whose latest consent does not match the current
+          terms/privacy versions must re-accept (``terms_accepted=True``), or the
+          request is rejected with ``TERMS_REACCEPTANCE_REQUIRED``.
+        """
         # 1. Cryptographic RS256 validation against Google JWKS
         payload = self.token_verifier(id_token, settings=self.settings)
 
@@ -187,7 +193,34 @@ class AuthenticationService:
         email = payload.get("email")
         resolved_name = payload.get("name") or display_name
 
-        # 2. Identity resolution and auto-provisioning
+        # 2. Consent gate, evaluated before any row is written
+        existing = await self.user_repo.get_by_id(
+            uuid.uuid5(uuid.NAMESPACE_URL, f"firebase:{firebase_uid}")
+        )
+        if existing is None:
+            if terms_accepted is not True:
+                raise BadRequestError(
+                    message="You must read and agree to the Terms & Conditions "
+                    "and Privacy Policy.",
+                    details={"field": "terms_accepted"},
+                )
+        else:
+            current = await self.consent_repo.has_consented_to_current(
+                existing.id,
+                self.settings.TERMS_VERSION,
+                self.settings.PRIVACY_POLICY_VERSION,
+            )
+            if not current and terms_accepted is not True:
+                raise ForbiddenError(
+                    message="Accept the updated Terms & Conditions to continue.",
+                    details={
+                        "reason": "TERMS_REACCEPTANCE_REQUIRED",
+                        "terms_version": self.settings.TERMS_VERSION,
+                        "privacy_version": self.settings.PRIVACY_POLICY_VERSION,
+                    },
+                )
+
+        # 3. Identity resolution and auto-provisioning
         user, is_new = await self.user_repo.get_or_create_firebase_user(
             firebase_uid=firebase_uid,
             email=email,
@@ -200,20 +233,8 @@ class AuthenticationService:
                 details={"reason": "account_deactivated"},
             )
 
-        # 3. Handle consent recording for new or re-accepting users
+        # 4. Persist consent for new accounts and re-acceptance
         if is_new:
-            if terms_accepted is False:
-                try:
-                    await self.user_repo.session.delete(user)
-                    await self.user_repo.session.commit()
-                except Exception:
-                    pass
-                raise BadRequestError(
-                    message="You must read and agree to the Terms & Conditions "
-                    "and Privacy Policy.",
-                    details={"field": "terms_accepted"},
-                )
-
             try:
                 provider_id = payload.get("firebase", {}).get("sign_in_provider", "")
                 action_source = (
@@ -243,17 +264,32 @@ class AuthenticationService:
                     details={"reason": "consent_persistence_failed"},
                 ) from exc
         elif terms_accepted is True:
-            try:
-                await self.consent_repo.record_consent(
-                    user_id=user.id,
-                    terms_version=self.settings.TERMS_VERSION,
-                    privacy_version=self.settings.PRIVACY_POLICY_VERSION,
-                    action_source="reacceptance",
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                )
-            except Exception as exc:
-                logger.warning("Consent re-acceptance recording failed: %s", exc)
+            # Recorded only when the stored consent is not current; a repeat
+            # login with an up-to-date record must not add duplicate rows.
+            current = await self.consent_repo.has_consented_to_current(
+                user.id,
+                self.settings.TERMS_VERSION,
+                self.settings.PRIVACY_POLICY_VERSION,
+            )
+            if not current:
+                try:
+                    await self.consent_repo.record_consent(
+                        user_id=user.id,
+                        terms_version=self.settings.TERMS_VERSION,
+                        privacy_version=self.settings.PRIVACY_POLICY_VERSION,
+                        action_source="reacceptance",
+                        ip_address=ip_address,
+                        user_agent=user_agent,
+                    )
+                except Exception as exc:
+                    # Consent is required here, so a failed write must fail the login.
+                    logger.error("Consent re-acceptance recording failed: %s", exc)
+                    raise AppError(
+                        message="Failed to record legal consent. Please try again.",
+                        code="CONSENT_PERSISTENCE_FAILED",
+                        status_code=500,
+                        details={"reason": "consent_persistence_failed"},
+                    ) from exc
 
         # 4. Mint internal session token
         token, expires_in = create_access_token(

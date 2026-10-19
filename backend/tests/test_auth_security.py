@@ -384,9 +384,14 @@ def test_firebase_auth_endpoint_and_token_exchange(
         auth_endpoint, "verify_firebase_id_token", lambda token, settings: mock_payload
     )
 
+    # New accounts must send explicit Terms acceptance (server-side consent gate).
     resp = client.post(
         "/api/v1/auth/firebase",
-        json={"id_token": "valid.mock.firebase.token"},
+        json={
+            "id_token": "valid.mock.firebase.token",
+            "terms_accepted": True,
+            "is_signup": True,
+        },
     )
     assert resp.status_code == 200
     data = resp.json()
