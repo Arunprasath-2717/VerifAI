@@ -74,7 +74,7 @@ class AnalysisBudgetManager:
             return available >= estimated_tokens
 
     async def reserve(self, estimated_tokens: int) -> str:
-        """Reserve token budget prior to dispatching an LLM call to prevent race overruns."""
+        """Reserve token budget before dispatching an LLM call (prevents races)."""
         async with self._lock:
             available = self.budget_limit - (
                 self._total_tokens_spent + sum(self._active_reservations.values())
@@ -124,7 +124,7 @@ class AnalysisBudgetManager:
         retry_count: int = 0,
         reservation_id: str | None = None,
     ) -> TokenUsageRecord:
-        """Record verified actual or estimated token usage, replacing any active reservation."""
+        """Record actual or estimated token usage, replacing any active reservation."""
         async with self._lock:
             # Reconcile reservation if provided
             if reservation_id and reservation_id in self._active_reservations:
@@ -167,7 +167,8 @@ class AnalysisBudgetManager:
                 self._is_exhausted = True
 
             logger.info(
-                "Recorded usage: %s %s/%s -> %d in, %d out (%d total). Spent: %d/%d (exhausted=%s)",
+                "Recorded usage: %s %s/%s -> %d in, %d out (%d total). "
+                "Spent: %d/%d (exhausted=%s)",
                 operation,
                 provider,
                 model_name,

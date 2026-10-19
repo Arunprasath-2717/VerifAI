@@ -14,7 +14,8 @@ class TokenEstimator:
         """Estimate token count deterministically without external API dependencies.
 
         Uses a blended heuristic: average of word/symbol regex matches and character
-        length ratio (~3.8 characters per token), guaranteeing non-zero for non-empty text.
+        length ratio (~3.8 characters per token), guaranteeing non-zero for
+        non-empty text.
         """
         if not text or not text.strip():
             return 0
@@ -23,7 +24,7 @@ class TokenEstimator:
         char_estimate = len(stripped) / 3.8
         token_matches = len(_TOKEN_PATTERN.findall(stripped))
 
-        # Take the maximum of token matches and char estimate for safe budget reservation
+        # Take the max of token matches and char estimate for safe reservation
         estimated = int(max(token_matches, char_estimate))
         return max(1, estimated)
 
@@ -34,11 +35,12 @@ class TokenEstimator:
         output_tokens: int,
         pricing_map: dict[str, dict[str, float]] | None = None,
     ) -> float:
-        """Calculate estimated cost in USD using versioned model pricing per 1M tokens."""
+        """Estimate cost in USD using versioned model pricing per 1M tokens."""
         if not pricing_map:
             return 0.0
 
-        # Match exact or partial model name (e.g. "gpt-4o-mini-2024-07-18" -> "gpt-4o-mini")
+        # Match exact or partial model name
+        # (e.g. "gpt-4o-mini-2024-07-18" -> "gpt-4o-mini")
         clean_model = model_name.lower().strip()
         matched_pricing = pricing_map.get("default", {"input": 0.20, "output": 0.80})
 
