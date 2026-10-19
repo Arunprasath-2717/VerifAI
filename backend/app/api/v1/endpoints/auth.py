@@ -20,7 +20,6 @@ from app.modules.auth.service import AuthenticationService
 from app.repositories.user import UserRepository
 from app.schemas.auth import (
     FirebaseAuthRequest,
-    GoogleAuthRequest,
     TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
@@ -159,27 +158,3 @@ async def authenticate_with_firebase(
         user_agent=user_agent,
     )
     return token_response
-
-
-@router.post(
-    "/auth/google",
-    response_model=TokenResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Authenticate via Google SSO",
-    description=(
-        "Authenticates or auto-provisions a user account via Google SSO, "
-        "and returns a signed VerifAI session token."
-    ),
-)
-async def authenticate_with_google(
-    request: GoogleAuthRequest,
-    auth_service: AuthenticationService = Depends(get_auth_service),
-) -> TokenResponse:
-    """Authenticate or synchronize user via Google SSO."""
-    return await auth_service.authenticate_google(
-        email=request.email,
-        name=request.name,
-        google_id=request.google_id,
-        id_token=request.id_token,
-    )
-

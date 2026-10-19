@@ -34,14 +34,6 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface GoogleAuthPayload {
-  email: string;
-  name?: string;
-  google_id?: string;
-  id_token?: string;
-  terms_accepted?: boolean;
-}
-
 export const authApi = {
   async register(data: RegisterPayload): Promise<UserResponse> {
     const base = (data.username || data.full_name || data.email.split('@')[0] || 'user')
@@ -104,23 +96,6 @@ export const authApi = {
       body: JSON.stringify({
         email_or_username: identifier,
         password: data.password,
-      }),
-    });
-
-    if (res.access_token) {
-      setAuthToken(res.access_token);
-    }
-    return res;
-  },
-
-  async googleAuth(data: GoogleAuthPayload): Promise<TokenResponse> {
-    const res = await apiClient<TokenResponse>('/auth/google', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: data.email.trim().toLowerCase(),
-        name: data.name || data.email.split('@')[0],
-        google_id: data.google_id || `google_${data.email.replace(/[^a-zA-Z0-9]/g, '_')}`,
-        id_token: data.id_token || null,
       }),
     });
 

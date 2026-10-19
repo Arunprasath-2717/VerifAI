@@ -167,29 +167,3 @@ class FirebaseAuthRequest(BaseModel):
     )
 
 
-class GoogleAuthRequest(BaseModel):
-    """Payload for Google SSO authentication and auto-provisioning."""
-
-    model_config = ConfigDict(extra="ignore")
-
-    email: str = Field(
-        ...,
-        min_length=5,
-        max_length=255,
-        description="Google verified email address.",
-    )
-    name: str | None = Field(
-        default=None,
-        max_length=128,
-        description="Google user display name.",
-    )
-    google_id: str | None = Field(
-        default=None,
-        max_length=128,
-        description="Google sub or account identifier.",
-    )
-    id_token: str | None = Field(
-        default=None,
-        description="Optional Google or Firebase ID token.",
-    )
-
