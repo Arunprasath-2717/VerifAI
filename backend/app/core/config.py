@@ -137,6 +137,9 @@ class Settings(BaseSettings):
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
     OMNIROUTE_API_KEY: SecretStr | None = None
     OMNIROUTE_BASE_URL: str = "https://api.cheaperinference.com/v1"
+    # Fernet key (urlsafe base64, 32 bytes) for encrypting user BYOK credentials
+    # at rest. Generate with Fernet.generate_key(). Never commit a real value.
+    PROVIDER_CREDENTIAL_ENCRYPTION_KEY: SecretStr | None = None
     DEFAULT_LLM_MODELS: list[str] = Field(
         default_factory=lambda: [
             "gpt-4o-mini",

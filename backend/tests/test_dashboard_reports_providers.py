@@ -51,31 +51,18 @@ def test_models_leaderboard_endpoint(client: TestClient):
     assert "factualSupport" in data[0]["categories"]
 
 
-def test_providers_endpoints(client: TestClient):
-    """Confirm /api/v1/providers lists and tests providers."""
-    list_resp = client.get("/api/v1/providers")
-    assert list_resp.status_code == 200
-    providers = list_resp.json()
-    assert isinstance(providers, list)
-    assert any(p["id"] == "prov-openai" for p in providers)
+def test_providers_endpoints_require_authentication(client: TestClient):
+    """Provider routes are owner-scoped; anonymous callers are rejected.
 
-    # Test link key
-    save_resp = client.post(
-        "/api/v1/providers/prov-mistral/key",
-        json={"apiKey": "mistral-secret-key-12345678"},
+    Full BYOK behavior (save, persist, test, unlink, isolation) is covered in
+    test_provider_credentials.py against the isolated test database.
+    """
+    assert client.get("/api/v1/providers").status_code == 401
+    assert (
+        client.post(
+            "/api/v1/providers/prov-mistral/key", json={"apiKey": "x" * 12}
+        ).status_code
+        == 401
     )
-    assert save_resp.status_code == 200
-    saved = save_resp.json()
-    assert saved["status"] == "Connected"
-    assert "mist" in saved["keyMasked"]
-    assert "mistral-secret-key-12345678" not in saved["keyMasked"]  # Key must be masked!
-
-    # Test connection ping
-    test_resp = client.post("/api/v1/providers/prov-mistral/test")
-    assert test_resp.status_code == 200
-    assert test_resp.json()["success"] is True
-
-    # Test unlink key
-    unlink_resp = client.delete("/api/v1/providers/prov-mistral/key")
-    assert unlink_resp.status_code == 200
-    assert unlink_resp.json()["unlinked"] is True
+    assert client.post("/api/v1/providers/prov-mistral/test").status_code == 401
+    assert client.delete("/api/v1/providers/prov-mistral/key").status_code == 401
