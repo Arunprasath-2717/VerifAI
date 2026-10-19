@@ -7,6 +7,7 @@ import httpx
 from app.core.config import Settings, get_settings
 from app.modules.llm.models import LLMExecutionResult
 from app.modules.llm.providers.interface import BaseLLMProvider
+from app.modules.token_budget.estimator import TokenEstimator
 
 
 class OllamaProvider(BaseLLMProvider):
@@ -24,15 +25,19 @@ class OllamaProvider(BaseLLMProvider):
         model_name: str,
         prompt: str,
         timeout_seconds: float = 30.0,
+        max_tokens: int | None = None,
+        operation: str = "COMPLETION",
     ) -> LLMExecutionResult:
         start_time = time.monotonic()
         base_url = self.settings.OLLAMA_BASE_URL.rstrip("/")
         url = f"{base_url}/api/chat"
-        payload = {
+        payload: dict = {
             "model": model_name,
             "messages": [{"role": "user", "content": prompt}],
             "stream": False,
         }
+        if max_tokens is not None:
+            payload["options"] = {"num_predict": max_tokens}
 
         try:
             async with httpx.AsyncClient(timeout=timeout_seconds) as client:
@@ -54,8 +59,15 @@ class OllamaProvider(BaseLLMProvider):
 
                 data = resp.json()
                 content = data.get("message", {}).get("content", "")
-                prompt_tokens = data.get("prompt_eval_count", 0)
-                eval_tokens = data.get("eval_count", 0)
+                prompt_tokens = data.get("prompt_eval_count")
+                eval_tokens = data.get("eval_count")
+                is_est = False
+
+                if prompt_tokens is None or eval_tokens is None:
+                    prompt_tokens = TokenEstimator.estimate_tokens(prompt)
+                    eval_tokens = TokenEstimator.estimate_tokens(content)
+                    is_est = True
+
                 return LLMExecutionResult(
                     provider="ollama",
                     model_name=model_name,
@@ -71,6 +83,9 @@ class OllamaProvider(BaseLLMProvider):
                             "total_tokens": (prompt_tokens or 0) + (eval_tokens or 0),
                         }
                     },
+                    input_tokens=prompt_tokens,
+                    output_tokens=eval_tokens,
+                    is_estimated_usage=is_est,
                 )
         except (httpx.ConnectError, httpx.ConnectTimeout):
             elapsed = (time.monotonic() - start_time) * 1000.0

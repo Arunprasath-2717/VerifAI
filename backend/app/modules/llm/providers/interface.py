@@ -20,6 +20,8 @@ class BaseLLMProvider(ABC):
         model_name: str,
         prompt: str,
         timeout_seconds: float = 30.0,
+        max_tokens: int | None = None,
+        operation: str = "COMPLETION",
     ) -> LLMExecutionResult:
         """Execute a prompt against the provider and return normalized result."""
         pass

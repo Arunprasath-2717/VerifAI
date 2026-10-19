@@ -29,6 +29,8 @@ class MultiLLMOrchestrator:
         self,
         prompt: str,
         models: list[LLMModelSelection],
+        max_tokens: int | None = None,
+        operation: str = "COMPLETION",
     ) -> list[LLMExecutionResult]:
         """Execute between 1 and 3 models in parallel with strict failure isolation."""
         if not (1 <= len(models) <= 3):
@@ -45,6 +47,8 @@ class MultiLLMOrchestrator:
                     model_name=selection.model_name,
                     prompt=prompt,
                     timeout_seconds=timeout,
+                    max_tokens=max_tokens,
+                    operation=operation,
                 )
             except Exception as exc:
                 clean_msg = sanitize_credential_text(str(exc))

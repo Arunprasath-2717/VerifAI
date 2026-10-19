@@ -148,6 +148,41 @@ class Settings(BaseSettings):
     LLM_TIMEOUT_SECONDS: float = 30.0
 
     # ===========================================================================
+    # Centralized Token & Cost Budget Configuration (PRD Section 2)
+    # ===========================================================================
+    TOKEN_BUDGET_ANALYSIS_DEFAULT: int = 20000
+    TOKEN_BUDGET_CLAIM_EXTRACTION_INPUT: int = 6000
+    TOKEN_BUDGET_CLAIM_EXTRACTION_OUTPUT: int = 1000
+    TOKEN_BUDGET_SINGLE_CLAIM_EVAL_INPUT: int = 4000
+    TOKEN_BUDGET_SINGLE_CLAIM_EVAL_OUTPUT: int = 600
+    TOKEN_BUDGET_REPORT_SUMMARY_INPUT: int = 4000
+    TOKEN_BUDGET_REPORT_SUMMARY_OUTPUT: int = 500
+    TOKEN_BUDGET_EVIDENCE_ITEMS_PER_CLAIM: int = 5
+    TOKEN_BUDGET_EVIDENCE_EXCERPT_CHARS: int = 1000
+    TOKEN_BUDGET_MAX_RETRIES: int = 2
+    TOKEN_BUDGET_PARALLEL_EVALS: int = 3
+    TOKEN_BUDGET_USER_DAILY_MAX: int = 100000
+    TOKEN_BUDGET_USER_DAILY_ANALYSES_MAX: int = 50
+    TOKEN_BUDGET_MAX_CONCURRENT_ANALYSES_PER_USER: int = 3
+    TOKEN_BUDGET_MAX_PARALLEL_CALLS: int = 3
+    TOKEN_BUDGET_MAX_REQUEST_SIZE_CHARS: int = 25000
+    ENABLE_ANALYSIS_CACHE: bool = True
+    ANALYSIS_CACHE_TTL_SECONDS: int = 3600
+    MODEL_PRICING_PER_1M_TOKENS: dict[str, dict[str, float]] = Field(
+        default_factory=lambda: {
+            "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+            "gpt-4o": {"input": 2.50, "output": 10.00},
+            "claude-3-5-sonnet": {"input": 3.00, "output": 15.00},
+            "claude-3-haiku": {"input": 0.25, "output": 1.25},
+            "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
+            "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
+            "llama3:8b": {"input": 0.0, "output": 0.0},
+            "llama-3-8b": {"input": 0.05, "output": 0.08},
+            "default": {"input": 0.20, "output": 0.80},
+        }
+    )
+
+    # ===========================================================================
     # Knowledge Base (KB) Configuration
     # ===========================================================================
     DEFAULT_OWNER_ID: str = "default_dev_user"
@@ -259,6 +294,25 @@ class Settings(BaseSettings):
                     f"'{self.ENVIRONMENT}'."
                 )
         return self
+
+    # ---------------------------------------------------------------------------
+    # Property aliases — convenience shorthands for the orchestrator and tests.
+    # These read directly from the TOKEN_BUDGET_* fields above.
+    # ---------------------------------------------------------------------------
+    @property
+    def USER_DAILY_ANALYSIS_LIMIT(self) -> int:  # noqa: N802
+        """Max analyses a single user may run per UTC day."""
+        return self.TOKEN_BUDGET_USER_DAILY_ANALYSES_MAX
+
+    @property
+    def MAX_TOKENS_PER_ANALYSIS(self) -> int:  # noqa: N802
+        """Hard token ceiling for a single analysis job."""
+        return self.TOKEN_BUDGET_ANALYSIS_DEFAULT
+
+    @property
+    def USER_DAILY_TOKEN_LIMIT(self) -> int:  # noqa: N802
+        """Max tokens a single user may consume per UTC day."""
+        return self.TOKEN_BUDGET_USER_DAILY_MAX
 
     model_config = SettingsConfigDict(
         # Search for .env in backend/ first (Docker / CI), then repo root.

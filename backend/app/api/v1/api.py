@@ -14,6 +14,7 @@ from app.api.v1.endpoints import (
     models,
     providers,
     reports,
+    token_budget,
     verification,
 )
 
@@ -32,3 +33,4 @@ api_v1_router.include_router(ingestion.router, tags=["Ingestion"])
 api_v1_router.include_router(knowledge.router, tags=["Knowledge Base"])
 api_v1_router.include_router(reports.router, tags=["Reports & Analytics"])
 api_v1_router.include_router(providers.router, tags=["AI Providers"])
+api_v1_router.include_router(token_budget.router)

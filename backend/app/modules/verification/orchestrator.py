@@ -33,6 +33,12 @@ from app.modules.judging.models import JudgeEvaluationData
 from app.modules.judging.semantic_judge import SecondarySemanticJudge
 from app.modules.knowledge.retriever import KBSearchResult, PrivateKBRetriever
 from app.modules.knowledge.service import KnowledgeBaseService
+from app.modules.token_budget import (
+    AnalysisBudgetManager,
+    AnalysisCacheService,
+    UserDailyBudgetTracker,
+)
+from app.repositories.token_usage import TokenUsageRepository
 from app.schemas.knowledge import KBSufficiencyStatus
 from app.schemas.verification import (
     AuditRecordSchema,
@@ -86,6 +92,39 @@ class VerificationOrchestrator:
         db_session: AsyncSession | None = None,
     ) -> VerificationResponse:
         """Execute full verification pipeline for the given input text."""
+        # ── Cache lookup ────────────────────────────────────────────────────────
+        effective_owner_early = request.options.owner_id or "anonymous"
+        _cache = AnalysisCacheService.get_instance()
+        _cache_hash = AnalysisCacheService.compute_hash(
+            text=request.text,
+            query=request.query,
+            options=request.options.model_dump(exclude_none=True),
+        )
+        cached_response = _cache.get(effective_owner_early, _cache_hash)
+        if cached_response is not None:
+            logger.info(
+                "Cache HIT for owner=%s — returning cached analysis (hash=%s).",
+                effective_owner_early,
+                _cache_hash[:12],
+            )
+            return cached_response
+
+        # ── Daily budget guard ─────────────────────────────────────────────────
+        _daily_tracker = UserDailyBudgetTracker.get_instance()
+        await _daily_tracker.check_and_increment_analysis(
+            user_id=effective_owner_early,
+            daily_max_analyses=self.settings.USER_DAILY_ANALYSIS_LIMIT,
+        )
+
+        # ── Per-analysis token budget ─────────────────────────────────────────
+        budget_limit = getattr(self.settings, "MAX_TOKENS_PER_ANALYSIS", 20_000)
+        budget = AnalysisBudgetManager(
+            analysis_id=uuid.uuid4(),  # separate from verification_id
+            owner_id=effective_owner_early,
+            budget_limit=budget_limit,
+            settings=self.settings,
+        )
+
         verification_id = uuid.uuid4()
         now_utc = datetime.now(UTC)
         audit_records: list[AuditRecord] = []
@@ -311,14 +350,48 @@ class VerificationOrchestrator:
                         },
                     )
 
-                # Step 4: Independent Judge Evaluation
+                # Step 4: Independent Judge Evaluation (budget-gated)
                 if evidence_items:
                     # Evaluate primary 2 judges
                     for judge in self.judges[:2]:
+                        # Estimate cost and check budget before invoking judge
+                        combined_text = item.text + " ".join(
+                            ev.snippet or "" for ev in evidence_items
+                        )
+                        from app.modules.token_budget.estimator import TokenEstimator
+
+                        est_tokens = TokenEstimator.estimate_tokens(combined_text)
+                        if not await budget.can_spend(est_tokens):
+                            logger.warning(
+                                "Budget exhausted before judge %s on claim %d; skipping.",
+                                judge.name,
+                                item.index,
+                            )
+                            judge_evaluations.append(
+                                JudgeEvaluationData(
+                                    judge_id=uuid.uuid4(),
+                                    judge_name=judge.name,
+                                    judgment=JudgeDecision.UNAVAILABLE,
+                                    rationale="Token budget exhausted — judge skipped.",
+                                )
+                            )
+                            continue
+                        reservation_id = await budget.reserve(est_tokens)
                         try:
                             eval_data = await judge.evaluate(item.text, evidence_items)
                             judge_evaluations.append(eval_data)
+                            # Record actual usage (use estimate for deterministic judges)
+                            await budget.record_usage(
+                                operation="CLAIM_EVALUATION",
+                                provider="deterministic",
+                                model_name=judge.name,
+                                input_tokens=est_tokens,
+                                output_tokens=0,
+                                is_estimated=True,
+                                reservation_id=reservation_id,
+                            )
                         except Exception as j_exc:
+                            await budget.release_reservation(reservation_id)
                             logger.warning(
                                 "Judge %s failed on claim %d: %s",
                                 judge.name,
@@ -564,12 +637,35 @@ class VerificationOrchestrator:
         if db_session is not None:
             try:
                 db_session.add(verification_job)
+                await db_session.flush()  # flush first so FK exists for token_usages
+
+                # Step 8a: Persist token usage records
+                budget_status = budget.get_status()
+                if budget_status.records:
+                    token_repo = TokenUsageRepository(session=db_session)
+                    await token_repo.save_records(
+                        records=[r for r in budget._records],  # noqa: SLF001
+                        owner_id=effective_owner,
+                        verification_id=verification_id,
+                    )
+                # Flush again to include token usage rows, then commit atomically
                 await db_session.commit()
+
+                # Update daily tracker with actual spent tokens
+                await _daily_tracker.record_daily_tokens(
+                    user_id=effective_owner,
+                    tokens=budget_status.total_tokens,
+                )
+
                 log_audit(
                     stage="PERSISTENCE",
                     event_type="JOB_SAVED",
                     status="SUCCESS",
-                    message="Verification job saved to database.",
+                    message=(
+                        f"Verification job saved to database. "
+                        f"Token usage: {budget_status.total_tokens} tokens, "
+                        f"est. cost: ${budget_status.estimated_cost_usd:.6f}."
+                    ),
                 )
             except Exception as db_exc:
                 logger.error("Database persistence failed: %s", db_exc)
@@ -657,7 +753,7 @@ class VerificationOrchestrator:
             for ar in audit_records
         ]
 
-        return VerificationResponse(
+        final_response = VerificationResponse(
             verification_id=verification_id,
             owner_id=effective_owner,
             status=VerificationStatus.COMPLETED.value,
@@ -682,3 +778,19 @@ class VerificationOrchestrator:
             claims=response_claims,
             audit_trail=response_audit,
         )
+
+        # Store in tenant-isolated cache so identical future requests are free
+        _cache.set(
+            owner_id=effective_owner,
+            cache_hash=_cache_hash,
+            response=final_response,
+            ttl_seconds=3600,
+        )
+        logger.info(
+            "Cache STORE for owner=%s (hash=%s). Budget: %d/%d tokens.",
+            effective_owner,
+            _cache_hash[:12],
+            budget.spent_tokens,
+            budget.budget_limit,
+        )
+        return final_response

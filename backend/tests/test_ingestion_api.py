@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.dependencies import get_async_session
 from app.main import create_app
 from app.models.ingestion import IngestedPayload
+from app.models.verification import VerificationJob
 
 
 @pytest.fixture
@@ -165,8 +166,9 @@ class TestIngestionEndpoint:
 
         # Assert both verification job and ingested payload entity were added
         # and committed cleanly
-        assert mock_session.add.call_count == 2
+        # Token-usage rows are also added per judge call; check required entities.
         added_entities = [call[0][0] for call in mock_session.add.call_args_list]
+        assert any(isinstance(e, VerificationJob) for e in added_entities)
         payload_entities = [e for e in added_entities if isinstance(e, IngestedPayload)]
         assert len(payload_entities) == 1
         record = payload_entities[0]

@@ -31,6 +31,10 @@ class LLMExecutionResult:
         error_code: str | None = None,
         error_message: str | None = None,
         metadata: dict[str, Any] | None = None,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        is_estimated_usage: bool = False,
+        retry_count: int = 0,
     ) -> None:
         self.provider = provider
         self.model_name = model_name
@@ -42,3 +46,23 @@ class LLMExecutionResult:
         self.error_code = error_code
         self.error_message = sanitize_credential_text(error_message)
         self.metadata = metadata or {}
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.is_estimated_usage = is_estimated_usage
+        self.retry_count = retry_count
+
+        # Reconcile usage metadata if passed in metadata dict
+        usage_dict = self.metadata.get("usage", {})
+        if usage_dict:
+            if self.input_tokens is None:
+                self.input_tokens = (
+                    usage_dict.get("prompt_tokens")
+                    or usage_dict.get("prompt_token_count")
+                    or usage_dict.get("input_tokens")
+                )
+            if self.output_tokens is None:
+                self.output_tokens = (
+                    usage_dict.get("completion_tokens")
+                    or usage_dict.get("candidates_token_count")
+                    or usage_dict.get("output_tokens")
+                )

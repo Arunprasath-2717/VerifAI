@@ -35,3 +35,15 @@ def client(app: FastAPI) -> Generator[TestClient, None, None]:
     """Fixture providing a synchronous TestClient for hermetic API testing."""
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture(autouse=True)
+def _reset_token_budget_singletons() -> Generator[None, None, None]:
+    """Isolate per-process analysis cache and daily quota state between tests."""
+    from app.modules.token_budget import AnalysisCacheService, UserDailyBudgetTracker
+
+    AnalysisCacheService.reset_for_test()
+    UserDailyBudgetTracker.reset_for_test()
+    yield
+    AnalysisCacheService.reset_for_test()
+    UserDailyBudgetTracker.reset_for_test()

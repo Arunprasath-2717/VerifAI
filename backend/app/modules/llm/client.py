@@ -30,6 +30,8 @@ class RealLLMClient:
         model_name: str,
         prompt: str,
         timeout_seconds: float = 30.0,
+        max_tokens: int | None = None,
+        operation: str = "COMPLETION",
     ) -> LLMExecutionResult:
         """Execute prompt against a provider strategy with error normalization."""
         start_time = time.monotonic()
@@ -51,6 +53,8 @@ class RealLLMClient:
                 model_name=model_name,
                 prompt=prompt,
                 timeout_seconds=timeout_seconds,
+                max_tokens=max_tokens,
+                operation=operation,
             )
         except Exception as exc:
             elapsed = (time.monotonic() - start_time) * 1000.0

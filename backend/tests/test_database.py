@@ -15,8 +15,11 @@ from app.core.database import (
 from app.core.dependencies import get_async_session
 
 
-def test_default_database_settings_unconfigured() -> None:
+def test_default_database_settings_unconfigured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Verify that default settings have DATABASE_URL as None (unconfigured)."""
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     settings = Settings(_env_file=None)
     assert settings.DATABASE_URL is None
     assert settings.DATABASE_POOL_SIZE == 5
