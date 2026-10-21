@@ -72,6 +72,48 @@ class BadRequestError(AppError):
         )
 
 
+class UnauthorizedError(AppError):
+    """Missing or invalid credentials exception."""
+
+    def __init__(self, message: str = "Authentication required", details: Any = None):
+        super().__init__(
+            message=message,
+            code="UNAUTHORIZED",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class ForbiddenError(AppError):
+    """Authenticated caller lacks access to the requested resource."""
+
+    def __init__(self, message: str = "Forbidden", details: Any = None):
+        super().__init__(
+            message=message,
+            code="FORBIDDEN",
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
+class TooManyRequestsError(AppError):
+    """Caller exceeded the configured request budget."""
+
+    def __init__(
+        self,
+        message: str = "Rate limit exceeded",
+        details: Any = None,
+        retry_after_seconds: int = 60,
+    ):
+        super().__init__(
+            message=message,
+            code="TOO_MANY_REQUESTS",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            details=details,
+        )
+        self.retry_after_seconds = retry_after_seconds
+
+
 class ServiceUnavailableError(AppError):
     """Service or upstream dependency unavailable exception."""
 
@@ -117,12 +159,18 @@ async def app_error_handler(
 ) -> JSONResponse:
     """Handle custom application-level exceptions."""
     req_id = getattr(request.state, "request_id", None) or get_current_request_id()
+    headers: dict[str, str] = {}
+    if isinstance(exc, UnauthorizedError):
+        headers["WWW-Authenticate"] = "ApiKey"
+    if isinstance(exc, TooManyRequestsError):
+        headers["Retry-After"] = str(exc.retry_after_seconds)
     return create_error_response(
         status_code=exc.status_code,
         code=exc.code,
         message=exc.message,
         request_id=req_id,
         details=exc.details,
+        headers=headers,
         header_name=header_name,
     )
 

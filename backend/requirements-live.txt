@@ -1,0 +1,5 @@
+# Optional live-search providers (tier 2 DuckDuckGo fallback).
+# Tier 1 (Tavily) and tier 3 (Wikipedia) need no extra packages.
+# Install with: pip install -r backend/requirements-live.txt
+-r requirements.txt
+ddgs==9.16.0

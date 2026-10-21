@@ -16,7 +16,9 @@ class DependencyHealth(BaseModel):
     )
     status: str = Field(
         ...,
-        description="Current operational status: available, unavailable, or unconfigured.",
+        description=(
+            "Current operational status: available, unavailable, or unconfigured."
+        ),
     )
 
 

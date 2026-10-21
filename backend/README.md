@@ -93,7 +93,7 @@ Interactive API documentation and OpenAPI schemas are accessible at:
 - **ReDoc UI:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **OpenAPI Schema (JSON):** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
 - **Liveness Probe Endpoint:** [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health) (Returns HTTP 200)
-- **Readiness Probe Endpoint:** [http://127.0.0.1:8000/api/v1/ready](http://127.0.0.1:8000/api/v1/ready) (Returns HTTP 503 until external dependencies are configured in Phase 1 P2)
+- **Readiness Probe Endpoint:** [http://127.0.0.1:8000/api/v1/ready](http://127.0.0.1:8000/api/v1/ready) (Returns HTTP 200 once the database is configured and reachable, HTTP 503 otherwise)
 
 ---
 
@@ -152,9 +152,11 @@ Database connectivity is powered by **SQLAlchemy 2.x** and **asyncpg**:
 - **Transaction Responsibility:** The `get_async_session` dependency guarantees session cleanup in a `finally` block, but **does not auto-commit**. Domain services and repositories are strictly responsible for calling `await session.commit()` or `await session.rollback()`.
 - **Test Overrideability:** In tests, the session generator can be mocked or overridden cleanly via `app.dependency_overrides[get_async_session]`.
 
-### 6.4 Schema Migration Status
-- Migration tooling (Alembic) is intentionally **deferred** to subsequent prompts where actual domain tables are introduced.
-- Prompt 2 established the underlying async engine, session lifecycle, and pooling infrastructure.
+### 6.4 Schema Migrations
+- Schema is managed with Alembic (`backend/migrations/`); the URL comes from `DATABASE_URL`.
+- Apply migrations from `backend/`: `alembic upgrade head`.
+- After changing models: `alembic revision --autogenerate -m "<change>"`, review the
+  generated file, then `alembic check` (CI fails if models and migrations drift).
 
 ---
 
@@ -234,16 +236,32 @@ All application errors, HTTP exceptions, validation errors, and unexpected serve
 | `DATABASE_MAX_OVERFLOW` | `int` | `10` | SQLAlchemy maximum overflow connections |
 | `DATABASE_POOL_TIMEOUT` | `int` | `30` | Seconds to wait before timing out pool checkout |
 | `DATABASE_CONNECT_TIMEOUT` | `float` | `3.0` | Socket connection timeout in seconds |
+| `DATABASE_USE_TRANSACTION_POOLER` | `bool` | `false` | Disable asyncpg statement caching for transaction-mode poolers (Supabase port 6543, PgBouncer) |
+| `API_KEYS` | `dict[str, SecretStr]` | `{}` | Owner ID → API key (min 16 chars). Unset: anonymous access in development/test only; 401 elsewhere |
+| `API_KEY_HEADER` | `str` | `"X-API-Key"` | Header carrying the API key |
+| `RATE_LIMIT_PER_MINUTE` | `int` | `60` | Per-principal budget for state-changing endpoints (0 disables; per process) |
+| `MAX_REQUEST_BODY_BYTES` | `int` | `6291456` | Request body size limit, HTTP 413 above it (0 disables) |
+| `VERIFICATION_MAX_INPUT_CHARS` | `int` | `20000` | Maximum verification input length |
+| `VERIFICATION_MAX_CLAIMS` | `int` | `20` | Server-side cap on claims per job |
+| `VERIFICATION_CLAIM_CONCURRENCY` | `int` | `4` | Claims verified in parallel per job |
+| `RETRIEVAL_TIMEOUT_SECONDS` | `float` | `8.0` | Per-claim external retrieval timeout |
+| `ENABLE_LIVE_SEARCH` | `bool` | `false` | Default for requests that do not set `enable_live_search` |
+| `ENABLE_DEMO_EVIDENCE_INDEX` | `bool \| None` | `None` | Built-in demo passages; `None` = enabled only in development/test |
+| `KB_CORROBORATION_MODE` | `bool` | `false` | Default for requests that do not set `force_external_retrieval` |
+| `KB_EPHEMERAL_MAX_BYTES` | `int` | `52428800` | Total size cap for the in-memory KB (no database), HTTP 507 above it |
+| `JUDGE_MODEL_ENDPOINT` | `str \| None` | `None` | Ollama-compatible `/api/generate` URL for the model tie-breaker judge |
+| `JUDGE_MODEL_NAME` | `str` | `"llama3:8b"` | Model used by the tie-breaker judge |
+| `JUDGE_MODEL_TIMEOUT_SECONDS` | `float` | `10.0` | Model judge request timeout |
 
 ---
 
-## 11. Scope Boundaries — What is Intentionally NOT Implemented in Phase 1 Prompt 3
+## 11. Current Scope and Known Limitations
 
-To maintain strict compliance with project governance:
-- **Domain Tables & Migrations:** No verification, job, or domain tables; Alembic migrations deferred to future prompts.
-- **Authentication:** Supabase Auth JWT verification remains deferred to Future Enhancements.
-- **pgvector Implementation:** The `pgvector` extension is a future prerequisite for Phase 4 knowledge-base ingestion.
-- **Verification Engine & AI Models:** No claim extraction, LLM judge execution, or hallucination risk scoring.
-- **External Logging Services:** No external logging platforms (Datadog, Sentry, ELK); standard-library logging only.
-- **Frontend / Extension / MCP:** Strictly isolated from backend infrastructure.
-
+- **Authentication:** API keys (`API_KEYS`, `X-API-Key` header) map to owner
+  namespaces. Supabase Auth / JWT verification is not implemented.
+- **Judging:** The built-in judges are lexical heuristics that prefer UNKNOWN over
+  guessing; configure `JUDGE_MODEL_ENDPOINT` for a model tie-breaker.
+- **Rate limiting:** Per-process (in-memory); multi-worker deployments need a
+  shared store for a global limit.
+- **pgvector:** Not used; private-KB retrieval is lexical.
+- **External Logging Services:** Standard-library logging only.

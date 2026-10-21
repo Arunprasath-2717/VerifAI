@@ -33,10 +33,7 @@ def test_readiness_probe_returns_503_when_unready(client: TestClient) -> None:
     assert "dependencies" in data
     assert data["dependencies"]["database"]["configured"] is False
     assert data["dependencies"]["database"]["status"] == "unconfigured"
-    assert data["dependencies"]["storage"]["configured"] is False
-    assert data["dependencies"]["storage"]["status"] == "unconfigured"
-    assert data["dependencies"]["auth"]["configured"] is False
-    assert data["dependencies"]["auth"]["status"] == "unconfigured"
+    assert set(data["dependencies"]) == {"database"}
     # Ensure no passwords or sensitive URLs leaked in response
     assert "password" not in str(data)
     assert "postgresql://" not in str(data)
@@ -62,14 +59,15 @@ def test_readiness_probe_database_unavailable_mocked(client: TestClient) -> None
 
 
 def test_readiness_probe_database_available_mocked(client: TestClient) -> None:
-    """Verify readiness reflects mocked DB availability (still 503 unready)."""
+    """Verify readiness returns 200 once the database is available (mocked)."""
     mock_db_result = {"configured": True, "status": "available"}
     with patch(
         "app.api.v1.endpoints.health.check_database_connectivity",
         new=AsyncMock(return_value=mock_db_result),
     ):
         response = client.get("/api/v1/ready")
-        assert response.status_code == 503
+        assert response.status_code == 200
+        assert response.json()["ready"] is True
         assert "x-request-id" in response.headers
         data = response.json()
         assert data["dependencies"]["database"] == {

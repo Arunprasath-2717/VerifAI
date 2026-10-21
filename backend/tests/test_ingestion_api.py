@@ -147,6 +147,10 @@ class TestIngestionEndpoint:
         mock_session.add = MagicMock()
         mock_session.commit = AsyncMock()
         mock_session.rollback = AsyncMock()
+        # Private-KB lookup runs a real query; return an empty result set.
+        empty_result = MagicMock()
+        empty_result.all.return_value = []
+        mock_session.execute = AsyncMock(return_value=empty_result)
 
         async def override_db():
             yield mock_session

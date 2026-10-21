@@ -62,6 +62,16 @@
         </div>
       </div>
 
+      <div class="field-group api-key-group">
+        <label for="input-backend-url" class="field-label">Backend URL</label>
+        <input id="input-backend-url" class="select-input" type="url" autocomplete="off" spellcheck="false" placeholder="http://localhost:8000">
+      </div>
+
+      <div class="field-group api-key-group">
+        <label for="input-api-key" class="field-label">API Key (required when the server enforces authentication)</label>
+        <input id="input-api-key" class="select-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your VerifAI API key">
+      </div>
+
       <button id="btn-verify" class="btn btn-primary btn-block">
         <span id="btn-verify-text">Verify with VerifAI</span>
         <div id="btn-spinner" class="spinner hidden"></div>

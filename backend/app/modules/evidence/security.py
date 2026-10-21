@@ -1,5 +1,6 @@
 """Security validations and source authority heuristics for evidence retrieval."""
 
+import asyncio
 import ipaddress
 import re
 from urllib.parse import urlparse
@@ -36,50 +37,117 @@ HIGH_AUTHORITY_PATTERNS = [
 ]
 
 
+# Hostnames and suffixes that only ever resolve to internal infrastructure.
+_BLOCKED_HOSTNAMES = {"localhost", "metadata.google.internal", "instance-data"}
+_BLOCKED_HOST_SUFFIXES = (
+    ".localhost",
+    ".local",
+    ".localdomain",
+    ".internal",
+    ".intranet",
+    ".lan",
+    ".home.arpa",
+)
+_NAT64_PREFIX = ipaddress.ip_network("64:ff9b::/96")
+_DOMAIN_PATTERN = re.compile(
+    r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$"
+)
+
+
+def _embedded_ipv4(ip: ipaddress.IPv6Address) -> ipaddress.IPv4Address | None:
+    """Return an IPv4 address tunnelled inside an IPv6 one, if any."""
+    if ip.ipv4_mapped is not None:
+        return ip.ipv4_mapped
+    if ip.sixtofour is not None:
+        return ip.sixtofour
+    if ip.teredo is not None:
+        return ip.teredo[1]
+    if ip in _NAT64_PREFIX:
+        return ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
+    return None
+
+
+def is_public_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """True only for globally routable unicast addresses.
+
+    IPv4 addresses embedded in IPv6 (mapped, 6to4, Teredo, NAT64) are unwrapped
+    and checked too, so "::ffff:127.0.0.1" cannot smuggle a loopback target.
+    """
+    if isinstance(ip, ipaddress.IPv6Address):
+        embedded = _embedded_ipv4(ip)
+        if embedded is not None:
+            return is_public_ip(embedded)
+    if ip.is_multicast or ip.is_unspecified or ip.is_reserved:
+        return False
+    # Explicit blocklist kept as defense in depth alongside is_global.
+    if any(ip.version == net.version and ip in net for net in BLOCKED_IP_NETWORKS):
+        return False
+    return ip.is_global
+
+
 def is_safe_url(url: str) -> bool:
-    """Validate that a URL uses http/https and does not target internal addresses."""
+    """Statically validate that a URL is http(s) and not an internal target.
+
+    This check does not resolve DNS, so a public-looking name may still point at
+    an internal address (e.g. wildcard-DNS services such as ``*.nip.io``).
+    Anything that makes a server-side request to the URL must call
+    :func:`is_safe_url_resolved` first.
+    """
     if not url or not isinstance(url, str):
         return False
 
     try:
         parsed = urlparse(url.strip())
-    except Exception:
-        return False
-
-    # 1. Scheme check: only http and https allowed
-    if parsed.scheme.lower() not in {"http", "https"}:
-        return False
-
-    hostname = parsed.hostname
-    if not hostname:
-        return False
-
-    hostname = hostname.lower().strip("[]")
-
-    # 2. Rejection of localhost and metadata service names
-    if hostname in {"localhost", "metadata.google.internal", "instance-data"}:
-        return False
-
-    # 3. Check for literal IP addresses in hostname
-    try:
-        ip = ipaddress.ip_address(hostname)
-        for net in BLOCKED_IP_NETWORKS:
-            if ip in net:
-                return False
+        hostname = parsed.hostname
     except ValueError:
-        # Not a literal IP address; domain name syntax check
-        pass
+        return False
 
-    # 4. Valid domain syntax
-    domain_pattern = re.compile(
-        r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$"
-    )
-    if not domain_pattern.match(hostname):
+    if parsed.scheme.lower() not in {"http", "https"} or not hostname:
+        return False
+    if parsed.username or parsed.password:
+        return False  # credentials in URLs enable host-confusion tricks
+
+    hostname = hostname.lower().strip("[]").rstrip(".")
+    if hostname in _BLOCKED_HOSTNAMES or hostname.endswith(_BLOCKED_HOST_SUFFIXES):
+        return False
+
+    try:
+        return is_public_ip(ipaddress.ip_address(hostname))
+    except ValueError:
+        pass  # not an IP literal
+
+    return bool(_DOMAIN_PATTERN.match(hostname))
+
+
+async def is_safe_url_resolved(url: str) -> bool:
+    """Validate a URL and every address its hostname currently resolves to.
+
+    Required before any server-side fetch. Resolution failures are unsafe.
+    Callers should connect to the validated address (or re-check at connect
+    time) to avoid DNS-rebinding between this check and the request.
+    """
+    if not is_safe_url(url):
+        return False
+    hostname = (urlparse(url.strip()).hostname or "").strip("[]")
+    try:
+        ipaddress.ip_address(hostname)
+        return True  # literal already validated
+    except ValueError:
+        pass
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(hostname, None)
+    except OSError:
+        return False
+    addresses = {str(info[4][0]) for info in infos}
+    if not addresses:
+        return False
+    for address in addresses:
         try:
-            ipaddress.ip_address(hostname)
+            ip = ipaddress.ip_address(address.split("%", 1)[0])
         except ValueError:
             return False
-
+        if not is_public_ip(ip):
+            return False
     return True
 
 

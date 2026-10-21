@@ -162,10 +162,3 @@ class SupabaseClient:
                 type(exc).__name__,
             )
             return []
-
-
-def get_supabase_client(
-    settings: Settings = get_settings(),
-) -> SupabaseClient:
-    """Dependency provider for SupabaseClient."""
-    return SupabaseClient.from_settings(settings=settings)

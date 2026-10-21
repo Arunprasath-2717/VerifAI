@@ -13,13 +13,17 @@ Priority chain in the orchestrator:
 Security controls:
 - SSRF validation applied to every source URL returned by Tavily.
 - Source domain authority scored before inclusion.
-- API key never logged.
+- API key never logged; sent only as a Bearer header over HTTPS.
+- Calls the REST API directly with httpx (no SDK dependency) and a hard timeout.
 - Request/response content length bounded.
 """
 
 import logging
 import uuid
 from datetime import UTC, datetime
+from typing import Any
+
+import httpx
 
 from app.modules.evidence.interface import BaseEvidenceRetriever
 from app.modules.evidence.models import RetrievedEvidenceItem
@@ -29,6 +33,8 @@ logger = logging.getLogger("verifai.retriever.tavily")
 
 # Maximum snippet length to avoid unbounded memory / log growth
 _MAX_SNIPPET_LEN = 600
+
+_TAVILY_SEARCH_URL = "https://api.tavily.com/search"
 
 
 class TavilySearchRetriever(BaseEvidenceRetriever):
@@ -95,32 +101,10 @@ class TavilySearchRetriever(BaseEvidenceRetriever):
         if not claim_text.strip():
             return []
 
-        try:
-            from tavily import TavilyClient  # type: ignore[import-untyped]
-        except ImportError:
-            logger.warning(
-                "tavily-python package not installed; skipping Tavily retrieval. "
-                "Install with: pip install tavily-python"
-            )
-            return []
-
         effective_max = min(max_passages, self._max_results)
 
         try:
-            client = TavilyClient(api_key=self._api_key)
-            # search() is synchronous — run in thread pool to stay async-safe
-            import asyncio
-
-            response = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: client.search(
-                    query=claim_text,
-                    search_depth=self._search_depth,
-                    max_results=effective_max,
-                    include_answer=False,
-                    include_raw_content=False,
-                ),
-            )
+            response = await self._search(claim_text, effective_max)
         except Exception as exc:
             logger.warning(
                 "Tavily search request failed (%s): gracefully returning empty.",
@@ -128,7 +112,7 @@ class TavilySearchRetriever(BaseEvidenceRetriever):
             )
             return []
 
-        results = response.get("results", []) if isinstance(response, dict) else []
+        results = response.get("results", []) or []
         evidence: list[RetrievedEvidenceItem] = []
 
         for item in results:
@@ -172,6 +156,24 @@ class TavilySearchRetriever(BaseEvidenceRetriever):
             len(claim_text),
         )
         return evidence
+
+    async def _search(self, query: str, max_results: int) -> dict[str, Any]:
+        """Call the Tavily REST search API with a hard request timeout."""
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.post(
+                _TAVILY_SEARCH_URL,
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                json={
+                    "query": query,
+                    "search_depth": self._search_depth,
+                    "max_results": max_results,
+                    "include_answer": False,
+                    "include_raw_content": False,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+        return data if isinstance(data, dict) else {}
 
 
 def _extract_publisher(url: str) -> str | None:

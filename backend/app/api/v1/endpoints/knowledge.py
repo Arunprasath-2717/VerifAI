@@ -2,14 +2,14 @@
 
 import logging
 import uuid
-from collections.abc import AsyncGenerator
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import Principal, enforce_rate_limit, get_principal, resolve_owner
 from app.core.config import Settings, get_settings
-from app.core.database import get_async_session as _get_async_session
+from app.core.dependencies import get_optional_db_session
 from app.core.errors import AppError
 from app.models.knowledge import KnowledgeDocument
 from app.modules.knowledge.ingestion import (
@@ -17,7 +17,7 @@ from app.modules.knowledge.ingestion import (
     IngestionValidationError,
 )
 from app.modules.knowledge.retriever import PrivateKBRetriever
-from app.modules.knowledge.service import KnowledgeBaseService, resolve_owner_id
+from app.modules.knowledge.service import KnowledgeBaseService
 from app.schemas.knowledge import (
     ChunkResponse,
     DocumentCreateRequest,
@@ -31,25 +31,6 @@ from app.schemas.knowledge import (
 
 logger = logging.getLogger("verifai.api.knowledge")
 router = APIRouter()
-
-
-async def get_optional_db_session(
-    settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession | None, None]:
-    """Provide an async database session if configured, or None for ephemeral runs."""
-    if not settings.DATABASE_URL:
-        yield None
-        return
-
-    try:
-        async for session in _get_async_session():
-            yield session
-    except Exception as exc:
-        logger.warning(
-            "Could not establish database session: %s. Proceeding ephemerally.",
-            type(exc).__name__,
-        )
-        yield None
 
 
 def _format_doc_response(doc: KnowledgeDocument) -> DocumentResponse:
@@ -83,8 +64,10 @@ async def create_document(
     request: DocumentCreateRequest,
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(enforce_rate_limit),
 ) -> DocumentResponse:
     """Add a new document via text payload."""
+    effective_owner = resolve_owner(principal, request.owner_id, settings)
     service = KnowledgeBaseService(db_session=db, settings=settings)
     try:
         doc = await service.add_document(
@@ -93,7 +76,7 @@ async def create_document(
             title=request.title,
             description=request.description,
             content_type=request.content_type,
-            owner_id=request.owner_id,
+            owner_id=effective_owner,
         )
         return _format_doc_response(doc)
     except DuplicateDocumentError as exc:
@@ -123,10 +106,11 @@ async def list_documents(
     ),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(get_principal),
 ) -> DocumentListResponse:
     """List documents for a namespace."""
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(owner_id, settings)
+    effective_owner = resolve_owner(principal, owner_id, settings)
     docs = await service.list_documents(owner_id=effective_owner)
 
     return DocumentListResponse(
@@ -150,10 +134,11 @@ async def get_document_details(
     ),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(get_principal),
 ) -> DocumentDetailResponse:
     """Retrieve a single document and its constituent chunks."""
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(owner_id, settings)
+    effective_owner = resolve_owner(principal, owner_id, settings)
     doc = await service.get_document(document_id=document_id, owner_id=effective_owner)
 
     chunk_responses = [
@@ -191,10 +176,11 @@ async def delete_document(
     ),
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(enforce_rate_limit),
 ) -> dict[str, Any]:
     """Delete a document and its chunks."""
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(owner_id, settings)
+    effective_owner = resolve_owner(principal, owner_id, settings)
     await service.delete_document(document_id=document_id, owner_id=effective_owner)
     return {
         "status": "deleted",
@@ -214,10 +200,11 @@ async def search_knowledge_base(
     request: KnowledgeSearchRequest,
     db: AsyncSession | None = Depends(get_optional_db_session),
     settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(enforce_rate_limit),
 ) -> KnowledgeSearchResponse:
     """Execute search against private knowledge base."""
     service = KnowledgeBaseService(db_session=db, settings=settings)
-    effective_owner = resolve_owner_id(request.owner_id, settings)
+    effective_owner = resolve_owner(principal, request.owner_id, settings)
     retriever = PrivateKBRetriever(
         service=service, owner_id=effective_owner, settings=settings
     )

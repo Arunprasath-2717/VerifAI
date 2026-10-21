@@ -1,7 +1,5 @@
 """Health and readiness check endpoints."""
 
-from typing import Any
-
 from fastapi import APIRouter, Depends, Response, status
 
 from app.core.config import Settings
@@ -56,16 +54,10 @@ async def get_ready(
     """
     db_check = await check_database_connectivity(settings=settings)
 
+    # Only dependencies the backend actually uses are evaluated; listing
+    # unimplemented subsystems here would make readiness permanently fail.
     dependencies = {
         "database": db_check,
-        "storage": {
-            "configured": False,
-            "status": "unconfigured",
-        },
-        "auth": {
-            "configured": False,
-            "status": "unconfigured",
-        },
     }
 
     # All critical dependencies must be configured and available for readiness

@@ -31,6 +31,11 @@ class VerificationJob(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
+    owner_id: Mapped[str | None] = mapped_column(
+        String(128),
+        nullable=True,
+        index=True,
+    )
     input_text: Mapped[str] = mapped_column(
         Text,
         nullable=False,

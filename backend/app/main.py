@@ -7,12 +7,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.router import api_router
+from app.api.router import build_api_router
 from app.core.config import Settings, get_settings
 from app.core.database import dispose_async_engine
 from app.core.errors import register_error_handlers
 from app.core.logging import setup_logging
-from app.core.middleware import RequestIDMiddleware
+from app.core.middleware import BodySizeLimitMiddleware, RequestIDMiddleware
 
 
 @asynccontextmanager
@@ -29,6 +29,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.ENVIRONMENT,
         settings.DEBUG,
     )
+    if settings.ENABLE_LIVE_SEARCH:
+        from app.modules.evidence.live_retriever import LiveWebRetriever
+
+        tiers = LiveWebRetriever.from_settings().describe_tiers()
+        logger.info("Live search tiers available: %s", tiers)
+        if not any(tiers.values()):
+            logger.warning("ENABLE_LIVE_SEARCH is on but no live tier is usable.")
+    if not settings.demo_evidence_index_enabled and not settings.ENABLE_LIVE_SEARCH:
+        logger.warning(
+            "No external evidence source enabled: claims without private-KB "
+            "evidence will resolve to UNKNOWN. Set ENABLE_LIVE_SEARCH=true."
+        )
+    if not settings.API_KEYS and not settings.is_development:
+        logger.error(
+            "API_KEYS is not configured: all non-health requests will be "
+            "rejected with HTTP 401 in '%s'.",
+            settings.ENVIRONMENT,
+        )
     yield
 
     # Shutdown lifecycle hook: Dispose engine and pool connections cleanly
@@ -52,6 +70,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,
+    )
+
+    # Bound request bodies before any parsing (inner to request-ID tracking so
+    # rejections still carry a correlation ID).
+    application.add_middleware(
+        BodySizeLimitMiddleware,
+        max_bytes=app_settings.MAX_REQUEST_BODY_BYTES,
+        header_name=app_settings.REQUEST_ID_HEADER,
     )
 
     # Attach Request ID & correlation tracking middleware (runs for all requests)
@@ -78,7 +104,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     # Mount versioned API routes exclusively under /api/v1 (no unversioned duplicates)
-    application.include_router(api_router)
+    application.include_router(build_api_router(app_settings.API_V1_STR))
 
     return application
 

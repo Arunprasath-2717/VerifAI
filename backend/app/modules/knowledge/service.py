@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings, get_settings
-from app.core.errors import NotFoundError
+from app.core.errors import AppError, NotFoundError, UnauthorizedError
 from app.models.knowledge import KnowledgeChunk, KnowledgeDocument
 from app.modules.knowledge.ingestion import (
     DuplicateDocumentError,
@@ -23,6 +23,10 @@ _EPHEMERAL_DOCS: dict[str, dict[uuid.UUID, KnowledgeDocument]] = {}
 _EPHEMERAL_CHUNKS: dict[str, dict[uuid.UUID, list[KnowledgeChunk]]] = {}
 
 
+class OwnerRequiredError(UnauthorizedError, ValueError):
+    """No namespace could be resolved outside development (HTTP 401)."""
+
+
 def resolve_owner_id(owner_id: str | None, settings: Settings | None = None) -> str:
     """Resolve owner/namespace ID with explicit development mode gating.
 
@@ -34,14 +38,11 @@ def resolve_owner_id(owner_id: str | None, settings: Settings | None = None) -> 
     if owner_id and owner_id.strip():
         return owner_id.strip()
 
-    is_dev = (
-        app_settings.ENVIRONMENT in ("development", "test", "testing")
-        or app_settings.DEBUG
-    )
-    if is_dev:
+    # DEBUG deliberately does not unlock the anonymous default namespace.
+    if app_settings.is_development:
         return app_settings.DEFAULT_OWNER_ID
 
-    raise ValueError(
+    raise OwnerRequiredError(
         "Namespace/owner ID is strictly required in production environments. "
         "Anonymous or unauthenticated access is forbidden."
     )
@@ -146,6 +147,18 @@ class KnowledgeBaseService:
             return doc
 
         # Ephemeral mode
+        stored_bytes = sum(
+            d.size_bytes for docs in _EPHEMERAL_DOCS.values() for d in docs.values()
+        )
+        if stored_bytes + ingestion.size_bytes > self.settings.KB_EPHEMERAL_MAX_BYTES:
+            raise AppError(
+                message=(
+                    "In-memory knowledge base is full; configure DATABASE_URL for "
+                    "persistent storage."
+                ),
+                code="STORAGE_QUOTA_EXCEEDED",
+                status_code=507,
+            )
         owner_docs = _EPHEMERAL_DOCS.setdefault(effective_owner, {})
         for existing_doc in owner_docs.values():
             if existing_doc.content_hash == ingestion.content_hash:
@@ -298,30 +311,22 @@ class KnowledgeBaseService:
         effective_owner = resolve_owner_id(owner_id, self.settings)
 
         if self.db is not None:
-            try:
-                stmt = (
-                    select(KnowledgeChunk, KnowledgeDocument)
-                    .join(
-                        KnowledgeDocument,
-                        KnowledgeChunk.document_id == KnowledgeDocument.id,
-                    )
-                    .where(
-                        KnowledgeChunk.owner_id == effective_owner,
-                        KnowledgeDocument.owner_id == effective_owner,
-                    )
-                    .order_by(KnowledgeChunk.created_at.asc())
+            # Database errors propagate: silently falling back to the in-memory
+            # store would hide outages and could serve another process's data.
+            stmt = (
+                select(KnowledgeChunk, KnowledgeDocument)
+                .join(
+                    KnowledgeDocument,
+                    KnowledgeChunk.document_id == KnowledgeDocument.id,
                 )
-                res = await self.db.execute(stmt)
-                all_records = res.all()
-                if hasattr(all_records, "__await__"):
-                    all_records = await all_records
-                if isinstance(all_records, (list, tuple)):
-                    return list(all_records)
-            except Exception as exc:
-                logger.debug(
-                    "Database chunk query error (%s); checking ephemeral store",
-                    exc,
+                .where(
+                    KnowledgeChunk.owner_id == effective_owner,
+                    KnowledgeDocument.owner_id == effective_owner,
                 )
+                .order_by(KnowledgeChunk.created_at.asc())
+            )
+            res = await self.db.execute(stmt)
+            return [(row[0], row[1]) for row in res.all()]
 
         pairs: list[tuple[KnowledgeChunk, KnowledgeDocument]] = []
         owner_docs = _EPHEMERAL_DOCS.get(effective_owner, {})

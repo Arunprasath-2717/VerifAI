@@ -45,12 +45,25 @@ class ContentClassifier:
         re.IGNORECASE,
     )
 
-    # Lexical markers for hypothetical and scenario conditional statements
+    # Lexical markers for hypothetical and scenario conditional statements.
+    # A bare "if" mid-sentence is not enough ("The landing happened if you count
+    # 1950" is a factual assertion); it must open the sentence or be paired with
+    # a conditional modal ("Prices would fall if demand dropped").
     HYPOTHETICAL_MARKERS = re.compile(
-        r"\b(?:if|imagine|suppose|supposing|assuming\s+that|were\s+to|what\s+if|"
-        r"hypothetically|in\s+the\s+event\s+that|would\s+have\s+been)\b",
+        r"^(?:if|imagine|suppose|supposing|assuming|what\s+if|hypothetically|"
+        r"in\s+the\s+event\s+that)\b|"
+        r"\b(?:were\s+to|what\s+if|hypothetically|would\s+have\s+been)\b",
         re.IGNORECASE,
     )
+    CONDITIONAL_IF = re.compile(r"\bif\b", re.IGNORECASE)
+    CONDITIONAL_MODAL = re.compile(r"\b(?:would|could|might)\b", re.IGNORECASE)
+
+    # Concrete, checkable content: any digit, or two distinct capitalized words
+    # after the first (proper nouns). Subjective wording does not exempt such
+    # claims from verification ("Mount Everest is the greatest mountain on
+    # Mars"), while "VerifAI is the best AI system" remains an opinion.
+    _DIGIT = re.compile(r"\d")
+    _WORD = re.compile(r"[A-Za-z][A-Za-z'\u2019-]*")
 
     # Lexical markers for creative, mythical, or fictional expressions
     CREATIVE_MARKERS = re.compile(
@@ -86,7 +99,9 @@ class ContentClassifier:
         r"format|implement|review|set\s+up|"
         # System directives / instruction overrides
         r"ignore|disregard|classify|override|forget|bypass"
-        r")\b",
+        # Verb must be a standalone word: "Run-time ..." / "Open-source ..." are
+        # noun phrases, not imperatives.
+        r")(?=[\s:,]|$)",
         re.IGNORECASE,
     )
 
@@ -95,6 +110,26 @@ class ContentClassifier:
         r"^\s*how\s+(?:do|can|should|would|to)\b",
         re.IGNORECASE,
     )
+
+    @classmethod
+    def has_checkable_content(cls, text: str) -> bool:
+        """True when the text names numbers or proper nouns that can be verified."""
+        if cls._DIGIT.search(text):
+            return True
+        words = cls._WORD.findall(text)
+        names = {
+            w
+            for w in words[1:]
+            if w[0].isupper() and w != "I" and not w.startswith(("I'", "I\u2019"))
+        }
+        return len(names) >= 2
+
+    def _is_hypothetical(self, text: str) -> bool:
+        if self.HYPOTHETICAL_MARKERS.search(text):
+            return True
+        return bool(
+            self.CONDITIONAL_IF.search(text) and self.CONDITIONAL_MODAL.search(text)
+        )
 
     def classify(self, claim_text: str) -> ClassificationResult:
         """Classify a single claim and return its verification routing disposition."""
@@ -132,7 +167,7 @@ class ContentClassifier:
             )
 
         # 3. Check for hypothetical/conditional scenario
-        if self.HYPOTHETICAL_MARKERS.search(text):
+        if self._is_hypothetical(text):
             return ClassificationResult(
                 content_type=ContentType.HYPOTHETICAL,
                 verdict=None,
@@ -162,7 +197,7 @@ class ContentClassifier:
             )
 
         # 5. Check for subjective opinion
-        if self.OPINION_MARKERS.search(text):
+        if self.OPINION_MARKERS.search(text) and not self.has_checkable_content(text):
             return ClassificationResult(
                 content_type=ContentType.OPINION,
                 verdict=None,

@@ -1,5 +1,5 @@
 # VerifAI Backend Development and Testing Dependencies
-# Pinned for strict reproducibility on Python 3.14.7
+# Exact pins; CI verifies them on Python 3.11 and 3.12.
 -r requirements.txt
 pytest==9.1.1
 httpx==0.28.1

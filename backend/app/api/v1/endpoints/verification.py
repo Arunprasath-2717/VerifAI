@@ -2,15 +2,15 @@
 
 import logging
 import uuid
-from collections.abc import AsyncGenerator
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.auth import Principal, enforce_rate_limit, get_principal, resolve_owner
 from app.core.config import Settings, get_settings
-from app.core.database import get_async_session as _get_async_session
+from app.core.dependencies import get_optional_db_session
 from app.core.errors import NotFoundError
 from app.models.verification import (
     ExtractedClaim,
@@ -33,28 +33,36 @@ logger = logging.getLogger("verifai.api.verification")
 router = APIRouter()
 
 
-async def get_optional_db_session(
-    settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession | None, None]:
-    """Provide an async database session if configured, or None for ephemeral runs."""
-    if not settings.DATABASE_URL:
-        yield None
-        return
-
-    try:
-        async for session in _get_async_session():
-            yield session
-    except Exception as exc:
-        logger.warning(
-            "Could not establish database session: %s. Proceeding ephemerally.",
-            type(exc).__name__,
-        )
-        yield None
-
-
 # Bounded ephemeral in-memory cache for development/demo when DATABASE_URL is not set
 _EPHEMERAL_MAX_ENTRIES = 100
-_EPHEMERAL_JOBS: dict[uuid.UUID, VerificationResponse] = {}
+# Maps job ID -> (owner ID, response) so lookups stay namespace-scoped.
+_EPHEMERAL_JOBS: dict[uuid.UUID, tuple[str, VerificationResponse]] = {}
+
+
+def _persistence_failed(response: VerificationResponse) -> bool:
+    return any(
+        a.stage == "PERSISTENCE" and a.event_type == "DEGRADED_EXECUTION"
+        for a in response.audit_trail
+    )
+
+
+def _cached_job(
+    verification_id: uuid.UUID, principal: Principal
+) -> VerificationResponse | None:
+    cached = _EPHEMERAL_JOBS.get(verification_id)
+    if cached is None:
+        return None
+    job_owner, cached_response = cached
+    if principal.authenticated and job_owner != principal.owner_id:
+        return None
+    return cached_response
+
+
+def _not_found(verification_id: uuid.UUID) -> NotFoundError:
+    return NotFoundError(
+        message=f"Verification job {verification_id} not found.",
+        details={"verification_id": str(verification_id)},
+    )
 
 
 @router.post(
@@ -71,15 +79,21 @@ _EPHEMERAL_JOBS: dict[uuid.UUID, VerificationResponse] = {}
 async def create_verification(
     request: VerificationCreateRequest,
     db: AsyncSession | None = Depends(get_optional_db_session),
+    settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(enforce_rate_limit),
 ) -> VerificationResponse:
     """Execute end-to-end verification pipeline."""
+    owner = resolve_owner(principal, request.options.owner_id, settings)
+    request = request.model_copy(
+        update={"options": request.options.model_copy(update={"owner_id": owner})}
+    )
     orchestrator = VerificationOrchestrator()
     response = await orchestrator.verify(request=request, db_session=db)
-    if db is None:
+    if db is None or _persistence_failed(response):
         if len(_EPHEMERAL_JOBS) >= _EPHEMERAL_MAX_ENTRIES:
             oldest_key = next(iter(_EPHEMERAL_JOBS))
             _EPHEMERAL_JOBS.pop(oldest_key, None)
-        _EPHEMERAL_JOBS[response.verification_id] = response
+        _EPHEMERAL_JOBS[response.verification_id] = (owner, response)
     return response
 
 
@@ -96,16 +110,18 @@ async def create_verification(
 async def get_verification(
     verification_id: uuid.UUID,
     db: AsyncSession | None = Depends(get_optional_db_session),
+    principal: Principal = Depends(get_principal),
 ) -> VerificationResponse:
-    """Retrieve an existing verification job by UUID."""
+    """Retrieve an existing verification job by UUID within the caller's namespace.
+
+    Jobs owned by another namespace are reported as not found so that their
+    existence is not disclosed.
+    """
     if db is None:
-        cached = _EPHEMERAL_JOBS.get(verification_id)
+        cached = _cached_job(verification_id, principal)
         if cached is not None:
             return cached
-        raise NotFoundError(
-            message=f"Verification job {verification_id} not found.",
-            details={"verification_id": str(verification_id)},
-        )
+        raise _not_found(verification_id)
 
     stmt = (
         select(VerificationJob)
@@ -120,15 +136,18 @@ async def get_verification(
         )
         .where(VerificationJob.id == verification_id)
     )
+    if principal.authenticated:
+        stmt = stmt.where(VerificationJob.owner_id == principal.owner_id)
 
     result = await db.execute(stmt)
     job = result.scalar_one_or_none()
 
     if job is None:
-        raise NotFoundError(
-            message=f"Verification job {verification_id} not found.",
-            details={"verification_id": str(verification_id)},
-        )
+        # Jobs whose database save failed are still served from the process cache.
+        cached = _cached_job(verification_id, principal)
+        if cached is not None:
+            return cached
+        raise _not_found(verification_id)
 
     # Reconstruct response envelope from database entity
     claims_out: list[ClaimResultSchema] = []

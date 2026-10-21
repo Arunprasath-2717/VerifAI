@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+
 from scripts.verifai_cli import (
     CinematicBanner,
     DemoRunner,
@@ -208,8 +209,12 @@ async def test_execute_verification_timing() -> None:
 # =========================================================================
 
 
-def test_terminal_styler_colors_enabled() -> None:
-    """Verify TerminalStyler applies ANSI escape sequences when enabled."""
+def test_terminal_styler_colors_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify TerminalStyler applies basic ANSI escape sequences when enabled."""
+    # Truecolor detection reads the host terminal; pin it off so the basic
+    # 16-color codes asserted below are used regardless of where tests run.
+    monkeypatch.delenv("COLORTERM", raising=False)
+    monkeypatch.setenv("TERM", "dumb")
     styler = TerminalStyler(force_color=True)
     assert styler.enabled is True
     assert "\033[32m" in styler.green("hello")
