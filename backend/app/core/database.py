@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -20,6 +21,10 @@ logger = logging.getLogger("verifai.database")
 # Global engine reference for application lifespan management
 _engine: AsyncEngine | None = None
 _session_maker: async_sessionmaker[AsyncSession] | None = None
+
+
+def _unique_statement_name() -> str:
+    return f"__asyncpg_{uuid.uuid4().hex}__"
 
 
 def get_async_engine(settings: Settings | None = None) -> AsyncEngine:
@@ -53,6 +58,15 @@ def get_async_engine(settings: Settings | None = None) -> AsyncEngine:
                 "pool_timeout": app_settings.DATABASE_POOL_TIMEOUT,
             }
         )
+        if app_settings.DATABASE_USE_TRANSACTION_POOLER:
+            # Transaction poolers hand each transaction a different backend, so
+            # cached or reused prepared statements fail ("prepared statement
+            # ... already exists"). Disable both caches and use unique names.
+            pool_kwargs["connect_args"] = {
+                "statement_cache_size": 0,
+                "prepared_statement_cache_size": 0,
+                "prepared_statement_name_func": _unique_statement_name,
+            }
 
     _engine = create_async_engine(db_url, **pool_kwargs)
     return _engine

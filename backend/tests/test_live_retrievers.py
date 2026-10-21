@@ -57,14 +57,24 @@ async def test_tavily_retriever_success_mocked() -> None:
         ]
     }
 
-    mock_tavily_client = MagicMock()
-    mock_tavily_client.search.return_value = mock_response
+    mock_http_response = MagicMock()
+    mock_http_response.json.return_value = mock_response
+    mock_http_response.raise_for_status = MagicMock()
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_http_response
+    mock_client_ctx = MagicMock()
+    mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
 
-    with patch.dict(
-        "sys.modules",
-        {"tavily": MagicMock(TavilyClient=MagicMock(return_value=mock_tavily_client))},
-    ):
+    with patch("httpx.AsyncClient", return_value=mock_client_ctx) as client_cls:
         items = await retriever.retrieve("Water formula is H2O", max_passages=5)
+
+    # Request is bounded by the configured timeout and authenticated via header
+    assert client_cls.call_args.kwargs["timeout"] == retriever._timeout
+    call = mock_client.post.call_args
+    assert call.args[0] == "https://api.tavily.com/search"
+    assert call.kwargs["headers"]["Authorization"] == "Bearer tvly-mock-key"
+    assert call.kwargs["json"]["query"] == "Water formula is H2O"
 
     # AWS metadata result must have been filtered out
     assert len(items) == 1
@@ -82,13 +92,13 @@ async def test_tavily_retriever_exception_handled() -> None:
     """TavilySearchRetriever never raises; returns [] on network/API exceptions."""
     retriever = TavilySearchRetriever(api_key="tvly-mock-key")
 
-    mock_tavily_client = MagicMock()
-    mock_tavily_client.search.side_effect = ConnectionError("Tavily unreachable")
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = httpx.ConnectError("Tavily unreachable")
+    mock_client_ctx = MagicMock()
+    mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
 
-    with patch.dict(
-        "sys.modules",
-        {"tavily": MagicMock(TavilyClient=MagicMock(return_value=mock_tavily_client))},
-    ):
+    with patch("httpx.AsyncClient", return_value=mock_client_ctx):
         items = await retriever.retrieve("Any claim")
         assert items == []
 
@@ -133,11 +143,7 @@ async def test_duckduckgo_retriever_success_mocked() -> None:
 
     with patch.dict(
         "sys.modules",
-        {
-            "duckduckgo_search": MagicMock(
-                DDGS=MagicMock(return_value=mock_ddgs_context)
-            )
-        },
+        {"ddgs": MagicMock(DDGS=MagicMock(return_value=mock_ddgs_context))},
     ):
         items = await retriever.retrieve("Quantum mechanics", max_passages=3)
 
@@ -159,11 +165,7 @@ async def test_duckduckgo_retriever_exception_handled() -> None:
 
     with patch.dict(
         "sys.modules",
-        {
-            "duckduckgo_search": MagicMock(
-                DDGS=MagicMock(return_value=mock_ddgs_context)
-            )
-        },
+        {"ddgs": MagicMock(DDGS=MagicMock(return_value=mock_ddgs_context))},
     ):
         items = await retriever.retrieve("Some search")
         assert items == []

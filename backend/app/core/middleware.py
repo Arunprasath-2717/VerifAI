@@ -8,6 +8,7 @@ import uuid
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.core.errors import create_error_response
 from app.core.logging import request_id_ctx
 
 logger = logging.getLogger("app.middleware")
@@ -77,3 +78,79 @@ class RequestIDMiddleware:
             )
         finally:
             request_id_ctx.reset(token)
+
+
+class BodySizeLimitMiddleware:
+    """Reject request bodies larger than ``max_bytes`` before they are parsed.
+
+    Oversized ``Content-Length`` headers are refused immediately; bodies without
+    a length (chunked transfer) are counted as they stream and cut off once they
+    cross the limit, answered with the same HTTP 413.
+    """
+
+    def __init__(
+        self, app: ASGIApp, max_bytes: int, header_name: str = "X-Request-ID"
+    ) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+        self.header_name = header_name
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or self.max_bytes <= 0:
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope.get("headers", []))
+        declared = headers.get(b"content-length")
+        if declared is not None:
+            try:
+                too_large = int(declared) > self.max_bytes
+            except ValueError:
+                too_large = False
+            if too_large:
+                await self._reject(scope, receive, send)
+                return
+
+        received = 0
+        overflowed = False
+        response_started = False
+
+        async def limited_receive() -> Message:
+            nonlocal received, overflowed
+            if overflowed:
+                return {"type": "http.disconnect"}
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    # Stop feeding the app; it sees a disconnect and whatever it
+                    # responds with is replaced by the 413 below.
+                    overflowed = True
+                    return {"type": "http.disconnect"}
+            return message
+
+        async def guarded_send(message: Message) -> None:
+            nonlocal response_started
+            if overflowed:
+                return
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, guarded_send)
+        except Exception:
+            if not overflowed:
+                raise
+        if overflowed and not response_started:
+            await self._reject(scope, receive, send)
+
+    async def _reject(self, scope: Scope, receive: Receive, send: Send) -> None:
+        response = create_error_response(
+            status_code=413,
+            code="PAYLOAD_TOO_LARGE",
+            message=f"Request body exceeds the {self.max_bytes}-byte limit.",
+            request_id=scope.get("state", {}).get("request_id"),
+            header_name=self.header_name,
+        )
+        await response(scope, receive, send)

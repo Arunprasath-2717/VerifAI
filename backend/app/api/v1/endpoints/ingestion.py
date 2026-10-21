@@ -2,16 +2,16 @@
 
 import logging
 import uuid
-from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import Principal, enforce_rate_limit, get_principal, resolve_owner
 from app.core.config import Settings, get_settings
-from app.core.database import get_async_session as _get_async_session
-from app.core.errors import BadRequestError, NotFoundError
+from app.core.dependencies import get_optional_db_session
+from app.core.errors import AppError, BadRequestError, NotFoundError
 from app.models.ingestion import IngestedPayload
 from app.modules.evidence.security import is_safe_url
 from app.modules.verification.orchestrator import VerificationOrchestrator
@@ -30,25 +30,6 @@ logger = logging.getLogger("verifai.api.ingestion")
 router = APIRouter()
 
 
-async def get_optional_db_session(
-    settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession | None, None]:
-    """Provide an async database session if configured, or None for ephemeral runs."""
-    if not settings.DATABASE_URL:
-        yield None
-        return
-
-    try:
-        async for session in _get_async_session():
-            yield session
-    except Exception as exc:
-        logger.warning(
-            "Could not establish database session: %s. Proceeding ephemerally.",
-            type(exc).__name__,
-        )
-        yield None
-
-
 @router.post(
     "/ingest",
     response_model=IngestionResponse,
@@ -63,8 +44,11 @@ async def get_optional_db_session(
 async def ingest_payload(
     request: IngestionPayloadRequest,
     db: AsyncSession | None = Depends(get_optional_db_session),
+    settings: Settings = Depends(get_settings),
+    principal: Principal = Depends(enforce_rate_limit),
 ) -> IngestionResponse:
     """Ingest AI response text and optionally execute verification."""
+    owner = resolve_owner(principal, request.options.owner_id, settings)
     ingestion_id = uuid.uuid4()
     now_utc = datetime.now(UTC)
 
@@ -91,7 +75,7 @@ async def ingest_payload(
             ver_req = VerificationCreateRequest(
                 text=request.text,
                 query=request.prompt,
-                options=request.options,
+                options=request.options.model_copy(update={"owner_id": owner}),
             )
             orchestrator = VerificationOrchestrator()
             verification_resp = await orchestrator.verify(
@@ -99,16 +83,23 @@ async def ingest_payload(
                 db_session=db,
             )
             verification_id = verification_resp.verification_id
-        except Exception as exc:
-            logger.error("Verification execution failed during ingestion: %s", exc)
+        except AppError as exc:
+            # Application errors carry messages written for clients.
             ingestion_status = IngestionStatus.FAILED
-            error_message = f"Verification failed: {type(exc).__name__} - {exc}"
+            error_message = f"Verification failed: {exc.message}"
+        except Exception as exc:
+            logger.exception("Verification execution failed during ingestion")
+            ingestion_status = IngestionStatus.FAILED
+            error_message = (
+                f"Verification failed due to an internal error ({type(exc).__name__})."
+            )
 
     # Step 2: Persist ingestion record if database is available
     if db is not None:
         try:
             payload_record = IngestedPayload(
                 id=ingestion_id,
+                owner_id=owner,
                 source=request.source.value,
                 source_url=request.source_url,
                 model_name=request.model_name,
@@ -153,6 +144,7 @@ async def ingest_payload(
 async def get_ingested_payload(
     ingestion_id: uuid.UUID,
     db: AsyncSession | None = Depends(get_optional_db_session),
+    principal: Principal = Depends(get_principal),
 ) -> IngestionResponse:
     """Retrieve an ingested payload record by UUID."""
     if db is None:
@@ -162,6 +154,8 @@ async def get_ingested_payload(
         )
 
     stmt = select(IngestedPayload).where(IngestedPayload.id == ingestion_id)
+    if principal.authenticated:
+        stmt = stmt.where(IngestedPayload.owner_id == principal.owner_id)
     result = await db.execute(stmt)
     record = result.scalar_one_or_none()
 

@@ -13,9 +13,13 @@ Security controls:
 - Connection and read timeouts enforced.
 """
 
+import asyncio
+import importlib
 import logging
 import uuid
+import warnings
 from datetime import UTC, datetime
+from typing import cast
 from urllib.parse import urlparse
 
 from app.modules.evidence.interface import BaseEvidenceRetriever
@@ -26,11 +30,38 @@ logger = logging.getLogger("verifai.retriever.duckduckgo")
 
 _MAX_SNIPPET_LEN = 600
 
+_missing_package_logged = False
+
+
+def load_ddgs_class() -> type | None:
+    """Import the DDGS client from ``ddgs`` (current) or ``duckduckgo_search``.
+
+    Returns None when neither package is installed, logging that once per
+    process rather than on every claim.
+    """
+    global _missing_package_logged
+    for module_name in ("ddgs", "duckduckgo_search"):
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+                module = importlib.import_module(module_name)
+            return cast(type, module.DDGS)
+        except (ImportError, AttributeError):
+            continue
+    if not _missing_package_logged:
+        logger.warning(
+            "DuckDuckGo fallback enabled but the 'ddgs' package is not installed; "
+            "tier skipped. Install with: pip install -r requirements-live.txt"
+        )
+        _missing_package_logged = True
+    return None
+
 
 class DuckDuckGoRetriever(BaseEvidenceRetriever):
     """Evidence retriever backed by DuckDuckGo web search.
 
-    Uses the ``duckduckgo-search`` library (no API key required).
+    Uses the optional ``ddgs`` library (no API key required); see
+    ``requirements-live.txt``.
     Returns structured evidence passages with provenance metadata.
 
     When the library is absent or the search fails, returns an empty list
@@ -70,34 +101,22 @@ class DuckDuckGoRetriever(BaseEvidenceRetriever):
         if not claim_text.strip():
             return []
 
-        try:
-            import warnings
-
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                from duckduckgo_search import DDGS  # type: ignore[import-untyped]
-        except ImportError:
-            logger.warning(
-                "duckduckgo-search package not installed; skipping DDG retrieval. "
-                "Install with: pip install duckduckgo-search"
-            )
+        ddgs_class = load_ddgs_class()
+        if ddgs_class is None:
             return []
 
         effective_max = min(max_passages, self._max_results)
 
+        def _run_search() -> list[dict]:
+            with ddgs_class(timeout=max(int(self._timeout), 1)) as ddgs:
+                return list(ddgs.text(claim_text, max_results=effective_max))
+
         try:
-            import asyncio
-
-            def _run_search() -> list[dict]:
-                with DDGS(timeout=max(int(self._timeout), 5)) as ddgs:
-                    return list(
-                        ddgs.text(
-                            claim_text,
-                            max_results=effective_max,
-                        )
-                    )
-
-            results = await asyncio.get_event_loop().run_in_executor(None, _run_search)
+            # The library is synchronous; run it off the event loop and bound the
+            # wait so a stalled search cannot hold the request open.
+            results = await asyncio.wait_for(
+                asyncio.to_thread(_run_search), timeout=self._timeout + 1.0
+            )
         except Exception as exc:
             logger.warning(
                 "DuckDuckGo search failed (%s): gracefully returning empty.",

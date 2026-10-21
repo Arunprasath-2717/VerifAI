@@ -19,7 +19,9 @@ Security controls:
 - Strict timeouts on all HTTP requests.
 """
 
+import html
 import logging
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -49,12 +51,26 @@ _HTML_ENTITY_MAP = {
 }
 
 
+_KEYWORD_RE = re.compile(r"[A-Za-z0-9]+(?:['’][A-Za-z]+)?")
+_MAX_KEYWORDS = 8
+
+
+def build_search_keywords(claim_text: str) -> str:
+    """Build a compact keyword query, stripping punctuation from each word.
+
+    Words keep their place even with punctuation attached ("Paris." ->
+    "Paris"), and short numbers such as "0" or "11" are kept.
+    """
+    words = [w for w in _KEYWORD_RE.findall(claim_text) if len(w) > 2 or w.isdigit()]
+    return " ".join(words[:_MAX_KEYWORDS])
+
+
 def _clean_snippet(raw: str) -> str:
     """Strip Wikipedia search-API HTML markup from a snippet string."""
     result = raw
     for token, replacement in _HTML_ENTITY_MAP.items():
         result = result.replace(token, replacement)
-    return result.strip()
+    return html.unescape(result).strip()
 
 
 class NightcrawlerRetriever(BaseEvidenceRetriever):
@@ -93,10 +109,7 @@ class NightcrawlerRetriever(BaseEvidenceRetriever):
         if not claim_text.strip():
             return []
 
-        # Build safe keyword query from alphanumeric tokens
-        keywords = " ".join(
-            [w for w in claim_text.split() if len(w) > 2 and w.isalnum()][:8]
-        )
+        keywords = build_search_keywords(claim_text)
         if not keywords:
             return []
 

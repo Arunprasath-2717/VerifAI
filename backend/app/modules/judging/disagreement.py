@@ -15,6 +15,12 @@ class DisagreementEngine:
     - Case D (Third Judge Unavailable): UNKNOWN verdict, degraded_evaluation=True.
     - Case E (Invalid or Unusable Output): Recorded safely, degraded_evaluation=True,
       never fabricating consensus.
+
+    ``strict_consensus`` (default True) requires the two primary judges to agree.
+    With ``strict_consensus=False`` a single decisive judgment (SUPPORTED or
+    CONTRADICTED) stands when the other primary judge *abstained* (UNKNOWN or
+    INSUFFICIENT_EVIDENCE); the result is flagged degraded. Directly opposed
+    judgments (SUPPORTED vs CONTRADICTED) always yield UNKNOWN.
     """
 
     def arbitrate(
@@ -105,6 +111,28 @@ class DisagreementEngine:
                     third_judge_invoked=False,
                     arbitration_reason=(
                         f"Consensus reached: both judges agreed on {v1.value}."
+                    ),
+                )
+            decisive = {v1, v2} - {VerdictType.UNKNOWN}
+            if not strict_consensus and len(decisive) == 1:
+                # Relaxed mode: one judge decided, the other abstained.
+                verdict = decisive.pop()
+                return DisagreementResult(
+                    consensus_verdict=verdict,
+                    has_disagreement=True,
+                    disagreement_details=(
+                        f"Relaxed consensus: {j1.judge_name} reported {v1.value}, "
+                        f"{j2.judge_name} reported {v2.value}; decisive judgment "
+                        "accepted because strict_consensus is disabled."
+                    ),
+                    unknown_reason=None,
+                    judge_evaluations=evaluations,
+                    degraded_evaluation=True,
+                    judges_used=2,
+                    third_judge_invoked=False,
+                    arbitration_reason=(
+                        f"Relaxed consensus: {verdict.value} accepted over an "
+                        "abstaining judge (strict_consensus=False)."
                     ),
                 )
             else:

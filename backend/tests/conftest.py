@@ -1,13 +1,20 @@
 """Test configuration and fixtures for VerifAI backend."""
 
-from collections.abc import Generator
+import os
 
-import pytest
-from fastapi import FastAPI
-from starlette.testclient import TestClient
+# Parametrized matrices send hundreds of requests through one app instance;
+# rate limiting is disabled suite-wide and covered by dedicated tests instead.
+# Set before importing the app so the module-level settings pick it up.
+os.environ.setdefault("RATE_LIMIT_PER_MINUTE", "0")
 
-from app.core.config import Settings, get_settings
-from app.main import create_app
+from collections.abc import Generator  # noqa: E402
+
+import pytest  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from starlette.testclient import TestClient  # noqa: E402
+
+from app.core.config import Settings, get_settings  # noqa: E402
+from app.main import create_app  # noqa: E402
 
 
 @pytest.fixture

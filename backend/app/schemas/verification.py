@@ -67,9 +67,12 @@ class VerificationOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    enable_live_search: bool = Field(
-        default=False,
-        description="Whether to attempt live search (requires network/provider).",
+    enable_live_search: bool | None = Field(
+        default=None,
+        description=(
+            "Whether to attempt live search (requires network/provider). "
+            "Defaults to the server's ENABLE_LIVE_SEARCH setting."
+        ),
     )
     max_claims: int = Field(
         default=20,
@@ -79,7 +82,11 @@ class VerificationOptions(BaseModel):
     )
     strict_consensus: bool = Field(
         default=True,
-        description="Contradictory signals immediately flag hallucination risk.",
+        description=(
+            "Require both primary judges to agree. When false, a single "
+            "decisive judgment is accepted (flagged degraded) if the other judge "
+            "abstained; opposed judgments always yield UNKNOWN."
+        ),
     )
     owner_id: str | None = Field(
         default=None,
@@ -93,11 +100,12 @@ class VerificationOptions(BaseModel):
         default=True,
         description="Search private knowledge base first before external sources.",
     )
-    force_external_retrieval: bool = Field(
-        default=False,
+    force_external_retrieval: bool | None = Field(
+        default=None,
         description=(
             "Corroboration mode: retrieve external evidence even if private "
-            "KB evidence meets sufficiency criteria."
+            "KB evidence meets sufficiency criteria. Defaults to the server's "
+            "KB_CORROBORATION_MODE setting."
         ),
     )
     kb_relevance_threshold: float | None = Field(

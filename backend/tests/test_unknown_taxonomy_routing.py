@@ -59,9 +59,7 @@ async def test_attempted_live_search_failure_produces_search_unknown(
     from unittest.mock import AsyncMock
 
     from app.modules.evidence.live_retriever import LiveWebRetriever
-    from app.modules.evidence.web_retriever import SafeWebRetriever
 
-    monkeypatch.setattr(SafeWebRetriever, "retrieve", AsyncMock(return_value=[]))
     monkeypatch.setattr(LiveWebRetriever, "retrieve", AsyncMock(return_value=[]))
 
     req = VerificationCreateRequest(

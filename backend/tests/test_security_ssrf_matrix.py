@@ -1,5 +1,7 @@
 """Comprehensive security, SSRF prevention, and authority scoring test matrix."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from app.modules.evidence.security import (
@@ -189,3 +191,56 @@ class TestSecurityAndSSRFMatrix:
         score = compute_domain_authority(url)
         assert 0.0 <= score <= 1.0
         assert score >= expected_min_authority - 0.05
+
+
+# ---------------------------------------------------------------------------
+# Bypass regressions: IPv4 embedded in IPv6, internal suffixes, credentials
+# ---------------------------------------------------------------------------
+
+SSRF_BYPASS_URLS = [
+    "http://[::ffff:127.0.0.1]/",
+    "http://[::ffff:169.254.169.254]/latest/meta-data/",
+    "http://[::]/",
+    "http://[64:ff9b::7f00:1]/",  # NAT64-embedded 127.0.0.1
+    "http://[2002:7f00:1::]/",  # 6to4-embedded 127.0.0.1
+    "http://foo.localhost/",
+    "http://localhost./",
+    "http://db.internal/",
+    "http://printer.local/",
+    "http://user:pw@example.com/",
+]
+
+
+@pytest.mark.parametrize("url", SSRF_BYPASS_URLS)
+def test_ssrf_bypass_vectors_blocked(url: str) -> None:
+    assert is_safe_url(url) is False
+
+
+@pytest.mark.parametrize(
+    "url", ["http://8.8.8.8/", "https://[2606:4700:4700::1111]/", "https://nasa.gov/"]
+)
+def test_public_targets_allowed(url: str) -> None:
+    assert is_safe_url(url) is True
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("resolved", "expected"),
+    [
+        (["127.0.0.1"], False),
+        (["93.184.215.14", "10.0.0.5"], False),  # any internal address fails
+        (["::ffff:169.254.169.254"], False),
+        (["93.184.215.14"], True),
+    ],
+)
+async def test_resolved_check_rejects_internal_dns_answers(
+    resolved: list[str], expected: bool
+) -> None:
+    from unittest.mock import AsyncMock, patch
+
+    from app.modules.evidence.security import is_safe_url_resolved
+
+    infos = [(None, None, None, "", (addr, 0)) for addr in resolved]
+    loop = MagicMock(getaddrinfo=AsyncMock(return_value=infos))
+    with patch("asyncio.get_running_loop", return_value=loop):
+        assert await is_safe_url_resolved("http://127.0.0.1.nip.io/") is expected
