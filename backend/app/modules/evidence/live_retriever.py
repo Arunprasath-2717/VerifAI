@@ -3,8 +3,7 @@
 Implements a 3-tier live-search strategy:
 
   Tier 1: Tavily AI Search   (configured via TAVILY_API_KEY)
-  Tier 2: DuckDuckGo Search  (no API key; ENABLE_DUCKDUCKGO_FALLBACK=true,
-                              requires the optional ``ddgs`` package)
+  Tier 2: DuckDuckGo Search  (no API key; ENABLE_DUCKDUCKGO_FALLBACK=true)
   Tier 3: Nightcrawler       (Wikipedia REST; ENABLE_NIGHTCRAWLER_FALLBACK=true)
 
 Each tier is tried in order; the first that returns ≥ 1 evidence passage is
@@ -86,17 +85,6 @@ class LiveWebRetriever(BaseEvidenceRetriever):
         )
 
         return cls(tavily=tavily, duckduckgo=duckduckgo, nightcrawler=nightcrawler)
-
-    def describe_tiers(self) -> dict[str, bool]:
-        """Report which tiers can actually serve requests in this process."""
-        from app.modules.evidence.duckduckgo_retriever import load_ddgs_class
-
-        return {
-            "tavily": self._tavily is not None and self._tavily.is_configured,
-            "duckduckgo": self._duckduckgo is not None
-            and load_ddgs_class() is not None,
-            "nightcrawler": self._nightcrawler is not None,
-        }
 
     async def retrieve(
         self, claim_text: str, max_passages: int = 5

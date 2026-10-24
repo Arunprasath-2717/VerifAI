@@ -1,0 +1,206 @@
+name: Phase 4 Regression — Isolated Backend and Browser
+
+on:
+  push:
+    branches: [Final, main]
+  pull_request:
+    branches: [Final, main]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend build and isolated browser regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install locked frontend dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check TypeScript
+        run: npm run lint
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Install matching Chrome and ChromeDriver
+        uses: browser-actions/setup-chrome@v2
+        id: setup-chrome
+        continue-on-error: true
+        with:
+          chrome-version: 'stable'
+          install-chromedriver: true
+
+      - name: Run isolated browser regressions (production build)
+        env:
+          VERIFAI_CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+          VERIFAI_CHROMEDRIVER_BIN: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: npm run test:browser
+
+  backend:
+    name: Backend regressions (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    # Deliberately dedicated test-only PostgreSQL, NOT an application database.
+    # Container is discarded at the end of the GitHub Actions job.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: verifai_ci
+          POSTGRES_PASSWORD: disposable_ci_test_only
+          POSTGRES_DB: verifai_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U verifai_ci -d verifai_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      VERIFAI_TEST_DATABASE_URL: postgresql+asyncpg://verifai_ci:disposable_ci_test_only@127.0.0.1:5432/verifai_test
+      PYTHONDONTWRITEBYTECODE: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install backend and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements-dev.txt
+          python -m pip check
+
+      - name: Run backend tests against isolated PostgreSQL
+        run: python -m pytest backend/tests -q -p no:cacheprovider -o addopts='' --tb=short
+
+      - name: Verify no live application credentials were needed
+        run: |
+          echo "Backend tests ran against the disposable verifai_test database."
+
+  fullstack:
+    name: Production UI + real test FastAPI + disposable PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: verifai_ci
+          POSTGRES_PASSWORD: disposable_ci_test_only
+          POSTGRES_DB: verifai_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U verifai_ci -d verifai_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://verifai_ci:disposable_ci_test_only@127.0.0.1:5432/verifai_test
+      ENVIRONMENT: testing
+      FIREBASE_AUTH_ENABLED: "false"
+      BACKEND_CORS_ORIGINS: '["http://127.0.0.1:4300"]'
+      VERIFAI_E2E_ALLOW_MUTATIONS: "1"
+      VERIFAI_E2E_API_URL: http://127.0.0.1:58005/api/v1
+      PYTHONDONTWRITEBYTECODE: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install -r backend/requirements-dev.txt
+          python -m pip check
+
+      - name: Install frontend and build
+        working-directory: frontend
+        run: |
+          npm ci --legacy-peer-deps
+          npm run build
+
+      - name: Install Chrome and ChromeDriver
+        uses: browser-actions/setup-chrome@v2
+        id: setup-chrome
+        continue-on-error: true
+        with:
+          chrome-version: 'stable'
+          install-chromedriver: true
+
+      - name: Run real full-stack smoke against test DB
+        env:
+          VERIFAI_CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+          VERIFAI_CHROMEDRIVER_BIN: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: |
+          PYTHONPATH=backend python -m uvicorn app.main:app --host 127.0.0.1 --port 58005 --no-access-log &
+          backend_pid=$!
+          trap 'kill "$backend_pid" 2>/dev/null || true' EXIT
+          python - <<'PYCODE'
+          import json
+          import time
+          import urllib.request
+
+          url = "http://127.0.0.1:58005/api/v1/ready"
+          for _ in range(100):
+              try:
+                  with urllib.request.urlopen(url, timeout=2) as resp:
+                      data = json.load(resp)
+                      if data.get("ready") and data.get("environment") == "testing":
+                          break
+              except Exception:
+                  pass
+              time.sleep(0.2)
+          else:
+              raise SystemExit("Isolated test backend did not become ready.")
+          PYCODE
+          python frontend/tests/full_stack_smoke.py

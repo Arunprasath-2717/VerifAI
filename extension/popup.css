@@ -192,10 +192,6 @@ textarea:focus {
   margin-bottom: 3px;
 }
 
-.api-key-group {
-  margin-bottom: 10px;
-}
-
 .select-input {
   width: 100%;
   background: var(--bg-main);

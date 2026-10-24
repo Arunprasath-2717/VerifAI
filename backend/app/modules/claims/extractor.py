@@ -33,15 +33,8 @@ class DeterministicClaimExtractor(BaseClaimExtractor):
     that `text[start:end] == claim_text`.
     """
 
-    # Common abbreviations to prevent false sentence boundaries (matched only at
-    # the end of the preceding span)
-    ABBREVIATIONS = (
-        r"\b(?:e\.g|i\.e|dr|mr|mrs|ms|prof|inc|ltd|co|jr|sr|st|vs|etc|u\.s|u\.k)\.$"
-    )
-
-    # Terminators count only when followed by whitespace or end of text, so
-    # decimals ("2.1"), version numbers, and URLs are never split.
-    BOUNDARY_PATTERN = re.compile(r"[.!?;…]+(?=\s|$)|\n+")
+    # Common abbreviations to prevent false sentence boundaries
+    ABBREVIATIONS = r"\b(?:e\.g|i\.e|dr|mr|mrs|ms|prof|inc|ltd|co|jr|sr|u\.s|u\.k|vs)\."
 
     def extract(self, text: str, max_claims: int = 20) -> list[ExtractedClaimItem]:
         """Deconstruct input text into validated atomic claims."""
@@ -50,9 +43,11 @@ class DeterministicClaimExtractor(BaseClaimExtractor):
 
         # Split text into candidate spans using sentence and clause boundaries
         candidates: list[tuple[int, int]] = []
+        pattern = re.compile(r"([^.!?;\n]+[.!?;\n]*)", re.UNICODE)
 
-        for start, end in self._sentence_spans(text):
-            raw_span = text[start:end]
+        for match in pattern.finditer(text):
+            raw_span = match.group(0)
+            start, end = match.span()
 
             # Handle common abbreviation false-splits by checking trailing word
             if candidates and self._is_continuation(text, candidates[-1], start):
@@ -121,17 +116,6 @@ class DeterministicClaimExtractor(BaseClaimExtractor):
             )
 
         return extracted
-
-    def _sentence_spans(self, text: str) -> list[tuple[int, int]]:
-        """Split text into spans that each end at (and include) a boundary."""
-        spans: list[tuple[int, int]] = []
-        pos = 0
-        for match in self.BOUNDARY_PATTERN.finditer(text):
-            spans.append((pos, match.end()))
-            pos = match.end()
-        if pos < len(text):
-            spans.append((pos, len(text)))
-        return spans
 
     def _is_continuation(
         self, full_text: str, prev_span: tuple[int, int], current_start: int

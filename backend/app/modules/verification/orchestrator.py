@@ -1,6 +1,5 @@
 """Pipeline orchestrator coordinating the verification lifecycle."""
 
-import asyncio
 import logging
 import uuid
 from datetime import UTC, datetime
@@ -8,8 +7,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
-from app.core.errors import AppError
+from app.core.config import Settings, get_settings
+from app.core.errors import ServiceUnavailableError
 from app.models.verification import (
     AuditRecord,
     ExtractedClaim,
@@ -21,7 +20,6 @@ from app.modules.claims.classifier import ContentClassifier
 from app.modules.claims.extractor import (
     BaseClaimExtractor,
     DeterministicClaimExtractor,
-    ExtractedClaimItem,
 )
 from app.modules.evidence.interface import BaseEvidenceRetriever
 from app.modules.evidence.live_retriever import LiveWebRetriever
@@ -31,11 +29,16 @@ from app.modules.judging.decision import DecisionEngine
 from app.modules.judging.deterministic_judge import DeterministicRuleJudge
 from app.modules.judging.disagreement import DisagreementEngine
 from app.modules.judging.interface import BaseJudge
-from app.modules.judging.model_judge import OpenSourceModelJudge
 from app.modules.judging.models import JudgeEvaluationData
 from app.modules.judging.semantic_judge import SecondarySemanticJudge
 from app.modules.knowledge.retriever import KBSearchResult, PrivateKBRetriever
 from app.modules.knowledge.service import KnowledgeBaseService
+from app.modules.token_budget import (
+    AnalysisBudgetManager,
+    AnalysisCacheService,
+    UserDailyBudgetTracker,
+)
+from app.repositories.token_usage import TokenUsageRepository
 from app.schemas.knowledge import KBSufficiencyStatus
 from app.schemas.verification import (
     AuditRecordSchema,
@@ -53,43 +56,6 @@ from app.schemas.verification import (
 logger = logging.getLogger("verifai.orchestrator")
 
 
-class _NoEvidenceRetriever(BaseEvidenceRetriever):
-    """Placeholder used when no external evidence source is enabled.
-
-    Outside development the built-in demo passages must not be presented as
-    evidence, so claims without private-KB or live evidence resolve to UNKNOWN.
-    """
-
-    @property
-    def name(self) -> str:
-        return "NO_EXTERNAL_RETRIEVER"
-
-    async def retrieve(
-        self, claim_text: str, max_passages: int = 3
-    ) -> list[RetrievedEvidenceItem]:
-        return []
-
-
-def _default_retriever() -> BaseEvidenceRetriever:
-    if get_settings().demo_evidence_index_enabled:
-        return LocalPassageRetriever()
-    return _NoEvidenceRetriever()
-
-
-def _configured_model_judge() -> BaseJudge | None:
-    """Return the model tie-breaker judge when an endpoint is configured."""
-    settings = get_settings()
-    if not settings.JUDGE_MODEL_ENDPOINT:
-        return None
-    return OpenSourceModelJudge(
-        endpoint_url=settings.JUDGE_MODEL_ENDPOINT,
-        model_name=settings.JUDGE_MODEL_NAME,
-        provider=settings.JUDGE_MODEL_PROVIDER,
-        name="Judge-Tiebreaker-Model",
-        timeout_seconds=settings.JUDGE_MODEL_TIMEOUT_SECONDS,
-    )
-
-
 class VerificationOrchestrator:
     """Coordinates extraction, retrieval, judging, and audit lifecycle."""
 
@@ -104,17 +70,19 @@ class VerificationOrchestrator:
         tie_breaker_judge: BaseJudge | None = None,
         disagreement_engine: DisagreementEngine | None = None,
         decision_engine: DecisionEngine | None = None,
+        settings: Settings | None = None,
     ) -> None:
+        self.settings = settings or get_settings()
         self.extractor = extractor or DeterministicClaimExtractor()
         self.classifier = classifier or ContentClassifier()
-        self.retriever = retriever or _default_retriever()
+        self.retriever = retriever or LocalPassageRetriever()
         self.kb_retriever = kb_retriever
         self.kb_service = kb_service
         self.judges = judges or [
             DeterministicRuleJudge(name="Judge-Primary-Deterministic"),
             SecondarySemanticJudge(name="Judge-Secondary-Semantic"),
         ]
-        self.tie_breaker_judge = tie_breaker_judge or _configured_model_judge()
+        self.tie_breaker_judge = tie_breaker_judge
         self.disagreement_engine = disagreement_engine or DisagreementEngine()
         self.decision_engine = decision_engine or DecisionEngine()
 
@@ -124,41 +92,51 @@ class VerificationOrchestrator:
         db_session: AsyncSession | None = None,
     ) -> VerificationResponse:
         """Execute full verification pipeline for the given input text."""
-        settings = get_settings()
-        if len(request.text) > settings.VERIFICATION_MAX_INPUT_CHARS:
-            raise AppError(
-                message=(
-                    f"Input text exceeds the configured limit of "
-                    f"{settings.VERIFICATION_MAX_INPUT_CHARS} characters."
-                ),
-                code="VALIDATION_ERROR",
-                status_code=422,
-            )
-        options = request.options
-        live_search = (
-            options.enable_live_search
-            if options.enable_live_search is not None
-            else settings.ENABLE_LIVE_SEARCH
+        # ── Cache lookup ────────────────────────────────────────────────────────
+        effective_owner_early = request.options.owner_id or "anonymous"
+        _cache = AnalysisCacheService.get_instance()
+        _cache_hash = AnalysisCacheService.compute_hash(
+            text=request.text,
+            query=request.query,
+            options=request.options.model_dump(exclude_none=True),
         )
-        force_external = (
-            options.force_external_retrieval
-            if options.force_external_retrieval is not None
-            else settings.KB_CORROBORATION_MODE
+        cached_response = _cache.get(effective_owner_early, _cache_hash)
+        if cached_response is not None:
+            logger.info(
+                "Cache HIT for owner=%s — returning cached analysis (hash=%s).",
+                effective_owner_early,
+                _cache_hash[:12],
+            )
+            return cached_response
+
+        # ── Daily budget guard ─────────────────────────────────────────────────
+        _daily_tracker = UserDailyBudgetTracker.get_instance()
+        await _daily_tracker.check_and_increment_analysis(
+            user_id=effective_owner_early,
+            daily_max_analyses=self.settings.USER_DAILY_ANALYSIS_LIMIT,
+        )
+
+        # ── Per-analysis token budget ─────────────────────────────────────────
+        budget_limit = getattr(self.settings, "MAX_TOKENS_PER_ANALYSIS", 20_000)
+        budget = AnalysisBudgetManager(
+            analysis_id=uuid.uuid4(),  # separate from verification_id
+            owner_id=effective_owner_early,
+            budget_limit=budget_limit,
+            settings=self.settings,
         )
 
         verification_id = uuid.uuid4()
         now_utc = datetime.now(UTC)
         audit_records: list[AuditRecord] = []
 
-        def record_audit(
+        def log_audit(
             stage: str,
             event_type: str,
             status: str,
             message: str,
             details: dict[str, Any] | None = None,
-            sink: list[AuditRecord] | None = None,
         ) -> None:
-            (audit_records if sink is None else sink).append(
+            audit_records.append(
                 AuditRecord(
                     id=uuid.uuid4(),
                     verification_id=verification_id,
@@ -170,8 +148,6 @@ class VerificationOrchestrator:
                     timestamp=datetime.now(UTC),
                 )
             )
-
-        log_audit = record_audit
 
         log_audit(
             stage="INITIALIZATION",
@@ -192,7 +168,7 @@ class VerificationOrchestrator:
             message="Extracting atomic claims from input text.",
         )
 
-        max_claims = min(options.max_claims, settings.VERIFICATION_MAX_CLAIMS)
+        max_claims = request.options.max_claims
         extracted_items = self.extractor.extract(request.text, max_claims=max_claims)
 
         log_audit(
@@ -205,7 +181,7 @@ class VerificationOrchestrator:
 
         # Configure external evidence retriever (live web or local index)
         active_retriever = self.retriever
-        if live_search:
+        if request.options.enable_live_search:
             active_retriever = LiveWebRetriever.from_settings()
             log_audit(
                 stage="RETRIEVAL",
@@ -225,22 +201,13 @@ class VerificationOrchestrator:
         active_kb_retriever = self.kb_retriever or PrivateKBRetriever(
             service=active_kb_service,
             owner_id=request.options.owner_id,
-            cache_chunks=True,
         )
 
         # Process each claim through classification, retrieval, and judging
         claims_processed: list[dict[str, Any]] = []
         db_claims: list[ExtractedClaim] = []
 
-        async def process_claim(
-            item: ExtractedClaimItem,
-        ) -> tuple[dict[str, Any], ExtractedClaim, list[AuditRecord]]:
-            """Classify, retrieve, and judge one claim, collecting its audit trail."""
-            claim_audit: list[AuditRecord] = []
-
-            def log_audit(**kwargs: Any) -> None:
-                record_audit(sink=claim_audit, **kwargs)
-
+        for item in extracted_items:
             # Step 2: Content Classification
             classification = self.classifier.classify(item.text)
 
@@ -307,23 +274,20 @@ class VerificationOrchestrator:
                             )
                     except Exception as kb_exc:
                         logger.warning(
-                            "KB retrieval failed for claim %d: %s",
-                            item.index,
-                            kb_exc,
+                            "KB retrieval failed for claim %d: %s", item.index, kb_exc
                         )
                         log_audit(
                             stage="RETRIEVAL",
                             event_type="KB_ERROR",
                             status="WARNING",
-                            message=(
-                                f"KB error on claim {item.index} "
-                                f"({type(kb_exc).__name__})."
-                            ),
+                            message=f"KB error on claim {item.index}: {kb_exc}",
                             details={"error": type(kb_exc).__name__},
                         )
 
                 # Step 3B: External Retrieval (if KB insufficient or corroboration)
-                should_search_external = not kb_hit or force_external
+                should_search_external = (
+                    not kb_hit or request.options.force_external_retrieval
+                )
 
                 if should_search_external:
                     log_audit(
@@ -337,12 +301,9 @@ class VerificationOrchestrator:
                         },
                     )
                     try:
-                        ext_items = await asyncio.wait_for(
-                            active_retriever.retrieve(
-                                claim_text=item.text,
-                                max_passages=3,
-                            ),
-                            timeout=settings.RETRIEVAL_TIMEOUT_SECONDS,
+                        ext_items = await active_retriever.retrieve(
+                            claim_text=item.text,
+                            max_passages=3,
                         )
                         external_evidence = ext_items
                     except Exception as exc:
@@ -363,9 +324,9 @@ class VerificationOrchestrator:
                         )
 
                 # Combine evidence passages according to orchestration policy
-                if kb_hit and not force_external:
+                if kb_hit and not request.options.force_external_retrieval:
                     evidence_items = kb_evidence
-                elif force_external:
+                elif request.options.force_external_retrieval:
                     evidence_items = kb_evidence + external_evidence
                 else:
                     evidence_items = external_evidence
@@ -389,14 +350,48 @@ class VerificationOrchestrator:
                         },
                     )
 
-                # Step 4: Independent Judge Evaluation
+                # Step 4: Independent Judge Evaluation (budget-gated)
                 if evidence_items:
                     # Evaluate primary 2 judges
                     for judge in self.judges[:2]:
+                        # Estimate cost and check budget before invoking judge
+                        combined_text = item.text + " ".join(
+                            ev.snippet or "" for ev in evidence_items
+                        )
+                        from app.modules.token_budget.estimator import TokenEstimator
+
+                        est_tokens = TokenEstimator.estimate_tokens(combined_text)
+                        if not await budget.can_spend(est_tokens):
+                            logger.warning(
+                                "Budget exhausted before judge %s on claim %d; skipping.",
+                                judge.name,
+                                item.index,
+                            )
+                            judge_evaluations.append(
+                                JudgeEvaluationData(
+                                    judge_id=uuid.uuid4(),
+                                    judge_name=judge.name,
+                                    judgment=JudgeDecision.UNAVAILABLE,
+                                    rationale="Token budget exhausted — judge skipped.",
+                                )
+                            )
+                            continue
+                        reservation_id = await budget.reserve(est_tokens)
                         try:
                             eval_data = await judge.evaluate(item.text, evidence_items)
                             judge_evaluations.append(eval_data)
+                            # Record actual usage (use estimate for deterministic judges)
+                            await budget.record_usage(
+                                operation="CLAIM_EVALUATION",
+                                provider="deterministic",
+                                model_name=judge.name,
+                                input_tokens=est_tokens,
+                                output_tokens=0,
+                                is_estimated=True,
+                                reservation_id=reservation_id,
+                            )
                         except Exception as j_exc:
+                            await budget.release_reservation(reservation_id)
                             logger.warning(
                                 "Judge %s failed on claim %d: %s",
                                 judge.name,
@@ -408,10 +403,7 @@ class VerificationOrchestrator:
                                     judge_id=uuid.uuid4(),
                                     judge_name=judge.name,
                                     judgment=JudgeDecision.UNAVAILABLE,
-                                    rationale=(
-                                        "Judge evaluation failed "
-                                        f"({type(j_exc).__name__})."
-                                    ),
+                                    rationale=f"Judge evaluation failed: {j_exc}",
                                 )
                             )
 
@@ -444,8 +436,7 @@ class VerificationOrchestrator:
                                     judge_name=self.tie_breaker_judge.name,
                                     judgment=JudgeDecision.UNAVAILABLE,
                                     rationale=(
-                                        "Tie-breaker evaluation failed "
-                                        f"({type(tb_exc).__name__})."
+                                        f"Tie-breaker evaluation failed: {tb_exc}"
                                     ),
                                 )
                             )
@@ -474,7 +465,7 @@ class VerificationOrchestrator:
                     claim_verdict = VerdictType.UNKNOWN
                     degraded_evaluation = False
                     arbitration_reason = None
-                    if live_search:
+                    if request.options.enable_live_search:
                         unknown_reason = UnknownReason.SEARCH_UNKNOWN
                         explanation = (
                             "External search protocol was attempted but "
@@ -514,6 +505,7 @@ class VerificationOrchestrator:
                 "evidence": evidence_items,
                 "judges": judge_evaluations,
             }
+            claims_processed.append(claim_data)
 
             # Build database entity
             db_claim = ExtractedClaim(
@@ -575,23 +567,7 @@ class VerificationOrchestrator:
                 )
                 db_claim.judge_evaluations.append(db_je)
 
-            return claim_data, db_claim, claim_audit
-
-        # Claims are independent, so they are processed concurrently (bounded);
-        # results and audit records are merged back in claim order.
-        semaphore = asyncio.Semaphore(max(1, settings.VERIFICATION_CLAIM_CONCURRENCY))
-
-        async def bounded(
-            item: ExtractedClaimItem,
-        ) -> tuple[dict[str, Any], ExtractedClaim, list[AuditRecord]]:
-            async with semaphore:
-                return await process_claim(item)
-
-        results = await asyncio.gather(*(bounded(item) for item in extracted_items))
-        for claim_data, db_claim, claim_audit in results:
-            claims_processed.append(claim_data)
             db_claims.append(db_claim)
-            audit_records.extend(claim_audit)
 
         # Step 6: Document-Level Decision Aggregation
         doc_summary = self.decision_engine.aggregate(claims_processed)
@@ -617,10 +593,11 @@ class VerificationOrchestrator:
 
         completed_at = datetime.now(UTC)
 
+        effective_owner = request.options.owner_id or "anonymous"
         # Step 7: Create VerificationJob Database Entity
         verification_job = VerificationJob(
             id=verification_id,
-            owner_id=request.options.owner_id,
+            owner_id=effective_owner,
             input_text=request.text,
             query=request.query,
             status=VerificationStatus.COMPLETED.value,
@@ -642,31 +619,61 @@ class VerificationOrchestrator:
             execution_metadata={
                 "retriever_used": active_retriever.name,
                 "judges_used": [j.name for j in self.judges],
-                "tie_breaker_judge": (
-                    self.tie_breaker_judge.name if self.tie_breaker_judge else None
-                ),
                 "extractor": "DeterministicClaimExtractor",
             },
         )
         verification_job.claims = db_claims
-        # Step 8: Database Persistence (if session provided)
-        if db_session is not None:
-            # The JOB_SAVED record is written in the same transaction as the job,
-            # so it exists in the database exactly when the save succeeded.
-            log_audit(
-                stage="PERSISTENCE",
-                event_type="JOB_SAVED",
-                status="SUCCESS",
-                message="Verification job saved to database.",
+        verification_job.audit_records = audit_records
+
+        # Step 8: Database Persistence
+        is_production = self.settings.ENVIRONMENT in ("production", "staging")
+
+        if db_session is None and is_production:
+            raise ServiceUnavailableError(
+                "Database persistence is required in production; "
+                "ephemeral execution is prohibited."
             )
-            verification_job.audit_records = list(audit_records)
+
+        if db_session is not None:
             try:
                 db_session.add(verification_job)
+                await db_session.flush()  # flush first so FK exists for token_usages
+
+                # Step 8a: Persist token usage records
+                budget_status = budget.get_status()
+                if budget_status.records:
+                    token_repo = TokenUsageRepository(session=db_session)
+                    await token_repo.save_records(
+                        records=[r for r in budget._records],  # noqa: SLF001
+                        owner_id=effective_owner,
+                        verification_id=verification_id,
+                    )
+                # Flush again to include token usage rows, then commit atomically
                 await db_session.commit()
+
+                # Update daily tracker with actual spent tokens
+                await _daily_tracker.record_daily_tokens(
+                    user_id=effective_owner,
+                    tokens=budget_status.total_tokens,
+                )
+
+                log_audit(
+                    stage="PERSISTENCE",
+                    event_type="JOB_SAVED",
+                    status="SUCCESS",
+                    message=(
+                        f"Verification job saved to database. "
+                        f"Token usage: {budget_status.total_tokens} tokens, "
+                        f"est. cost: ${budget_status.estimated_cost_usd:.6f}."
+                    ),
+                )
             except Exception as db_exc:
-                logger.warning("Database persistence failed: %s", db_exc)
+                logger.error("Database persistence failed: %s", db_exc)
                 await db_session.rollback()
-                audit_records.pop()  # the JOB_SAVED record never committed
+                if is_production:
+                    raise ServiceUnavailableError(
+                        f"Database persistence failed: {type(db_exc).__name__}"
+                    ) from db_exc
                 log_audit(
                     stage="PERSISTENCE",
                     event_type="DEGRADED_EXECUTION",
@@ -676,8 +683,6 @@ class VerificationOrchestrator:
                     ),
                     details={"error": type(db_exc).__name__},
                 )
-        else:
-            verification_job.audit_records = audit_records
 
         # Step 9: Assemble Strongly-Typed VerificationResponse
         response_claims: list[ClaimResultSchema] = []
@@ -748,8 +753,9 @@ class VerificationOrchestrator:
             for ar in audit_records
         ]
 
-        return VerificationResponse(
+        final_response = VerificationResponse(
             verification_id=verification_id,
+            owner_id=effective_owner,
             status=VerificationStatus.COMPLETED.value,
             input_text=request.text,
             query=request.query,
@@ -772,3 +778,19 @@ class VerificationOrchestrator:
             claims=response_claims,
             audit_trail=response_audit,
         )
+
+        # Store in tenant-isolated cache so identical future requests are free
+        _cache.set(
+            owner_id=effective_owner,
+            cache_hash=_cache_hash,
+            response=final_response,
+            ttl_seconds=3600,
+        )
+        logger.info(
+            "Cache STORE for owner=%s (hash=%s). Budget: %d/%d tokens.",
+            effective_owner,
+            _cache_hash[:12],
+            budget.spent_tokens,
+            budget.budget_limit,
+        )
+        return final_response

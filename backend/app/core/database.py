@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -20,11 +19,8 @@ logger = logging.getLogger("verifai.database")
 
 # Global engine reference for application lifespan management
 _engine: AsyncEngine | None = None
+_engine_loop: asyncio.AbstractEventLoop | None = None
 _session_maker: async_sessionmaker[AsyncSession] | None = None
-
-
-def _unique_statement_name() -> str:
-    return f"__asyncpg_{uuid.uuid4().hex}__"
 
 
 def get_async_engine(settings: Settings | None = None) -> AsyncEngine:
@@ -32,11 +28,25 @@ def get_async_engine(settings: Settings | None = None) -> AsyncEngine:
 
     Connections are established lazily upon first query/transaction;
     calling this function does not perform any network operations.
+    Recreates engine if a different event loop is active.
     """
-    global _engine
-    if _engine is not None:
-        return _engine
+    global _engine, _engine_loop, _session_maker
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
 
+    if _engine is not None:
+        if _engine_loop is not None and (
+            _engine_loop.is_closed()
+            or (current_loop is not None and _engine_loop is not current_loop)
+        ):
+            _engine = None
+            _session_maker = None
+        else:
+            return _engine
+
+    _engine_loop = current_loop
     app_settings = settings or get_settings()
     if not app_settings.DATABASE_URL:
         raise ValueError("DATABASE_URL is not configured.")
@@ -58,15 +68,6 @@ def get_async_engine(settings: Settings | None = None) -> AsyncEngine:
                 "pool_timeout": app_settings.DATABASE_POOL_TIMEOUT,
             }
         )
-        if app_settings.DATABASE_USE_TRANSACTION_POOLER:
-            # Transaction poolers hand each transaction a different backend, so
-            # cached or reused prepared statements fail ("prepared statement
-            # ... already exists"). Disable both caches and use unique names.
-            pool_kwargs["connect_args"] = {
-                "statement_cache_size": 0,
-                "prepared_statement_cache_size": 0,
-                "prepared_statement_name_func": _unique_statement_name,
-            }
 
     _engine = create_async_engine(db_url, **pool_kwargs)
     return _engine
@@ -77,10 +78,14 @@ def get_async_session_maker(
 ) -> async_sessionmaker[AsyncSession]:
     """Create or return the configured async session factory."""
     global _session_maker
-    if _session_maker is not None and engine is None:
+    target_engine = engine or get_async_engine()
+    if (
+        _session_maker is not None
+        and engine is None
+        and getattr(_session_maker, "kw", {}).get("bind") is target_engine
+    ):
         return _session_maker
 
-    target_engine = engine or get_async_engine()
     _session_maker = async_sessionmaker(
         bind=target_engine,
         expire_on_commit=False,
@@ -105,7 +110,7 @@ async def dispose_async_engine(engine: AsyncEngine | None = None) -> None:
 
 
 async def get_async_session(
-    session_maker: async_sessionmaker[AsyncSession] | None = None,
+    session_maker: Any = None,
 ) -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency providing an isolated asynchronous database session.
 
@@ -175,3 +180,17 @@ async def check_database_connectivity(
             "configured": True,
             "status": "unavailable",
         }
+
+
+async def init_db(engine: AsyncEngine | None = None) -> None:
+    """Initialize database tables according to Declarative Base metadata.
+
+    Safe, idempotent operation using CREATE TABLE IF NOT EXISTS.
+    """
+    import app.models  # noqa: F401 - ensures all models are registered on Base.metadata
+    from app.models.base import Base
+
+    target_engine = engine or get_async_engine()
+    async with target_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables verified/created successfully.")

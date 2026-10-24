@@ -1,11 +1,9 @@
-"""Hermetic unit tests for live evidence retrievers and Supabase integration."""
+"""Hermetic unit tests for live evidence retrievers (Tavily, Wikipedia)."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
 import pytest
 
-from app.core.supabase import SupabaseClient
 from app.modules.evidence.duckduckgo_retriever import DuckDuckGoRetriever
 from app.modules.evidence.live_retriever import LiveWebRetriever
 from app.modules.evidence.models import RetrievedEvidenceItem
@@ -57,24 +55,14 @@ async def test_tavily_retriever_success_mocked() -> None:
         ]
     }
 
-    mock_http_response = MagicMock()
-    mock_http_response.json.return_value = mock_response
-    mock_http_response.raise_for_status = MagicMock()
-    mock_client = AsyncMock()
-    mock_client.post.return_value = mock_http_response
-    mock_client_ctx = MagicMock()
-    mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
+    mock_tavily_client = MagicMock()
+    mock_tavily_client.search.return_value = mock_response
 
-    with patch("httpx.AsyncClient", return_value=mock_client_ctx) as client_cls:
+    with patch.dict(
+        "sys.modules",
+        {"tavily": MagicMock(TavilyClient=MagicMock(return_value=mock_tavily_client))},
+    ):
         items = await retriever.retrieve("Water formula is H2O", max_passages=5)
-
-    # Request is bounded by the configured timeout and authenticated via header
-    assert client_cls.call_args.kwargs["timeout"] == retriever._timeout
-    call = mock_client.post.call_args
-    assert call.args[0] == "https://api.tavily.com/search"
-    assert call.kwargs["headers"]["Authorization"] == "Bearer tvly-mock-key"
-    assert call.kwargs["json"]["query"] == "Water formula is H2O"
 
     # AWS metadata result must have been filtered out
     assert len(items) == 1
@@ -92,13 +80,13 @@ async def test_tavily_retriever_exception_handled() -> None:
     """TavilySearchRetriever never raises; returns [] on network/API exceptions."""
     retriever = TavilySearchRetriever(api_key="tvly-mock-key")
 
-    mock_client = AsyncMock()
-    mock_client.post.side_effect = httpx.ConnectError("Tavily unreachable")
-    mock_client_ctx = MagicMock()
-    mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_client)
-    mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
+    mock_tavily_client = MagicMock()
+    mock_tavily_client.search.side_effect = ConnectionError("Tavily unreachable")
 
-    with patch("httpx.AsyncClient", return_value=mock_client_ctx):
+    with patch.dict(
+        "sys.modules",
+        {"tavily": MagicMock(TavilyClient=MagicMock(return_value=mock_tavily_client))},
+    ):
         items = await retriever.retrieve("Any claim")
         assert items == []
 
@@ -143,7 +131,11 @@ async def test_duckduckgo_retriever_success_mocked() -> None:
 
     with patch.dict(
         "sys.modules",
-        {"ddgs": MagicMock(DDGS=MagicMock(return_value=mock_ddgs_context))},
+        {
+            "duckduckgo_search": MagicMock(
+                DDGS=MagicMock(return_value=mock_ddgs_context)
+            )
+        },
     ):
         items = await retriever.retrieve("Quantum mechanics", max_passages=3)
 
@@ -165,7 +157,11 @@ async def test_duckduckgo_retriever_exception_handled() -> None:
 
     with patch.dict(
         "sys.modules",
-        {"ddgs": MagicMock(DDGS=MagicMock(return_value=mock_ddgs_context))},
+        {
+            "duckduckgo_search": MagicMock(
+                DDGS=MagicMock(return_value=mock_ddgs_context)
+            )
+        },
     ):
         items = await retriever.retrieve("Some search")
         assert items == []
@@ -368,89 +364,3 @@ async def test_live_retriever_all_tiers_exhausted_returns_empty() -> None:
 
     results = await chain.retrieve("Obscure claim with no evidence")
     assert results == []
-
-
-# ==============================================================================
-# SupabaseClient Tests
-# ==============================================================================
-
-
-@pytest.mark.anyio
-async def test_supabase_client_unconfigured() -> None:
-    """SupabaseClient correctly indicates unconfigured status."""
-    client = SupabaseClient(url=None)
-    assert not client.is_configured
-    assert client.active_key is None
-    status = await client.check_connectivity()
-    assert status == {"configured": False, "status": "unconfigured"}
-    query_result = await client.query_table("verifications")
-    assert query_result == []
-
-
-@pytest.mark.anyio
-async def test_supabase_client_check_connectivity_available() -> None:
-    """SupabaseClient returns available when endpoint responds 200."""
-    client = SupabaseClient(
-        url="https://mock-proj.supabase.co",
-        publishable_key="sb_publishable_test",
-        secret_key="sb_secret_test",
-    )
-    assert client.is_configured
-    assert client.active_key == "sb_secret_test"
-
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-
-    mock_http_client = AsyncMock()
-    mock_http_client.get.return_value = mock_resp
-    mock_ctx = MagicMock(
-        __aenter__=AsyncMock(return_value=mock_http_client), __aexit__=AsyncMock()
-    )
-
-    with patch("httpx.AsyncClient", return_value=mock_ctx):
-        status = await client.check_connectivity()
-        assert status == {"configured": True, "status": "available"}
-
-
-@pytest.mark.anyio
-async def test_supabase_client_check_connectivity_unavailable() -> None:
-    """SupabaseClient returns unavailable when endpoint fails or errors."""
-    client = SupabaseClient(
-        url="https://mock-proj.supabase.co",
-        publishable_key="sb_publishable_test",
-    )
-
-    mock_http_client = AsyncMock()
-    mock_http_client.get.side_effect = httpx.ConnectError("Network down")
-    mock_ctx = MagicMock(
-        __aenter__=AsyncMock(return_value=mock_http_client),
-        __aexit__=AsyncMock(return_value=False),
-    )
-
-    with patch("httpx.AsyncClient", return_value=mock_ctx):
-        status = await client.check_connectivity()
-        assert status == {"configured": True, "status": "unavailable"}
-
-
-@pytest.mark.anyio
-async def test_supabase_client_query_table_success() -> None:
-    """SupabaseClient queries PostgREST endpoint and parses rows."""
-    client = SupabaseClient(
-        url="https://mock-proj.supabase.co",
-        publishable_key="sb_publishable_test",
-    )
-
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = [{"id": "job-1", "status": "completed"}]
-
-    mock_http_client = AsyncMock()
-    mock_http_client.get.return_value = mock_resp
-    mock_ctx = MagicMock(
-        __aenter__=AsyncMock(return_value=mock_http_client), __aexit__=AsyncMock()
-    )
-
-    with patch("httpx.AsyncClient", return_value=mock_ctx):
-        rows = await client.query_table("verification_jobs")
-        assert len(rows) == 1
-        assert rows[0]["id"] == "job-1"

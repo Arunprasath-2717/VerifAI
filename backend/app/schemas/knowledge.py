@@ -37,11 +37,7 @@ class DocumentCreateRequest(BaseModel):
     text: str = Field(
         ...,
         min_length=1,
-        max_length=5 * 1024 * 1024,
-        description=(
-            "Raw document text content (byte size is further limited by "
-            "KB_MAX_DOCUMENT_BYTES)."
-        ),
+        description="Raw document text content.",
     )
     filename: str = Field(
         default="document.txt",

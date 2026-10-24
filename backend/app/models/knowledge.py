@@ -68,6 +68,7 @@ class KnowledgeDocument(Base, TimestampMixin):
         back_populates="document",
         cascade="all, delete-orphan",
         order_by="KnowledgeChunk.chunk_index",
+        lazy="selectin",
     )
 
     __table_args__ = (

@@ -3,14 +3,17 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+INSECURE_DEV_JWT_SECRET: str = (
+    "verifai_insecure_development_secret_key_change_in_production_32chars!"
+)
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables and defaults."""
 
-    # Project Metadata
     PROJECT_NAME: str = "VerifAI"
     VERSION: str = "0.1.0"
     DESCRIPTION: str = (
@@ -32,24 +35,6 @@ class Settings(BaseSettings):
     # Request & Correlation Tracking
     REQUEST_ID_HEADER: str = "X-Request-ID"
 
-    # ===========================================================================
-    # API Authentication
-    # API_KEYS maps owner/namespace ID -> API key, e.g.
-    #   API_KEYS='{"alice": "<random-key>", "bob": "<random-key>"}'
-    # The caller's owner ID is derived from the key presented in API_KEY_HEADER.
-    # When no keys are configured, anonymous access is permitted only in
-    # development/test environments; every other environment rejects requests.
-    # ===========================================================================
-    API_KEYS: dict[str, SecretStr] = Field(default_factory=dict)
-    API_KEY_HEADER: str = "X-API-Key"
-
-    # Upper bound on any request body (0 disables). Sized for KB documents up to
-    # KB_MAX_DOCUMENT_BYTES plus JSON encoding overhead.
-    MAX_REQUEST_BODY_BYTES: int = Field(default=6 * 1024 * 1024, ge=0)
-
-    # Per-principal request budget for state-changing endpoints (0 disables).
-    RATE_LIMIT_PER_MINUTE: int = Field(default=60, ge=0)
-
     # CORS Configuration
     # NOTE: Default origins are strictly for local development and must be
     # explicitly overridden in production.
@@ -62,27 +47,143 @@ class Settings(BaseSettings):
         ]
     )
 
+    # ===========================================================================
     # Database Configuration (PostgreSQL + asyncpg)
-    # Using SecretStr ensures credentials are never leaked in repr, str, or logs
+    # Using SecretStr ensures credentials are never leaked in repr, str, or logs.
+    # DATABASE_URL is REQUIRED at startup — there is no in-memory fallback.
+    # ===========================================================================
     DATABASE_URL: SecretStr | None = None
     DATABASE_POOL_SIZE: int = 5
     DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_POOL_TIMEOUT: int = 30
     DATABASE_CONNECT_TIMEOUT: float = 3.0
-    # Set true behind a transaction-mode pooler (Supabase pooler on port 6543,
-    # PgBouncer pool_mode=transaction), which cannot keep prepared statements.
-    DATABASE_USE_TRANSACTION_POOLER: bool = False
+
+    # ===========================================================================
+    # Authentication — Firebase Auth (RS256 via Google JWKS)
+    # ===========================================================================
+    FIREBASE_AUTH_ENABLED: bool = True
+    FIREBASE_API_KEY: str = "AIzaSyDag7_lFm6ayphrJUDYWK2EQmZmFdaU_5s"
+    FIREBASE_PROJECT_ID: str = "verifai-22c4b"
+    FIREBASE_AUTH_DOMAIN: str = "verifai-22c4b.firebaseapp.com"
+    FIREBASE_STORAGE_BUCKET: str = "verifai-22c4b.firebasestorage.app"
+    FIREBASE_MESSAGING_SENDER_ID: str = "501647364420"
+    FIREBASE_APP_ID: str = "1:501647364420:web:9848f5dc7ba7d236704711"
+    FIREBASE_MEASUREMENT_ID: str = "G-4LPP8CZGG3"
+
+    # ===========================================================================
+    # Legal & Compliance Configuration
+    # Authoritative versions and effective dates for Terms & Privacy Policy
+    # ===========================================================================
+    TERMS_VERSION: str = "2026.1"
+    PRIVACY_POLICY_VERSION: str = "2026.1"
+    TERMS_EFFECTIVE_DATE: str = "October 10, 2026"
+    PRIVACY_EFFECTIVE_DATE: str = "October 10, 2026"
+    LEGAL_CONTACT_EMAIL: str = "[CONFIGURED_LEGAL_CONTACT_EMAIL]"
+    GOVERNING_LAW: str = "[CONFIGURED_GOVERNING_JURISDICTION_PLACEHOLDER]"
+    MINIMUM_AGE_REQUIREMENT: str = "[CONFIGURED_MINIMUM_AGE_PLACEHOLDER]"
+
+    # Internal JWT for session tokens issued after Firebase verification
+    # NOTE: These are VerifAI-issued session tokens, NOT Firebase tokens.
+    JWT_SECRET: SecretStr = Field(
+        default=SecretStr(INSECURE_DEV_JWT_SECRET),
+        description=(
+            "Secret key for signing session JWT tokens. "
+            "Must be overridden in production with a high-entropy secret (>=32 chars)."
+        ),
+    )
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ISSUER: str = "verifai-backend"
+    JWT_AUDIENCE: str = "verifai-client"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # Trusted Reverse Proxy IP Configuration
+    FORWARDED_ALLOW_IPS: list[str] = Field(
+        default_factory=list,
+        description=(
+            "List of trusted reverse proxy IP addresses or CIDR blocks. "
+            "If empty, X-Forwarded-For headers are ignored and socket IP is used."
+        ),
+    )
+
+    # Rate Limiting Configuration
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_ENABLED_IN_TEST: bool = False
+    RATE_LIMIT_LOGIN_PER_MINUTE: int = 10
+    RATE_LIMIT_REGISTER_PER_MINUTE: int = 5
+    RATE_LIMIT_VERIFY_PER_MINUTE: int = 30
+    RATE_LIMIT_KB_UPLOAD_PER_MINUTE: int = 20
+    RATE_LIMIT_KB_SEARCH_PER_MINUTE: int = 40
+
+    # Resource Concurrency Controls
+    MAX_CONCURRENT_VERIFICATIONS_PER_USER: int = 3
 
     # Verification Engine Configuration
     VERIFICATION_MAX_INPUT_CHARS: int = 20000
     VERIFICATION_MAX_CLAIMS: int = 20
-    # Claims verified in parallel per job (bounds concurrent provider calls).
-    VERIFICATION_CLAIM_CONCURRENCY: int = Field(default=4, ge=1)
     RETRIEVAL_TIMEOUT_SECONDS: float = 8.0
     ENABLE_LIVE_SEARCH: bool = False
-    # Built-in demo reference passages (LocalPassageRetriever). Defaults to on in
-    # development/test only; elsewhere they must never be served as evidence.
-    ENABLE_DEMO_EVIDENCE_INDEX: bool | None = None
+
+    # ===========================================================================
+    # LLM Provider & Multi-Model Execution Configuration
+    # ===========================================================================
+    OPENAI_API_KEY: SecretStr | None = None
+    OPENAI_BASE_URL: str | None = None
+    ANTHROPIC_API_KEY: SecretStr | None = None
+    GEMINI_API_KEY: SecretStr | None = None
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OPENROUTER_API_KEY: SecretStr | None = None
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    GROQ_API_KEY: SecretStr | None = None
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    OMNIROUTE_API_KEY: SecretStr | None = None
+    OMNIROUTE_BASE_URL: str = "https://api.cheaperinference.com/v1"
+    # Fernet key (urlsafe base64, 32 bytes) for encrypting user BYOK credentials
+    # at rest. Generate with Fernet.generate_key(). Never commit a real value.
+    PROVIDER_CREDENTIAL_ENCRYPTION_KEY: SecretStr | None = None
+    DEFAULT_LLM_MODELS: list[str] = Field(
+        default_factory=lambda: [
+            "gpt-4o-mini",
+            "claude-3-5-sonnet",
+            "gemini-1.5-flash",
+        ]
+    )
+    MAX_LLMS_PER_PROMPT: int = 3
+    LLM_TIMEOUT_SECONDS: float = 30.0
+
+    # ===========================================================================
+    # Centralized Token & Cost Budget Configuration (PRD Section 2)
+    # ===========================================================================
+    TOKEN_BUDGET_ANALYSIS_DEFAULT: int = 20000
+    TOKEN_BUDGET_CLAIM_EXTRACTION_INPUT: int = 6000
+    TOKEN_BUDGET_CLAIM_EXTRACTION_OUTPUT: int = 1000
+    TOKEN_BUDGET_SINGLE_CLAIM_EVAL_INPUT: int = 4000
+    TOKEN_BUDGET_SINGLE_CLAIM_EVAL_OUTPUT: int = 600
+    TOKEN_BUDGET_REPORT_SUMMARY_INPUT: int = 4000
+    TOKEN_BUDGET_REPORT_SUMMARY_OUTPUT: int = 500
+    TOKEN_BUDGET_EVIDENCE_ITEMS_PER_CLAIM: int = 5
+    TOKEN_BUDGET_EVIDENCE_EXCERPT_CHARS: int = 1000
+    TOKEN_BUDGET_MAX_RETRIES: int = 2
+    TOKEN_BUDGET_PARALLEL_EVALS: int = 3
+    TOKEN_BUDGET_USER_DAILY_MAX: int = 100000
+    TOKEN_BUDGET_USER_DAILY_ANALYSES_MAX: int = 50
+    TOKEN_BUDGET_MAX_CONCURRENT_ANALYSES_PER_USER: int = 3
+    TOKEN_BUDGET_MAX_PARALLEL_CALLS: int = 3
+    TOKEN_BUDGET_MAX_REQUEST_SIZE_CHARS: int = 25000
+    ENABLE_ANALYSIS_CACHE: bool = True
+    ANALYSIS_CACHE_TTL_SECONDS: int = 3600
+    MODEL_PRICING_PER_1M_TOKENS: dict[str, dict[str, float]] = Field(
+        default_factory=lambda: {
+            "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+            "gpt-4o": {"input": 2.50, "output": 10.00},
+            "claude-3-5-sonnet": {"input": 3.00, "output": 15.00},
+            "claude-3-haiku": {"input": 0.25, "output": 1.25},
+            "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
+            "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
+            "llama3:8b": {"input": 0.0, "output": 0.0},
+            "llama-3-8b": {"input": 0.05, "output": 0.08},
+            "default": {"input": 0.20, "output": 0.80},
+        }
+    )
 
     # ===========================================================================
     # Knowledge Base (KB) Configuration
@@ -95,18 +196,6 @@ class Settings(BaseSettings):
     KB_CHUNK_SIZE: int = 600
     KB_CHUNK_OVERLAP: int = 100
     KB_CORROBORATION_MODE: bool = False
-    # Total size cap for the in-memory KB used when no database is configured.
-    KB_EPHEMERAL_MAX_BYTES: int = 50 * 1024 * 1024
-
-    # ===========================================================================
-    # Supabase Project Credentials
-    # SUPABASE_URL and keys are stored as SecretStr to prevent log leakage.
-    # DATABASE_URL (asyncpg) must be set separately from the Supabase
-    # project settings page: Settings → Database → Connection String.
-    # ===========================================================================
-    SUPABASE_URL: str | None = None
-    SUPABASE_PUBLISHABLE_KEY: SecretStr | None = None
-    SUPABASE_SECRET_KEY: SecretStr | None = None
 
     # ===========================================================================
     # Tavily Web Search (primary live evidence retrieval)
@@ -131,16 +220,6 @@ class Settings(BaseSettings):
     ENABLE_NIGHTCRAWLER_FALLBACK: bool = True
     NIGHTCRAWLER_TIMEOUT_SECONDS: float = 5.0
 
-    # ===========================================================================
-    # Model Judge (tie-breaker; Ollama-compatible /api/generate endpoint)
-    # The deterministic judges share lexical primitives, so their errors are
-    # correlated. Configure a model judge to arbitrate their disagreements.
-    # ===========================================================================
-    JUDGE_MODEL_ENDPOINT: str | None = None
-    JUDGE_MODEL_NAME: str = "llama3:8b"
-    JUDGE_MODEL_PROVIDER: str = "ollama"
-    JUDGE_MODEL_TIMEOUT_SECONDS: float = 10.0
-
     @field_validator("LOG_LEVEL", mode="after")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
@@ -153,6 +232,18 @@ class Settings(BaseSettings):
             )
         return upper_v
 
+    @field_validator("JWT_ALGORITHM", mode="after")
+    @classmethod
+    def validate_jwt_algorithm(cls, v: str) -> str:
+        """Enforce strict whitelist of permitted cryptographic algorithms."""
+        allowed = {"HS256"}
+        if v not in allowed:
+            allowed_list = ", ".join(sorted(allowed))
+            raise ValueError(
+                f"Unsupported JWT_ALGORITHM '{v}'. Strictly permitted: {allowed_list}"
+            )
+        return v
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="after")
     @classmethod
     def validate_cors_origins(cls, v: list[str]) -> list[str]:
@@ -160,35 +251,6 @@ class Settings(BaseSettings):
         if not v:
             return []
         return [origin.rstrip("/") for origin in v]
-
-    @field_validator("API_KEYS", mode="after")
-    @classmethod
-    def validate_api_keys(cls, v: dict[str, SecretStr]) -> dict[str, SecretStr]:
-        """Reject blank owners, short keys, and keys shared between owners."""
-        seen: set[str] = set()
-        for owner, key in v.items():
-            secret = key.get_secret_value()
-            if not owner.strip():
-                raise ValueError("API_KEYS owner IDs must be non-empty.")
-            if len(secret) < 16:
-                raise ValueError(
-                    f"API key for owner '{owner}' must be at least 16 characters."
-                )
-            if secret in seen:
-                raise ValueError("Each API key must map to exactly one owner.")
-            seen.add(secret)
-        return v
-
-    @property
-    def demo_evidence_index_enabled(self) -> bool:
-        if self.ENABLE_DEMO_EVIDENCE_INDEX is not None:
-            return self.ENABLE_DEMO_EVIDENCE_INDEX
-        return self.is_development
-
-    @property
-    def is_development(self) -> bool:
-        """Return True for environments where anonymous dev access is allowed."""
-        return self.ENVIRONMENT in ("development", "test", "testing")
 
     @field_validator("DATABASE_URL", mode="after")
     @classmethod
@@ -204,6 +266,56 @@ class Settings(BaseSettings):
                 "(e.g. postgresql+asyncpg://...)"
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_production_security_invariants(self) -> "Settings":
+        """Enforce fail-closed production security invariants."""
+        if self.ENVIRONMENT in ("production", "staging"):
+            # 1. JWT_SECRET must be explicitly configured and non-default
+            secret = self.JWT_SECRET.get_secret_value() if self.JWT_SECRET else ""
+            if not secret or not secret.strip():
+                raise ValueError(
+                    f"FATAL: JWT_SECRET must be configured and non-empty in "
+                    f"'{self.ENVIRONMENT}' environment."
+                )
+            if secret == INSECURE_DEV_JWT_SECRET or "insecure_development" in secret:
+                raise ValueError(
+                    f"FATAL: Default development JWT_SECRET is strictly forbidden in "
+                    f"'{self.ENVIRONMENT}' environment. You must provide a secure, "
+                    f"high-entropy secret via JWT_SECRET environment variable."
+                )
+            if len(secret) < 32:
+                raise ValueError(
+                    f"FATAL: JWT_SECRET must be at least 32 characters long in "
+                    f"'{self.ENVIRONMENT}' environment (got {len(secret)} characters)."
+                )
+
+            # 2. DEBUG must not be True in production
+            if self.DEBUG:
+                raise ValueError(
+                    f"FATAL: DEBUG mode cannot be enabled when ENVIRONMENT is "
+                    f"'{self.ENVIRONMENT}'."
+                )
+        return self
+
+    # ---------------------------------------------------------------------------
+    # Property aliases — convenience shorthands for the orchestrator and tests.
+    # These read directly from the TOKEN_BUDGET_* fields above.
+    # ---------------------------------------------------------------------------
+    @property
+    def USER_DAILY_ANALYSIS_LIMIT(self) -> int:  # noqa: N802
+        """Max analyses a single user may run per UTC day."""
+        return self.TOKEN_BUDGET_USER_DAILY_ANALYSES_MAX
+
+    @property
+    def MAX_TOKENS_PER_ANALYSIS(self) -> int:  # noqa: N802
+        """Hard token ceiling for a single analysis job."""
+        return self.TOKEN_BUDGET_ANALYSIS_DEFAULT
+
+    @property
+    def USER_DAILY_TOKEN_LIMIT(self) -> int:  # noqa: N802
+        """Max tokens a single user may consume per UTC day."""
+        return self.TOKEN_BUDGET_USER_DAILY_MAX
 
     model_config = SettingsConfigDict(
         # Search for .env in backend/ first (Docker / CI), then repo root.

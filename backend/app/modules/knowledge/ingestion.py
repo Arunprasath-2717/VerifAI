@@ -143,80 +143,98 @@ def compute_content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-_SENTENCE_END_RE = re.compile(r"[.!?](?=\s)")
-
-
-def _find_cut(text: str, start: int, limit: int) -> tuple[int, str]:
-    """Pick a chunk end in (start, limit], preferring natural boundaries.
-
-    Searches only the back half of the window so chunks never shrink below half
-    the target size. Returns (end_offset, boundary_kind).
-    """
-    floor = start + max(1, (limit - start) // 2)
-    paragraph = text.rfind("\n\n", floor, limit)
-    if paragraph != -1:
-        return paragraph, "paragraph"
-    sentence_ends = [m.end() for m in _SENTENCE_END_RE.finditer(text, floor, limit)]
-    if sentence_ends:
-        return sentence_ends[-1], "sentence"
-    space = text.rfind(" ", floor, limit)
-    if space != -1:
-        return space, "word"
-    return limit, "hard"
-
-
 def chunk_document_text(
     text: str,
     chunk_size: int | None = None,
     chunk_overlap: int | None = None,
 ) -> list[DocumentChunkData]:
-    """Split normalized text into deterministic, overlapping chunks.
+    """Split normalized document text into deterministic overlapping chunks.
 
-    Every chunk satisfies ``text[start_offset:end_offset] == chunk.text``.
-    Consecutive chunks overlap by up to ``chunk_overlap`` characters (snapped
-    forward to a word start) so facts spanning a boundary remain retrievable.
-    Chunk ends prefer paragraph breaks, then sentence ends, then spaces.
+    Prefers splitting on paragraph boundaries (`\n\n`) and sentence endings,
+    falling back to character slicing with overlap.
     """
     settings = get_settings()
     c_size = chunk_size or settings.KB_CHUNK_SIZE
-    c_overlap = (
-        chunk_overlap if chunk_overlap is not None else settings.KB_CHUNK_OVERLAP
-    )
+    c_overlap = chunk_overlap or settings.KB_CHUNK_OVERLAP
+
     if c_overlap >= c_size:
         c_overlap = max(0, c_size // 4)
 
+    paragraphs = re.split(r"(\n\n+)", text)
     chunks: list[DocumentChunkData] = []
-    n = len(text)
-    pos = 0
-    while pos < n:
-        limit = min(n, pos + c_size)
-        cut, kind = (n, "end") if limit >= n else _find_cut(text, pos, limit)
+    current_chunk: list[str] = []
+    current_len = 0
+    current_start = 0
+    global_offset = 0
 
-        # Trim surrounding whitespace while keeping offsets exact.
-        start, end = pos, cut
-        while start < end and text[start].isspace():
-            start += 1
-        while end > start and text[end - 1].isspace():
-            end -= 1
-        if end > start:
+    # Build paragraph-aware chunks
+    for part in paragraphs:
+        part_len = len(part)
+        if current_len + part_len <= c_size:
+            current_chunk.append(part)
+            current_len += part_len
+        else:
+            if current_chunk:
+                chunk_str = "".join(current_chunk).strip()
+                if chunk_str:
+                    chunks.append(
+                        DocumentChunkData(
+                            chunk_index=len(chunks),
+                            text=chunk_str,
+                            start_offset=current_start,
+                            end_offset=current_start + current_len,
+                            metadata_json={"paragraph_aligned": True},
+                        )
+                    )
+                # Next chunk start with overlap
+                current_start = max(0, global_offset - c_overlap)
+                current_chunk = [part]
+                current_len = part_len
+            else:
+                # Single part exceeds chunk_size; slice deterministically
+                step = c_size - c_overlap
+                for i in range(0, part_len, step):
+                    sub = part[i : i + c_size].strip()
+                    if sub:
+                        chunks.append(
+                            DocumentChunkData(
+                                chunk_index=len(chunks),
+                                text=sub,
+                                start_offset=global_offset + i,
+                                end_offset=min(len(text), global_offset + i + len(sub)),
+                                metadata_json={"sliced": True},
+                            )
+                        )
+                current_chunk = []
+                current_len = 0
+                current_start = global_offset + part_len
+
+        global_offset += part_len
+
+    if current_chunk:
+        chunk_str = "".join(current_chunk).strip()
+        if chunk_str:
             chunks.append(
                 DocumentChunkData(
                     chunk_index=len(chunks),
-                    text=text[start:end],
-                    start_offset=start,
-                    end_offset=end,
-                    metadata_json={"boundary": kind},
+                    text=chunk_str,
+                    start_offset=current_start,
+                    end_offset=len(text),
+                    metadata_json={"paragraph_aligned": True},
                 )
             )
-        if cut >= n:
-            break
 
-        # Step back by the overlap, snapped forward to the start of a word, but
-        # always make progress.
-        next_pos = max(cut - c_overlap, start + 1)
-        while next_pos < cut and not text[next_pos - 1].isspace():
-            next_pos += 1
-        pos = next_pos if next_pos < cut else cut
+    # Fallback guarantee: if no chunks generated, create one covering entire text
+    if not chunks and text.strip():
+        chunks.append(
+            DocumentChunkData(
+                chunk_index=0,
+                text=text.strip(),
+                start_offset=0,
+                end_offset=len(text),
+                metadata_json={"single_chunk": True},
+            )
+        )
 
     return chunks
 

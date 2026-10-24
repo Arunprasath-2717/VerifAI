@@ -31,8 +31,26 @@ class VerificationJob(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
-    owner_id: Mapped[str | None] = mapped_column(
+    owner_id: Mapped[str] = mapped_column(
         String(128),
+        nullable=False,
+        index=True,
+    )
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        ForeignKey("conversations.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    message_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        ForeignKey("messages.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    llm_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID,
+        ForeignKey("llm_runs.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
@@ -126,20 +144,25 @@ class VerificationJob(Base, TimestampMixin):
         back_populates="verification",
         cascade="all, delete-orphan",
         order_by="ExtractedClaim.claim_index",
+        lazy="selectin",
     )
     audit_records: Mapped[list["AuditRecord"]] = relationship(
         "AuditRecord",
         back_populates="verification",
         cascade="all, delete-orphan",
         order_by="AuditRecord.timestamp",
+        lazy="selectin",
     )
 
-    __table_args__ = (Index("ix_verifications_status_created", "status", "created_at"),)
+    __table_args__ = (
+        Index("ix_verifications_status_created", "status", "created_at"),
+        Index("ix_verifications_owner_created", "owner_id", "created_at"),
+    )
 
     def __repr__(self) -> str:
         return (
-            f"<VerificationJob(id={self.id}, status='{self.status}', "
-            f"claims={self.total_claims})>"
+            f"<VerificationJob(id={self.id}, owner='{self.owner_id}', "
+            f"status='{self.status}', claims={self.total_claims})>"
         )
 
 
@@ -236,11 +259,13 @@ class ExtractedClaim(Base, TimestampMixin):
         "RetrievedEvidence",
         back_populates="claim",
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
     judge_evaluations: Mapped[list["JudgeVerdict"]] = relationship(
         "JudgeVerdict",
         back_populates="claim",
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     __table_args__ = (

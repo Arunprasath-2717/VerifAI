@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -15,6 +16,7 @@ class VerificationStatus(StrEnum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     PARTIAL_FAILURE = "PARTIAL_FAILURE"
+    PARTIAL_BUDGET_EXHAUSTED = "PARTIAL_BUDGET_EXHAUSTED"
 
 
 class ContentType(StrEnum):
@@ -50,6 +52,7 @@ class UnknownReason(StrEnum):
     SEARCH_UNKNOWN = "SEARCH_UNKNOWN"
     CONFLICTING_EVIDENCE = "CONFLICTING_EVIDENCE"
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED"
 
 
 class JudgeDecision(StrEnum):
@@ -67,12 +70,9 @@ class VerificationOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    enable_live_search: bool | None = Field(
-        default=None,
-        description=(
-            "Whether to attempt live search (requires network/provider). "
-            "Defaults to the server's ENABLE_LIVE_SEARCH setting."
-        ),
+    enable_live_search: bool = Field(
+        default=False,
+        description="Whether to attempt live search (requires network/provider).",
     )
     max_claims: int = Field(
         default=20,
@@ -82,11 +82,7 @@ class VerificationOptions(BaseModel):
     )
     strict_consensus: bool = Field(
         default=True,
-        description=(
-            "Require both primary judges to agree. When false, a single "
-            "decisive judgment is accepted (flagged degraded) if the other judge "
-            "abstained; opposed judgments always yield UNKNOWN."
-        ),
+        description="Contradictory signals immediately flag hallucination risk.",
     )
     owner_id: str | None = Field(
         default=None,
@@ -100,12 +96,11 @@ class VerificationOptions(BaseModel):
         default=True,
         description="Search private knowledge base first before external sources.",
     )
-    force_external_retrieval: bool | None = Field(
-        default=None,
+    force_external_retrieval: bool = Field(
+        default=False,
         description=(
             "Corroboration mode: retrieve external evidence even if private "
-            "KB evidence meets sufficiency criteria. Defaults to the server's "
-            "KB_CORROBORATION_MODE setting."
+            "KB evidence meets sufficiency criteria."
         ),
     )
     kb_relevance_threshold: float | None = Field(
@@ -113,6 +108,16 @@ class VerificationOptions(BaseModel):
         ge=0.0,
         le=1.0,
         description="Optional override for KB sufficiency threshold.",
+    )
+    max_tokens_budget: int | None = Field(
+        default=None,
+        ge=100,
+        le=100000,
+        description="Optional override for maximum analysis token budget.",
+    )
+    bypass_cache: bool = Field(
+        default=False,
+        description="Whether to bypass cached verification results.",
     )
 
 
@@ -224,6 +229,7 @@ class VerificationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     verification_id: uuid.UUID
+    owner_id: str
     status: str
     input_text: str
     query: str | None = None
@@ -241,5 +247,20 @@ class VerificationResponse(BaseModel):
     summary: str | None = None
     created_at: datetime
     completed_at: datetime | None = None
+    token_budget: dict[str, Any] | None = Field(
+        default=None,
+        description="Detailed token budget accounting snapshot.",
+    )
     claims: list[ClaimResultSchema] = Field(default_factory=list)
     audit_trail: list[AuditRecordSchema] = Field(default_factory=list)
+
+
+class VerificationListResponse(BaseModel):
+    """Paginated list of verification records."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[VerificationResponse]
+    total: int
+    limit: int
+    offset: int

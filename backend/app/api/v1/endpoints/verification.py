@@ -1,17 +1,22 @@
-"""Verification pipeline endpoints."""
+"""Verification pipeline endpoints with owner isolation, rate limiting, and RBAC.
+
+Architecture: Database is required for all verification operations.
+There is no in-memory ephemeral fallback in production.
+"""
 
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.auth import Principal, enforce_rate_limit, get_principal, resolve_owner
 from app.core.config import Settings, get_settings
-from app.core.dependencies import get_optional_db_session
-from app.core.errors import NotFoundError
+from app.core.dependencies import get_async_session, get_optional_current_user
+from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
+from app.core.rate_limit import enforce_rate_limit, track_verification_concurrency
+from app.models.user import User
 from app.models.verification import (
     ExtractedClaim,
     VerificationJob,
@@ -33,125 +38,10 @@ logger = logging.getLogger("verifai.api.verification")
 router = APIRouter()
 
 
-# Bounded ephemeral in-memory cache for development/demo when DATABASE_URL is not set
-_EPHEMERAL_MAX_ENTRIES = 100
-# Maps job ID -> (owner ID, response) so lookups stay namespace-scoped.
-_EPHEMERAL_JOBS: dict[uuid.UUID, tuple[str, VerificationResponse]] = {}
-
-
-def _persistence_failed(response: VerificationResponse) -> bool:
-    return any(
-        a.stage == "PERSISTENCE" and a.event_type == "DEGRADED_EXECUTION"
-        for a in response.audit_trail
-    )
-
-
-def _cached_job(
-    verification_id: uuid.UUID, principal: Principal
-) -> VerificationResponse | None:
-    cached = _EPHEMERAL_JOBS.get(verification_id)
-    if cached is None:
-        return None
-    job_owner, cached_response = cached
-    if principal.authenticated and job_owner != principal.owner_id:
-        return None
-    return cached_response
-
-
-def _not_found(verification_id: uuid.UUID) -> NotFoundError:
-    return NotFoundError(
-        message=f"Verification job {verification_id} not found.",
-        details={"verification_id": str(verification_id)},
-    )
-
-
-@router.post(
-    "/verification",
-    response_model=VerificationResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Execute Claim Verification Pipeline",
-    description=(
-        "Decomposes input text into atomic claims, retrieves verified evidence, "
-        "runs independent judges with disagreement analysis, and returns an "
-        "auditable verification envelope."
-    ),
-)
-async def create_verification(
-    request: VerificationCreateRequest,
-    db: AsyncSession | None = Depends(get_optional_db_session),
-    settings: Settings = Depends(get_settings),
-    principal: Principal = Depends(enforce_rate_limit),
-) -> VerificationResponse:
-    """Execute end-to-end verification pipeline."""
-    owner = resolve_owner(principal, request.options.owner_id, settings)
-    request = request.model_copy(
-        update={"options": request.options.model_copy(update={"owner_id": owner})}
-    )
-    orchestrator = VerificationOrchestrator()
-    response = await orchestrator.verify(request=request, db_session=db)
-    if db is None or _persistence_failed(response):
-        if len(_EPHEMERAL_JOBS) >= _EPHEMERAL_MAX_ENTRIES:
-            oldest_key = next(iter(_EPHEMERAL_JOBS))
-            _EPHEMERAL_JOBS.pop(oldest_key, None)
-        _EPHEMERAL_JOBS[response.verification_id] = (owner, response)
-    return response
-
-
-@router.get(
-    "/verification/{verification_id}",
-    response_model=VerificationResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Retrieve Verification Result",
-    description=(
-        "Fetches a completed verification job and its claims, evidence, "
-        "and audit trail."
-    ),
-)
-async def get_verification(
-    verification_id: uuid.UUID,
-    db: AsyncSession | None = Depends(get_optional_db_session),
-    principal: Principal = Depends(get_principal),
-) -> VerificationResponse:
-    """Retrieve an existing verification job by UUID within the caller's namespace.
-
-    Jobs owned by another namespace are reported as not found so that their
-    existence is not disclosed.
-    """
-    if db is None:
-        cached = _cached_job(verification_id, principal)
-        if cached is not None:
-            return cached
-        raise _not_found(verification_id)
-
-    stmt = (
-        select(VerificationJob)
-        .options(
-            selectinload(VerificationJob.claims).selectinload(
-                ExtractedClaim.evidence_items
-            ),
-            selectinload(VerificationJob.claims).selectinload(
-                ExtractedClaim.judge_evaluations
-            ),
-            selectinload(VerificationJob.audit_records),
-        )
-        .where(VerificationJob.id == verification_id)
-    )
-    if principal.authenticated:
-        stmt = stmt.where(VerificationJob.owner_id == principal.owner_id)
-
-    result = await db.execute(stmt)
-    job = result.scalar_one_or_none()
-
-    if job is None:
-        # Jobs whose database save failed are still served from the process cache.
-        cached = _cached_job(verification_id, principal)
-        if cached is not None:
-            return cached
-        raise _not_found(verification_id)
-
-    # Reconstruct response envelope from database entity
+def _job_to_response(job: VerificationJob) -> VerificationResponse:
+    """Reconstruct full verification response envelope from database entity."""
     claims_out: list[ClaimResultSchema] = []
-    for c in job.claims:
+    for c in job.claims or []:
         evidence_out = [
             EvidenceSchema(
                 id=ev.id,
@@ -161,10 +51,15 @@ async def get_verification(
                 publication_date=ev.publication_date,
                 snippet=ev.snippet,
                 retriever_name=ev.retriever_name,
+                evidence_source=getattr(ev, "evidence_source", "EXTERNAL"),
+                document_id=getattr(ev, "document_id", None),
+                chunk_id=getattr(ev, "chunk_id", None),
+                chunk_index=getattr(ev, "chunk_index", None),
+                document_title=getattr(ev, "document_title", None),
                 relevance_score=ev.relevance_score,
                 authority_score=ev.authority_score,
             )
-            for ev in c.evidence_items
+            for ev in (c.evidence_items or [])
         ]
         judges_out = [
             JudgeEvaluationSchema(
@@ -175,7 +70,7 @@ async def get_verification(
                 rationale=je.rationale,
                 evidence_references=je.evidence_references,
             )
-            for je in c.judge_evaluations
+            for je in (c.judge_evaluations or [])
         ]
         claims_out.append(
             ClaimResultSchema(
@@ -212,11 +107,12 @@ async def get_verification(
             message=ar.message,
             timestamp=ar.timestamp,
         )
-        for ar in job.audit_records
+        for ar in (job.audit_records or [])
     ]
 
     return VerificationResponse(
         verification_id=job.id,
+        owner_id=job.owner_id,
         status=job.status,
         input_text=job.input_text,
         query=job.query,
@@ -237,3 +133,189 @@ async def get_verification(
         claims=claims_out,
         audit_trail=audit_out,
     )
+
+
+def resolve_verification_owner(
+    current_user: User | None,
+    client_owner_id: str | None,
+    settings: Settings,
+) -> str:
+    """Determine effective owner_id for verification execution."""
+    if current_user is not None:
+        user_id_str = str(current_user.id)
+        if current_user.role == "ADMIN":
+            if client_owner_id and client_owner_id.strip():
+                return client_owner_id.strip()
+            return user_id_str
+
+        if (
+            client_owner_id
+            and client_owner_id.strip()
+            and client_owner_id.strip() != user_id_str
+        ):
+            raise ForbiddenError(
+                message="Cannot run verifications on behalf of another user namespace.",
+                details={
+                    "user_id": user_id_str,
+                    "requested_owner_id": client_owner_id,
+                },
+            )
+        return user_id_str
+
+    is_dev = (
+        settings.ENVIRONMENT in ("development", "test", "testing") or settings.DEBUG
+    )
+    if not is_dev:
+        raise UnauthorizedError(
+            message="Authentication required to run verifications in production.",
+            details={"environment": settings.ENVIRONMENT},
+        )
+
+    if client_owner_id and client_owner_id.strip():
+        return client_owner_id.strip()
+    return settings.DEFAULT_OWNER_ID
+
+
+@router.post(
+    "/verification",
+    response_model=VerificationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Execute Claim Verification Pipeline",
+    description=(
+        "Decomposes input text into atomic claims, retrieves verified evidence, "
+        "runs independent judges with disagreement analysis, and returns an "
+        "auditable verification envelope. Results are persisted to PostgreSQL."
+    ),
+)
+async def create_verification(
+    request: VerificationCreateRequest,
+    http_request: Request,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_async_session),
+    settings: Settings = Depends(get_settings),
+) -> VerificationResponse:
+    """Execute end-to-end verification pipeline. Results are persisted to DB."""
+    effective_owner = resolve_verification_owner(
+        current_user=current_user,
+        client_owner_id=request.options.owner_id,
+        settings=settings,
+    )
+    request.options.owner_id = effective_owner
+
+    if settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request,
+            action="verification",
+            limit=settings.RATE_LIMIT_VERIFY_PER_MINUTE,
+            user_id=effective_owner,
+            settings=settings,
+        )
+
+    # Track maximum concurrent jobs per user/owner
+    async with track_verification_concurrency(
+        owner_id=effective_owner,
+        max_concurrent=settings.MAX_CONCURRENT_VERIFICATIONS_PER_USER,
+        settings=settings,
+    ):
+        orchestrator = VerificationOrchestrator()
+        response = await orchestrator.verify(request=request, db_session=db)
+
+    return response
+
+
+@router.get(
+    "/verification/{verification_id}",
+    response_model=VerificationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retrieve Verification Result",
+    description=(
+        "Fetches a completed verification job and its claims, evidence, "
+        "and audit trail from PostgreSQL. Enforces ownership authorization."
+    ),
+)
+async def get_verification(
+    verification_id: uuid.UUID,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> VerificationResponse:
+    """Retrieve an existing verification job by UUID from the database."""
+    stmt = (
+        select(VerificationJob)
+        .options(
+            selectinload(VerificationJob.claims).selectinload(
+                ExtractedClaim.evidence_items
+            ),
+            selectinload(VerificationJob.claims).selectinload(
+                ExtractedClaim.judge_evaluations
+            ),
+            selectinload(VerificationJob.audit_records),
+        )
+        .where(VerificationJob.id == verification_id)
+    )
+
+    result = await db.execute(stmt)
+    job = result.scalar_one_or_none()
+
+    if job is None:
+        raise NotFoundError(
+            message=f"Verification job {verification_id} not found.",
+            details={"verification_id": str(verification_id)},
+        )
+
+    # Enforce ownership authorization
+    if current_user is not None and current_user.role != "ADMIN":
+        if job.owner_id != str(current_user.id):
+            raise ForbiddenError(
+                message="Access denied: You do not own this verification job.",
+                details={"verification_id": str(verification_id)},
+            )
+
+    return _job_to_response(job)
+
+
+@router.get(
+    "/verifications",
+    response_model=list[VerificationResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List Verification History",
+    description=(
+        "Lists verification jobs for current user or all jobs for administrators. "
+        "Results are ordered by creation date (newest first)."
+    ),
+)
+async def list_verifications(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_async_session),
+    settings: Settings = Depends(get_settings),
+) -> list[VerificationResponse]:
+    """List historical verification jobs from the database."""
+    effective_owner = resolve_verification_owner(
+        current_user=current_user,
+        client_owner_id=None,
+        settings=settings,
+    )
+
+    stmt = (
+        select(VerificationJob)
+        .options(
+            selectinload(VerificationJob.claims).selectinload(
+                ExtractedClaim.evidence_items
+            ),
+            selectinload(VerificationJob.claims).selectinload(
+                ExtractedClaim.judge_evaluations
+            ),
+            selectinload(VerificationJob.audit_records),
+        )
+        .order_by(VerificationJob.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+
+    if current_user is None or current_user.role != "ADMIN":
+        stmt = stmt.where(VerificationJob.owner_id == effective_owner)
+
+    result = await db.execute(stmt)
+    jobs = result.scalars().all()
+    return [_job_to_response(j) for j in jobs]

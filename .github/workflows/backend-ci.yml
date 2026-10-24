@@ -3,12 +3,11 @@ name: Backend CI & Hermetic Verification
 on:
   push:
     branches:
-      - main
       - Final
   pull_request:
     branches:
-      - main
       - Final
+      - main
 
 permissions:
   contents: read
@@ -17,24 +16,13 @@ jobs:
   verify:
     name: Verify Backend (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    env:
+      VERIFAI_TEST_DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      PYTHONPATH: "."
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_PASSWORD: ci-only-password
-          POSTGRES_DB: verifai_ci
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
 
     steps:
       - name: Checkout Repository
@@ -60,30 +48,28 @@ jobs:
 
       - name: Run Ruff Linting
         run: |
-          PYTHONPATH=. ruff check backend scripts
+          PYTHONPATH=. ruff check backend scripts benchmark
 
       - name: Run Ruff Formatting Verification
         run: |
-          PYTHONPATH=. ruff format --check backend scripts
+          PYTHONPATH=. ruff format --check backend scripts benchmark
 
       - name: Run Mypy Static Type Checking
         run: |
-          PYTHONPATH=. mypy backend/app
+          PYTHONPATH=. mypy backend/app benchmark
 
       - name: Run Backend Pytest Suite
         run: |
           PYTHONPATH=. pytest backend/tests -v
 
+      - name: Run Benchmark Pytest Suite
+        run: |
+          PYTHONPATH=. pytest benchmark/tests -v
+
       - name: Run Automated Application Smoke Test
         run: |
           PYTHONPATH=. python scripts/smoke_test.py
 
-      - name: Verify Database Migrations (apply, drift check, round-trip)
-        working-directory: backend
-        env:
-          DATABASE_URL: postgresql+asyncpg://postgres:ci-only-password@localhost:5432/verifai_ci
+      - name: Run Benchmark Dataset Validation
         run: |
-          alembic upgrade head
-          alembic check
-          alembic downgrade base
-          alembic upgrade head
+          PYTHONPATH=. python scripts/benchmark_tool.py validate

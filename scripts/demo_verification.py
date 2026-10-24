@@ -145,9 +145,8 @@ class DemoClient:
             self._live_client = httpx.Client(base_url=self._base_url, timeout=30.0)
             self.mode = f"LIVE SERVER ({self._base_url})"
         else:
-            from starlette.testclient import TestClient
-
             from app.main import create_app
+            from starlette.testclient import TestClient
 
             self._test_client = TestClient(create_app())
             self.mode = "IN-PROCESS ASGI (Hermetic Demo Mode)"

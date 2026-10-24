@@ -1,8 +1,6 @@
 /**
- * VerifAI Chrome Extension - On-demand capture script
- * Injected into the active tab only when the user clicks Auto-Capture
- * (chrome.scripting.executeScript + activeTab), never on page load.
- * The value of the final expression is returned to the popup as the result.
+ * VerifAI Chrome Extension - Content Script
+ * Captures selected text or auto-detects AI response containers on active web pages.
  */
 
 (() => {
@@ -90,5 +88,12 @@
     };
   }
 
-  return extractDetectedText();
+  // Listen for extraction requests from popup or background script
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "GET_PAGE_TEXT") {
+      const result = extractDetectedText();
+      sendResponse(result);
+    }
+    return true;
+  });
 })();
