@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
+    "test:smoke": "python3 tests/smoke_test_frontend.py",
     "test:browser": "python3 tests/browser_regression.py",
     "test:fullstack": "python3 tests/full_stack_smoke.py"
   },

@@ -16,6 +16,9 @@ jobs:
   verify:
     name: Verify Backend (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    env:
+      VERIFAI_TEST_DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      PYTHONPATH: "."
     strategy:
       fail-fast: false
       matrix:
