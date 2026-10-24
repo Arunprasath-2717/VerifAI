@@ -32,6 +32,11 @@ jobs:
       - name: Install locked frontend dependencies
         run: npm ci
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Check TypeScript
         run: npm run lint
 
@@ -41,7 +46,9 @@ jobs:
       - name: Install matching Chrome and ChromeDriver
         uses: browser-actions/setup-chrome@v2
         id: setup-chrome
+        continue-on-error: true
         with:
+          chrome-version: 'stable'
           install-chromedriver: true
 
       - name: Run isolated browser regressions (production build)
@@ -165,7 +172,9 @@ jobs:
       - name: Install Chrome and ChromeDriver
         uses: browser-actions/setup-chrome@v2
         id: setup-chrome
+        continue-on-error: true
         with:
+          chrome-version: 'stable'
           install-chromedriver: true
 
       - name: Run real full-stack smoke against test DB

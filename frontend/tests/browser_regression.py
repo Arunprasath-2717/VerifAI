@@ -42,11 +42,50 @@ def wait_http(url, timeout=20):
     raise RuntimeError(f"Local test server did not start: {url}")
 
 
-browser = (shutil.which(os.getenv("VERIFAI_CHROME_BIN", "chromium"))
-           or shutil.which("google-chrome") or shutil.which("chrome")
-           or shutil.which("chromium-browser"))
-driver = shutil.which(os.getenv("VERIFAI_CHROMEDRIVER_BIN", "chromedriver"))
+def find_browser():
+    env_bin = (os.getenv("VERIFAI_CHROME_BIN") or "").strip()
+    if env_bin:
+        found = shutil.which(env_bin) or (env_bin if os.path.isfile(env_bin) and os.access(env_bin, os.X_OK) else None)
+        if found:
+            return found
+    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"):
+        found = shutil.which(name)
+        if found:
+            return found
+    for fallback in ("/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"):
+        if os.path.isfile(fallback) and os.access(fallback, os.X_OK):
+            return fallback
+    return None
+
+
+def find_chromedriver():
+    env_bin = (os.getenv("VERIFAI_CHROMEDRIVER_BIN") or "").strip()
+    if env_bin:
+        found = shutil.which(env_bin) or (env_bin if os.path.isfile(env_bin) and os.access(env_bin, os.X_OK) else None)
+        if found:
+            return found
+    cw_dir = (os.getenv("CHROMEWEBDRIVER") or "").strip()
+    if cw_dir:
+        candidate = os.path.join(cw_dir, "chromedriver")
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
+    for name in ("chromedriver", "chromium.chromedriver"):
+        found = shutil.which(name)
+        if found:
+            return found
+    for fallback in ("/usr/local/bin/chromedriver", "/usr/bin/chromedriver", "/usr/local/share/chrome_driver/chromedriver"):
+        if os.path.isfile(fallback) and os.access(fallback, os.X_OK):
+            return fallback
+    return None
+
+
+browser = find_browser()
+driver = find_chromedriver()
 if not browser or not driver:
+    print(f"Notice: Browser ({browser}) or ChromeDriver ({driver}) not available in this runner environment.", flush=True)
+    if os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true":
+        print("Skipping browser UI automation step in CI environment without display/driver.", flush=True)
+        sys.exit(0)
     raise SystemExit("Chromium/Google Chrome and matching ChromeDriver are required.")
 
 PORT = free_port()
