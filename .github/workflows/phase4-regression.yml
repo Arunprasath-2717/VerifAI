@@ -30,7 +30,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install locked frontend dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -166,7 +166,7 @@ jobs:
       - name: Install frontend and build
         working-directory: frontend
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           npm run build
 
       - name: Install Chrome and ChromeDriver
