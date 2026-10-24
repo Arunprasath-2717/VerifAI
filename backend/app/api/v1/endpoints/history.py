@@ -94,7 +94,12 @@ async def list_verification_history(
 
     query = (
         query.options(
-            selectinload(VerificationJob.claims),
+            selectinload(VerificationJob.claims).selectinload(
+                ExtractedClaim.evidence_items
+            ),
+            selectinload(VerificationJob.claims).selectinload(
+                ExtractedClaim.judge_evaluations
+            ),
             selectinload(VerificationJob.audit_records),
         )
         .order_by(desc(VerificationJob.created_at))
@@ -234,7 +239,12 @@ async def get_history_verification(
             select(VerificationJob)
             .where(VerificationJob.id == verification_id)
             .options(
-                selectinload(VerificationJob.claims),
+                selectinload(VerificationJob.claims).selectinload(
+                    ExtractedClaim.evidence_items
+                ),
+                selectinload(VerificationJob.claims).selectinload(
+                    ExtractedClaim.judge_evaluations
+                ),
                 selectinload(VerificationJob.audit_records),
             )
         )

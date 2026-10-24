@@ -10,7 +10,7 @@ export interface BackendProviderResponse {
   id: string;
   name: string;
   category: 'cloud' | 'local' | 'router';
-  status: 'Connected' | 'Not Connected' | 'Unavailable' | 'Error';
+  status: 'Connected' | 'Saved' | 'Not Connected' | 'Unavailable' | 'Error';
   models: string[];
   configured_at?: string | null;
   key_masked?: string | null;
@@ -68,7 +68,54 @@ export function adaptBackendProvider(p: BackendProviderResponse | any): AIProvid
   };
 }
 
+export interface ConnectedChatModel {
+  id: string;
+  name: string;
+  provider: string;
+  providerId: string;
+  contextWindow: number;
+  isFree: boolean;
+  description: string;
+}
+
+export interface ConnectedChatModelsResponse {
+  providers: {
+    providerId: string;
+    name: string;
+    status: 'Connected' | 'Saved' | 'Not Connected' | 'Unavailable';
+    keyMasked: string | null;
+    modelsCount: number;
+    message?: string;
+  }[];
+  models: ConnectedChatModel[];
+}
+
+export interface ChatModelProbeResult {
+  provider: string;
+  model: string;
+  working: boolean;
+  status: string;
+  message: string;
+  latency_ms?: number | null;
+  error_code?: string | null;
+}
+
 export const providersApi = {
+  async probeChatModel(model: ConnectedChatModel): Promise<ChatModelProbeResult> {
+    return apiClient<ChatModelProbeResult>('/providers/chat-models/probe', {
+      method: 'POST',
+      body: JSON.stringify({ provider: model.provider, model_name: model.id }),
+      timeoutMs: 45000,
+    });
+  },
+
+  async getConnectedChatModels(): Promise<ConnectedChatModelsResponse> {
+    return apiClient<ConnectedChatModelsResponse>('/providers/chat-models', {
+      method: 'GET',
+      timeoutMs: 35000,
+    });
+  },
+
   async listProviders(): Promise<AIProvider[]> {
     const resp = await apiClient<any>('/providers', {
       method: 'GET',

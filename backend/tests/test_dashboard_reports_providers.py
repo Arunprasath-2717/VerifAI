@@ -45,10 +45,8 @@ def test_models_leaderboard_endpoint(client: TestClient):
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
-    assert len(data) >= 3
-    assert data[0]["rank"] == 1
-    assert "categories" in data[0]
-    assert "factualSupport" in data[0]["categories"]
+    # No fabricated benchmark observations may be returned when none are stored.
+    assert data == []
 
 
 def test_providers_endpoints_require_authentication(client: TestClient):

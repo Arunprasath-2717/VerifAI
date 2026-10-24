@@ -113,11 +113,16 @@ def test_full_real_system_e2e_lifecycle(client: TestClient):
             "verify": True,
         },
     )
-    assert prompt_resp.status_code == 200
-    p_data = prompt_resp.json()
-    assert len(p_data["runs"]) == 1
-    # In test environment without external API keys, truthful state is returned
-    assert p_data["runs"][0]["status"] in ("COMPLETED", "UNAVAILABLE")
+    # A chat without a verified user-owned key is rejected before any
+    # persistence or upstream usage; the rest of the KB/E2E lifecycle proceeds.
+    assert prompt_resp.status_code == 400
+    assert "verify" in prompt_resp.json()["error"]["message"].lower()
+    assert (
+        client.get(f"/api/v1/chat/conversations/{conv_id}", headers=headers_a).json()[
+            "messages"
+        ]
+        == []
+    )
 
     # --------------------------------------------------------------------------
     # Step 5: Execute Shared Verification Pipeline (Paste & Verify Entrypoint)

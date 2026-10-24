@@ -1,351 +1,306 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  BarChart3, 
-  Sparkles
-} from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  CartesianGrid
-} from 'recharts';
-import { motion } from 'motion/react';
-import { ChartPoint } from '../types';
-import { reportsApi, AnalyticsReportResponse } from '../api';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Activity, ArrowDownRight, ArrowRight, BarChart3, CheckCheck, CircleHelp,
+  FileCheck2, Link2, RefreshCw, ShieldCheck, TrendingUp } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { reportsApi, type AnalyticsReportResponse } from '../api';
 import { useTheme } from '../context/ThemeContext';
+import './ReportsRedesign.css';
 
 interface ReportsPageProps {
-  weeklyChartData: ChartPoint[];
-  monthlyChartData: ChartPoint[];
   theme?: 'light' | 'dark';
 }
 
-export const ReportsPage: React.FC<ReportsPageProps> = ({
-  weeklyChartData,
-  monthlyChartData,
-  theme: propTheme,
+type Period = '7D' | '30D' | '90D' | '1Y';
+type ActivityPoint = {
+  date: string;
+  name: string;
+  claims: number;
+  evidence: number;
+  verifications: number;
+};
+
+const PERIODS: { value: Period; label: string }[] = [
+  { value: '7D', label: '7 days' },
+  { value: '30D', label: '30 days' },
+  { value: '90D', label: '90 days' },
+  { value: '1Y', label: '1 year' },
+];
+
+const formatNumber = (n: number) => n.toLocaleString('en-US');
+const percent = (n: number) => Number.isFinite(n) ? n.toFixed(1) + '%' : '—';
+
+const dateLabel = (date: string, compact = false) => {
+  const parsed = new Date(date + 'T00:00:00Z');
+  if (!Number.isFinite(parsed.getTime())) return date;
+  return parsed.toLocaleDateString('en-US', {
+    timeZone: 'UTC',
+    month: compact ? 'short' : 'long',
+    day: 'numeric',
+    ...(compact ? {} : { year: 'numeric' }),
+  });
+};
+
+const RangeEmpty = ({ title, detail }: { title: string; detail: string }) => (
+  <div className="rpt-empty" role="status">
+    <div className="rpt-empty-icon"><Activity size={22} strokeWidth={1.8}/></div>
+    <strong>{title}</strong>
+    <p>{detail}</p>
+  </div>
+);
+
+const RankingRows = ({ rows, accent }: {
+  rows: { name: string; value: number; share?: number }[];
+  accent: 'olive' | 'mint';
 }) => {
-  const navigate = useNavigate();
+  const max = Math.max(1, ...rows.map(row => row.value));
+  return <div className="rpt-rank-list">
+    {rows.map((row, index) => (
+      <div key={row.name + index} className="rpt-rank-item" title={row.name}>
+        <div className="rpt-rank-copy">
+          <span className="rpt-rank-index">{String(index + 1).padStart(2, '0')}</span>
+          <span className="rpt-rank-name">{row.name}</span>
+          <strong className="rpt-rank-count">{formatNumber(row.value)}
+            {row.share !== undefined && <small> · {percent(row.share)}</small>}
+          </strong>
+        </div>
+        <div className="rpt-rank-track" aria-label={row.name + ': ' + row.value}>
+          <div className={'rpt-rank-fill rpt-rank-fill--' + accent}
+            style={{ width: (row.value > 0 ? Math.max(2, row.value / max * 100) : 0) + '%' }}/>
+        </div>
+      </div>
+    ))}
+  </div>;
+};
+
+export const ReportsPage: React.FC<ReportsPageProps> = ({ theme: propTheme }) => {
   const context = useTheme();
-  const isDark = (propTheme || context.theme) === 'dark';
-  const [timeframe, setTimeframe] = useState<'7D' | '30D' | '90D' | '1Y'>('30D');
+  const dark = (propTheme || context.theme) === 'dark';
+  const [timeframe, setTimeframe] = useState<Period>('30D');
   const [analytics, setAnalytics] = useState<AnalyticsReportResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
-  React.useEffect(() => {
-    const period = timeframe === '7D' ? '7d' : timeframe === '90D' ? '90d' : '30d';
-    reportsApi.getAnalytics(period)
-      .then(res => setAnalytics(res))
-      .catch(() => {});
-  }, [timeframe]);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(null);
+    reportsApi.getAnalytics(timeframe).then(report => {
+      if (active) setAnalytics(report);
+    }).catch(err => {
+      if (active) { setAnalytics(null); setLoadError(err instanceof Error ? err.message : 'Analytics unavailable'); }
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [timeframe, reload]);
 
-  const rawModelUsage = (analytics as any)?.model_usage || (analytics as any)?.model_breakdown;
-  const modelUsageData = Array.isArray(rawModelUsage) && rawModelUsage.length > 0
-    ? rawModelUsage.map((m: any) => ({ model: m.model || m.model_name, usage: m.usage || m.total_runs || 0 }))
-    : [
-        { model: 'GPT-4o', usage: 48 },
-        { model: 'Claude 3.5', usage: 36 },
-        { model: 'Gemini 1.5', usage: 28 },
-        { model: 'Ollama', usage: 14 },
-      ];
+  const series = useMemo<ActivityPoint[]>(() =>
+    (analytics?.chart_data ?? []).map((point, index) => ({
+      date: String(point.date || point.day || index),
+      name: String(point.day || point.date || index),
+      claims: Number(point.claims) || 0,
+      evidence: Number(point.evidence) || 0,
+      verifications: Number(point.verifications) || 0,
+    })), [analytics]);
 
-  const rawEvidence = analytics?.evidence_sources;
-  const evidenceSourceData = Array.isArray(rawEvidence) && rawEvidence.length > 0
-    ? rawEvidence.map((e: any) => ({ domain: e.domain || e.source || 'Verified Source', count: e.count || 0 }))
-    : [
-        { domain: 'Academic', count: 184 },
-        { domain: 'EPA / Reg', count: 142 },
-        { domain: 'arXiv', count: 98 },
-        { domain: 'Corp Docs', count: 64 },
-      ];
+  const tickDates = useMemo(() => {
+    if (series.length === 0) return [];
+    const step = Math.max(1, Math.ceil((series.length - 1) / 5));
+    return series.filter((_, index) => index % step === 0 || index === series.length - 1)
+      .map(item => item.date);
+  }, [series]);
+
+  const totalClaims = analytics?.total_claims ?? 0;
+  const totalVerifications = analytics?.total_verifications ?? 0;
+  const support = analytics?.supported_rate ?? 0;
+  const contradiction = analytics?.contradicted_rate ?? 0;
+  const unknown = analytics?.unknown_rate ?? 0;
+  const remainder = Math.max(0, 100 - support - contradiction - unknown);
+  const outcomes = [
+    { id: 'supported', label: 'Supported', pct: support },
+    { id: 'contradicted', label: 'Contradicted', pct: contradiction },
+    { id: 'unknown', label: 'Unknown', pct: unknown },
+    // Non-factual or otherwise unclassified claims need an honest fourth
+    // segment; never quietly assign missing percent to the Unknown category.
+    ...(totalClaims > 0 && remainder > 0.15
+      ? [{ id: 'other', label: 'Other / unclassified', pct: remainder }]
+      : []),
+  ];
+  const modelRows = (analytics?.model_usage ?? [])
+    .map(row => ({ name: String(row.model), value: Number(row.usage) || 0 }))
+    .filter(row => row.value > 0);
+  const sourceRows = (analytics?.evidence_sources ?? [])
+    .map(row => ({ name: String(row.domain), value: Number(row.count) || 0 }))
+    .filter(row => row.value > 0);
+  const sourceTotal = sourceRows.reduce((sum, source) => sum + source.value, 0);
+  const peak = series.reduce((best, point) => point.claims > best.claims ? point : best,
+    { date: '', name: '', claims: 0, evidence: 0, verifications: 0 });
+  const observed = series.some(item => item.claims > 0 || item.verifications > 0);
+  const fmtAxisDate = (value: string) =>
+    timeframe === '7D'
+      ? (Number.isFinite(Date.parse(value)) ? new Date(value + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) : value)
+      : dateLabel(value, true);
+  const periodLabel = PERIODS.find(period => period.value === timeframe)?.label || timeframe;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-8 pb-16"
-    >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[#FBF1E3] text-[#800020] border border-[#E9D6C4] dark:bg-[#181A20] dark:text-[#B6FF2E] dark:border-[#333742] dark:shadow-[0_0_15px_rgba(182,255,46,0.15)] shadow-xs transition-colors">
-            <BarChart3 size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#2E0A12] dark:text-white transition-colors">
-              Reports & Benchmarks
-            </h1>
-            <p className="text-xs md:text-sm font-medium text-[#6C3B45] dark:text-slate-300 transition-colors">
-              Analytics and insights from your verification activity.
-            </p>
-          </div>
+    <div className={'reports-redesign reports-redesign--' + (dark ? 'dark' : 'light')}>
+      <div className="rpt-head">
+        <div>
+          <h1>Reports &amp; Insights</h1>
+          <p>Understand the activity behind your verified claims.</p>
         </div>
-
-        {/* Actions & Time Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => navigate('/leaderboard')}
-            className="px-4 py-2 rounded-2xl border text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer bg-[#FFFDFA] border-[#E9D6C4] text-[#800020] hover:bg-[#FBF1E3] dark:bg-[#23262F] dark:border-[#333742] dark:text-white dark:hover:border-[#B6FF2E]/40"
-          >
-            <Sparkles size={14} className="text-[#800020] dark:text-[#B6FF2E]" />
-            <span>Model Performance Leaderboard</span>
-          </button>
-
-          {/* Time Filters */}
-          <div className="flex p-1 rounded-2xl border shadow-2xs self-start sm:self-auto bg-[#FFFDFA] border-[#E9D6C4] dark:bg-[#23262F] dark:border-[#333742]">
-            {(['7D', '30D', '90D', '1Y'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTimeframe(t)}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  timeframe === t 
-                    ? 'bg-[#800020] text-[#FBF1E3] dark:bg-[#B6FF2E] dark:text-[#181A20] shadow-xs' 
-                    : 'text-[#8A6A72] dark:text-slate-400 hover:text-[#2E0A12] dark:hover:text-white'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+        <div className="rpt-period" role="group" aria-label="Report time period">
+          {PERIODS.map(period => (
+            <button key={period.value} type="button" aria-pressed={timeframe === period.value}
+              onClick={() => setTimeframe(period.value)}>{period.label}</button>
+          ))}
         </div>
       </div>
 
-      {/* Top Grid: Verification Activity + Claim Outcomes */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Verification Activity Curve */}
-        <section className="lg:col-span-8 rounded-[2.8rem] p-7 border shadow-xs space-y-4 transition-colors bg-[#FFFDFA] border-[#E9D6C4] dark:bg-[#23262F] dark:border-[#333742]">
-          <div className="flex items-center justify-between">
+      {loadError && <div className="rpt-error" role="alert">
+        <span><CircleHelp size={18}/> Report data could not be loaded: {loadError}</span>
+        <button type="button" onClick={() => setReload(n => n + 1)}>Retry <RefreshCw size={14}/></button>
+      </div>}
+
+      <div className="rpt-metrics" aria-label="Analytics summary">
+        {[
+          { label: 'Verifications', value: formatNumber(totalVerifications), unit: 'completed runs', icon: <FileCheck2 size={20}/> },
+          { label: 'Claims analyzed', value: formatNumber(totalClaims), unit: 'across audits', icon: <BarChart3 size={20}/> },
+          { label: 'Supported claims', value: totalClaims ? percent(support) : '—', unit: 'of measured claims', icon: <CheckCheck size={20}/> },
+          { label: 'Unknown outcomes', value: totalClaims ? percent(unknown) : '—', unit: 'awaiting evidence', icon: <CircleHelp size={20}/> },
+        ].map((item, index) => (
+          <div className="rpt-metric" key={item.label}>
+            <div className="rpt-metric-top"><span>{item.label}</span>{item.icon}</div>
+            <div className="rpt-metric-value">{loading ? <span className="rpt-skeleton"/> : item.value}</div>
+            <div className="rpt-metric-foot"><span>{item.unit}</span><span className="rpt-metric-index">0{index + 1}</span></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rpt-top-grid">
+        <section className="rpt-panel rpt-trend" aria-label="Verification activity">
+          <div className="rpt-panel-head">
             <div>
-              <h3 className="font-extrabold text-base tracking-tight text-[#2E0A12] dark:text-white">
-                Verification Activity
-              </h3>
-              <p className="text-xs font-medium text-[#8A6A72] dark:text-slate-400">Daily verified proposition volume</p>
+              <div className="rpt-title-icon"><Activity size={18}/></div>
+              <h2>Verification activity</h2>
+              <p>Claims analyzed over the last {periodLabel.toLowerCase()} · UTC</p>
             </div>
-            <span className="text-xs font-bold font-mono px-3 py-1 rounded-full bg-[#FBF1E3] text-[#800020] border border-[#E9D6C4] dark:bg-[#B6FF2E]/15 dark:text-[#B6FF2E] dark:border dark:border-[#B6FF2E]/30">
-              +28% throughput
-            </span>
+            <div className="rpt-live-detail">
+              <span className="rpt-status-dot"/>
+              {peak.claims > 0 ? 'Peak ' + formatNumber(peak.claims) + ' · ' + dateLabel(peak.date, true) : 'No activity yet'}
+            </div>
           </div>
-
-          <div className="h-[240px] w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyChartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="repCurveColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop 
-                      offset="5%" 
-                      stopColor={isDark ? '#B6FF2E' : '#800020'} 
-                      stopOpacity={isDark ? 0.35 : 0.25} 
-                    />
-                    <stop 
-                      offset="95%" 
-                      stopColor={isDark ? '#B6FF2E' : '#D8AE9B'} 
-                      stopOpacity={0.0} 
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  vertical={false} 
-                  stroke={isDark ? '#333742' : '#E9D6C4'} 
-                />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: isDark ? '#94A3B8' : '#8A6A72', fontSize: 11 }} 
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: isDark ? '#94A3B8' : '#8A6A72', fontSize: 11 }} 
-                />
-                <Tooltip 
-                  cursor={{ 
-                    stroke: isDark ? '#B6FF2E' : '#800020', 
-                    strokeWidth: 1.5, 
-                    strokeDasharray: '4 4', 
-                    strokeOpacity: 0.6 
-                  }}
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    background: isDark ? '#14161C' : '#FFFDFA', 
-                    color: isDark ? '#FFFFFF' : '#2E0A12', 
-                    border: isDark ? '1px solid #333742' : '1px solid #E9D6C4', 
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                    fontSize: '12px' 
-                  }} 
-                />
-                <Area 
-                  type="natural" 
-                  dataKey="claims" 
-                  stroke={isDark ? '#B6FF2E' : '#800020'} 
-                  strokeWidth={3} 
-                  fill="url(#repCurveColor)" 
-                  dot={{ 
-                    r: 4, 
-                    fill: isDark ? '#14161C' : '#FFFDFA', 
-                    stroke: isDark ? '#B6FF2E' : '#800020', 
-                    strokeWidth: 2 
-                  }}
-                  activeDot={{ 
-                    r: 6, 
-                    fill: isDark ? '#B6FF2E' : '#800020', 
-                    stroke: isDark ? '#14161C' : '#FFFDFA', 
-                    strokeWidth: 2.5 
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          {loading ? <div className="rpt-trend-loading" role="status" aria-label="Loading activity chart"/> :
+            observed ? <div className="rpt-activity-chart" role="img" aria-label="Daily claims analyzed chart; hover or focus points for detail">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={series} margin={{ top: 16, right: 14, left: 2, bottom: 6 }}>
+                  <defs>
+                    <linearGradient id="reportAreaMint" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={dark ? '#B6FF2E' : '#40916C'} stopOpacity={0.24}/>
+                      <stop offset="100%" stopColor={dark ? '#B6FF2E' : '#74C69D'} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} strokeDasharray="3 5" stroke={dark ? '#333C42' : '#D8E8DD'}/>
+                  <XAxis dataKey="date" ticks={tickDates} interval="preserveStartEnd"
+                    axisLine={false} tickLine={false} minTickGap={16} tickMargin={12}
+                    tick={{ fill: dark ? '#A4B5AA' : '#2B4437', fontSize: 11 }}
+                    tickFormatter={fmtAxisDate} />
+                  <YAxis axisLine={false} tickLine={false} allowDecimals={false}
+                    width={35} tickMargin={8}
+                    tick={{ fill: dark ? '#A4B5AA' : '#2B4437', fontSize: 11 }}/>
+                  <Tooltip labelFormatter={label => dateLabel(String(label))}
+                    formatter={(value, name) => [formatNumber(Number(value) || 0),
+                      name === 'claims' ? 'Claims' : String(name)]}
+                    cursor={{ stroke: dark ? '#B6FF2E' : '#40916C', strokeDasharray: '4 4' }}
+                    contentStyle={{ background: dark ? '#1E2728' : '#FFFFFF',
+                      color: dark ? '#FFFFFF' : '#000000',
+                      border: '1px solid ' + (dark ? '#384843' : '#9ED4B0'),
+                      borderRadius: 12, fontSize: 12, boxShadow: '0 12px 30px -16px rgba(0,0,0,.25)' }}
+                    labelStyle={{ color: dark ? '#FFFFFF' : '#000000', fontWeight: 700 }} />
+                  <Area type="monotone" dataKey="claims" stroke={dark ? '#B6FF2E' : '#1B4332'}
+                    strokeWidth={2.6} fill="url(#reportAreaMint)" dot={false}
+                    activeDot={{ r: 5, strokeWidth: 2, stroke: dark ? '#1E2129' : '#FFFFFF' }}
+                    isAnimationActive={false}/>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div> :
+              <RangeEmpty title="No activity in this period" detail="When you verify claims, your daily volume appears here. Try a wider date range."/ >
+          }
+          <div className="rpt-trend-footer">
+            <span><span className="rpt-chart-legend"/> Claims analyzed</span>
+            <span>Daily totals · {periodLabel} selected</span>
           </div>
         </section>
 
-        {/* Claim Outcomes Ring Breakdown */}
-        <section className="lg:col-span-4 rounded-[2.8rem] p-7 border shadow-xs space-y-6 transition-colors bg-[#FFFDFA] border-[#E9D6C4] dark:bg-[#23262F] dark:border-[#333742]">
-          <div>
-            <h3 className="font-extrabold text-base tracking-tight text-[#2E0A12] dark:text-white">
-              Claim Outcomes
-            </h3>
-            <p className="text-xs font-medium text-[#8A6A72] dark:text-slate-400">Calibrated accuracy distribution</p>
-          </div>
-
-          {/* Donut representation */}
-          <div className="relative flex items-center justify-center py-2">
-            <div className="w-32 h-32 rounded-full border-8 border-[#800020] dark:border-[#B6FF2E] border-t-rose-500 border-r-amber-400 flex flex-col items-center justify-center shadow-inner">
-              <span className="text-2xl font-black font-mono text-[#2E0A12] dark:text-white">42</span>
-              <span className="text-[10px] font-bold uppercase text-[#8A6A72] dark:text-slate-400">Total</span>
+        <section className="rpt-panel rpt-outcomes" aria-label="Claim outcomes">
+          <div className="rpt-panel-head">
+            <div>
+              <div className="rpt-title-icon"><ShieldCheck size={18}/></div>
+              <h2>Claim outcomes</h2>
+              <p>How claims were classified</p>
             </div>
           </div>
-
-          <div className="space-y-3 pt-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#800020] dark:bg-[#B6FF2E]" />
-                <span>Supported</span>
-              </span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">65%</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <span>Contradicted</span>
-              </span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">20%</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                <span>Unknown</span>
-              </span>
-              <span className="font-mono font-bold text-slate-900 dark:text-white">15%</span>
+          <div className="rpt-outcome-graphic">
+            <div className="rpt-donut" role="img"
+              aria-label={totalClaims ? outcomes.map(item => percent(item.pct) + ' ' + item.label.toLowerCase()).join(', ') : 'No claim outcomes'}
+              style={{ background: totalClaims > 0
+                ? `conic-gradient(#40916C 0% ${support}%, #F06476 ${support}% ${support + contradiction}%, #E5A72F ${support + contradiction}% ${Math.min(100, support + contradiction + unknown)}%, #ABBDB0 ${Math.min(100, support + contradiction + unknown)}% 100%)`
+                : dark ? '#343D43' : '#E1EDE4' }}>
+              <div className="rpt-donut-center">
+                <strong>{loading ? '—' : formatNumber(totalClaims)}</strong>
+                <span>Total claims</span>
+              </div>
             </div>
           </div>
-        </section>
-
-      </div>
-
-      {/* Bottom Grid: Model Usage + Evidence Sources + Domain Distribution */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Model Usage Bar Chart */}
-        <section className="rounded-[2.5rem] p-6 border shadow-xs space-y-4 transition-colors bg-[#FFFDFA] border-[#E9D6C4] dark:bg-[#23262F] dark:border-[#333742]">
-          <h4 className="font-extrabold text-sm text-[#2E0A12] dark:text-white">Model Usage</h4>
-          <div className="h-44 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={modelUsageData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#333742' : '#E9D6C4'} />
-                <XAxis dataKey="model" axisLine={false} tickLine={false} tick={{ fill: isDark ? '#94A3B8' : '#8A6A72', fontSize: 10 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: isDark ? '#94A3B8' : '#8A6A72', fontSize: 10 }} />
-                <Tooltip 
-                  cursor={{ 
-                    fill: isDark ? 'rgba(182, 255, 46, 0.08)' : 'rgba(128, 0, 32, 0.06)', 
-                    radius: 8 
-                  }}
-                  contentStyle={{ 
-                    borderRadius: '12px', 
-                    background: isDark ? '#14161C' : '#FFFDFA', 
-                    color: isDark ? '#FFFFFF' : '#2E0A12', 
-                    border: isDark ? '1px solid #333742' : '1px solid #E9D6C4',
-                    fontSize: '11px' 
-                  }} 
-                />
-                <Bar 
-                  dataKey="usage" 
-                  fill={isDark ? '#B6FF2E' : '#800020'} 
-                  radius={[6, 6, 0, 0]}
-                  activeBar={{ fill: isDark ? '#CEFF6B' : '#9E0028' }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* Evidence Sources */}
-        <section className="rounded-[2.5rem] p-6 border shadow-xs space-y-4 transition-colors bg-[#FFFDFA] border-[#E9D6C4] dark:bg-[#23262F] dark:border-[#333742]">
-          <h4 className="font-extrabold text-sm text-[#2E0A12] dark:text-white">Evidence Sources</h4>
-          <div className="h-44 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={evidenceSourceData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#333742' : '#E9D6C4'} />
-                <XAxis dataKey="domain" axisLine={false} tickLine={false} tick={{ fill: isDark ? '#94A3B8' : '#8A6A72', fontSize: 9 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: isDark ? '#94A3B8' : '#8A6A72', fontSize: 10 }} />
-                <Tooltip 
-                  cursor={{ 
-                    fill: isDark ? 'rgba(182, 255, 46, 0.08)' : 'rgba(128, 0, 32, 0.06)', 
-                    radius: 8 
-                  }}
-                  contentStyle={{ 
-                    borderRadius: '12px', 
-                    background: isDark ? '#14161C' : '#FFFDFA', 
-                    color: isDark ? '#FFFFFF' : '#2E0A12', 
-                    border: isDark ? '1px solid #333742' : '1px solid #E9D6C4',
-                    fontSize: '11px' 
-                  }} 
-                />
-                <Bar 
-                  dataKey="count" 
-                  fill={isDark ? '#B6FF2E' : '#800020'} 
-                  radius={[6, 6, 0, 0]}
-                  activeBar={{ fill: isDark ? '#CEFF6B' : '#9E0028' }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* Domain Distribution */}
-        <section className="rounded-[2.5rem] p-6 border shadow-xs space-y-4 transition-colors bg-[#FFFDFA] border-[#E9D6C4] dark:bg-[#23262F] dark:border-[#333742]">
-          <h4 className="font-extrabold text-sm text-[#2E0A12] dark:text-white">Domain Distribution</h4>
-          <div className="space-y-3 pt-2 text-xs">
-            {[
-              { label: 'News & Media', pct: '32%', color: 'bg-[#800020] dark:bg-[#B6FF2E]' },
-              { label: 'Academic & Peer Review', pct: '28%', color: 'bg-[#D8AE9B] dark:bg-emerald-400' },
-              { label: 'Government & Regulators', pct: '18%', color: 'bg-amber-600 dark:bg-amber-400' },
-              { label: 'Other Public Sources', pct: '22%', color: 'bg-slate-400 dark:bg-slate-600' },
-            ].map((d, i) => (
-              <div key={i} className="space-y-1">
-                <div className="flex justify-between font-semibold text-[#6C3B45] dark:text-slate-300">
-                  <span>{d.label}</span>
-                  <span className="font-mono text-[#2E0A12] dark:text-white">{d.pct}</span>
-                </div>
-                <div className="h-2 w-full rounded-full overflow-hidden bg-[#FBF1E3] dark:bg-[#181A20]">
-                  <div className={`h-full ${d.color}`} style={{ width: d.pct }} />
-                </div>
+          <div className="rpt-outcome-rows">
+            {outcomes.map(outcome => (
+              <div className="rpt-outcome-row" key={outcome.id}>
+                <span className="rpt-outcome-label"><i className={'rpt-outcome-dot rpt-outcome-dot--' + outcome.id}/>{outcome.label}</span>
+                <span className="rpt-outcome-amount">{totalClaims ? percent(outcome.pct) : '—'}</span>
               </div>
             ))}
           </div>
+          <p className="rpt-outcome-note">Percent of recorded claims, not a model accuracy benchmark.</p>
+        </section>
+      </div>
+
+      <div className="rpt-bottom-grid">
+        <section className="rpt-panel rpt-rank-panel" aria-label="Model usage">
+          <div className="rpt-panel-head">
+            <div>
+              <div className="rpt-title-icon"><TrendingUp size={18}/></div>
+              <h2>Model usage</h2>
+              <p>Completed model responses in the reporting window</p>
+            </div>
+            <span className="rpt-mini-total">{modelRows.reduce((sum, row) => sum + row.value, 0)} runs</span>
+          </div>
+          {loading ? <div className="rpt-rank-loading"/> :
+            modelRows.length ? <RankingRows rows={modelRows} accent="olive"/> :
+            <RangeEmpty title="No model calls recorded" detail="Start a multi-model chat to see which models are used."/ >
+          }
         </section>
 
+        <section className="rpt-panel rpt-rank-panel" aria-label="Evidence sources">
+          <div className="rpt-panel-head">
+            <div>
+              <div className="rpt-title-icon"><Link2 size={18}/></div>
+              <h2>Evidence sources</h2>
+              <p>Retrieved sources by publisher or domain</p>
+            </div>
+            <span className="rpt-mini-total">{formatNumber(sourceTotal)} sources</span>
+          </div>
+          {loading ? <div className="rpt-rank-loading"/> :
+            sourceRows.length ? <RankingRows rows={sourceRows.map(row => ({
+              ...row, share: sourceTotal ? row.value / sourceTotal * 100 : 0,
+            }))} accent="mint"/> :
+            <RangeEmpty title="No sources retrieved" detail="Verified claims with available evidence will populate this list."/ >
+          }
+          {sourceRows.length > 0 && <p className="rpt-footnote">
+            <ArrowDownRight size={13}/> Shares reflect the listed publishers returned by analytics.
+          </p>}
+        </section>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
 export default ReportsPage;

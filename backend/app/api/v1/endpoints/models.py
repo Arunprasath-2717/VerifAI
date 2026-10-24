@@ -479,132 +479,72 @@ class ModelLeaderboardResponseItem(BaseModel):
     description="Returns empirical benchmarks, hallucination resistance rates, and category rankings across frontier models.",
 )
 async def get_model_leaderboard() -> list[ModelLeaderboardResponseItem]:
-    """Retrieve benchmark leaderboard entries with calibrated empirical metrics."""
-    return [
-        ModelLeaderboardResponseItem(
-            rank=1,
-            model="Claude 3.5 Sonnet",
-            provider="Anthropic",
-            version="20241022",
-            overallScore=96.2,
-            categories=LeaderboardCategories(
-                factualSupport=97.4,
-                evidenceSupport=96.8,
-                contradictionDetection=95.9,
-                unknownHandling=94.1,
-                claimVerification=96.8,
-            ),
-            evaluationsCount=1420,
-            lastEvaluated="Oct 4, 2026",
-            strengths=[
-                "Lowest observed hallucination rate across complex multi-step reasoning",
-                "Strict calibration with explicit uncertainty flagging",
-                "Exceptional citation precision when cross-referencing technical corpora"
-            ],
-            limitations=[
-                "Higher generation latency under multi-turn heavy cross-examination",
-                "Conservative on ambiguous propositions that require probabilistic stance"
-            ],
-        ),
-        ModelLeaderboardResponseItem(
-            rank=2,
-            model="GPT-4o",
-            provider="OpenAI",
-            version="2024-11-20",
-            overallScore=94.8,
-            categories=LeaderboardCategories(
-                factualSupport=95.6,
-                evidenceSupport=95.1,
-                contradictionDetection=94.2,
-                unknownHandling=93.5,
-                claimVerification=95.6,
-            ),
-            evaluationsCount=1890,
-            lastEvaluated="Oct 4, 2026",
-            strengths=[
-                "Fast inference latency and rapid proposition deconstruction",
-                "Strong multi-lingual factual recall across scientific domains",
-                "High consistency across disparate citation registries"
-            ],
-            limitations=[
-                "Occasional overconfidence in edge-case mathematical assertions",
-                "Requires explicit grounding prompt to suppress speculation"
-            ],
-        ),
-        ModelLeaderboardResponseItem(
-            rank=3,
-            model="Gemini 1.5 Pro",
-            provider="Google",
-            version="002-exp",
-            overallScore=93.6,
-            categories=LeaderboardCategories(
-                factualSupport=94.2,
-                evidenceSupport=93.9,
-                contradictionDetection=93.1,
-                unknownHandling=92.8,
-                claimVerification=94.0,
-            ),
-            evaluationsCount=1240,
-            lastEvaluated="Oct 3, 2026",
-            strengths=[
-                "Massive 2M token context window allows verifying entire regulatory corpus",
-                "Superb retrieval precision across structured tables and data exhibits",
-                "Direct grounding in web-scale multimodal documents"
-            ],
-            limitations=[
-                "Slightly higher rate of unflagged hedging on contradictory claims",
-                "Occasional token truncation on ultra-long proposition chains"
-            ],
-        ),
-        ModelLeaderboardResponseItem(
-            rank=4,
-            model="Llama 3.3 70B",
-            provider="Meta / Groq",
-            version="Instruct",
-            overallScore=91.4,
-            categories=LeaderboardCategories(
-                factualSupport=92.1,
-                evidenceSupport=91.5,
-                contradictionDetection=90.8,
-                unknownHandling=89.9,
-                claimVerification=92.7,
-            ),
-            evaluationsCount=980,
-            lastEvaluated="Oct 2, 2026",
-            strengths=[
-                "Sub-400ms ultra-fast inference via Groq LPU acceleration",
-                "Open-weights auditability: zero data retention guarantee",
-                "Strong deterministic instruction adherence for proposition extraction"
-            ],
-            limitations=[
-                "Narrower context window compared to frontier commercial models",
-                "Higher variance on subtle domain-specific legal terminology"
-            ],
-        ),
-        ModelLeaderboardResponseItem(
-            rank=5,
-            model="Mistral Large 2",
-            provider="Mistral AI",
-            version="2407",
-            overallScore=90.8,
-            categories=LeaderboardCategories(
-                factualSupport=91.3,
-                evidenceSupport=90.9,
-                contradictionDetection=90.2,
-                unknownHandling=89.4,
-                claimVerification=92.2,
-            ),
-            evaluationsCount=760,
-            lastEvaluated="Oct 1, 2026",
-            strengths=[
-                "European sovereign data protection and GDPR compliance focus",
-                "Robust multi-lingual reasoning across European registries",
-                "Clean reasoning traces without conversational filler"
-            ],
-            limitations=[
-                "Moderate hallucination frequency on niche scientific assertions",
-                "Less aggressive contradiction flagging on mixed factual claims"
-            ],
-        ),
-    ]
+    """Return no rankings until a persisted benchmark evaluation pipeline exists.
 
+    Catalog metadata and provider availability are not measurements of accuracy.
+    Publishing fabricated scores would misrepresent VerifAI evaluation results.
+    """
+    return []
+
+
+class PublicSuiteScores(BaseModel):
+    """Source-reported LiveBench 2.0 scores, never inferred from VerifAI runs."""
+
+    agentic: float | None
+    design: float | None
+    coding: float | None
+    browser: float | None
+    data_analysis: float | None
+    research: float | None
+    reasoning: float | None
+
+
+class PublicLeaderboardModel(BaseModel):
+    id: str
+    rank: int
+    name: str
+    organization: str
+    overall_score: float = Field(ge=0, le=100)
+    suite_scores: PublicSuiteScores
+    suite_coverage: int = Field(ge=1, le=7)
+
+
+class PublicLeaderboardSnapshot(BaseModel):
+    schema_version: int = 1
+    benchmark: str
+    benchmark_release: str
+    source_updated_at: str
+    retrieved_at: str
+    source_url: str
+    data_url: str
+    methodology_url: str
+    refresh_policy: str
+    score_description: str
+    total_models: int
+    models: list[PublicLeaderboardModel]
+
+
+@router.get(
+    "/public-benchmarks",
+    response_model=PublicLeaderboardSnapshot,
+    summary="Sourced, weekly refreshed LiveBench 2.0 model scores",
+    description=(
+        "A separately attributed public benchmark snapshot; unlike the empirical "
+        "VerifAI leaderboard, it does not assert hallucination/citation accuracy."
+    ),
+)
+async def get_public_benchmarks() -> PublicLeaderboardSnapshot:
+    from fastapi import HTTPException
+    from app.modules.benchmarks.public_leaderboard import (
+        PublicBenchmarkRefreshError,
+        load_public_snapshot,
+    )
+
+    try:
+        return PublicLeaderboardSnapshot.model_validate(load_public_snapshot())
+    except (PublicBenchmarkRefreshError, ValueError) as exc:
+        logger.warning("Public benchmark snapshot unavailable: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=503,
+            detail="Public benchmark snapshot is unavailable; retry after the weekly refresh.",
+        ) from exc

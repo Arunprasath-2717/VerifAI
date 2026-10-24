@@ -18,10 +18,12 @@ from app.core.dependencies import (
 )
 from app.core.rate_limit import enforce_rate_limit
 from app.models.user import User
+from app.modules.chat.safety import assert_safe_outbound_prompt
 from app.modules.chat.service import ChatService
 from app.schemas.chat import (
     ChatPromptRequest,
     ChatPromptResponse,
+    ChatSynthesis,
     ConversationCreateRequest,
     ConversationDetailResponse,
     ConversationListResponse,
@@ -181,6 +183,34 @@ async def send_prompt(
 
 
 @router.post(
+    "/conversations/{conversation_id}/messages/{message_id}/summarize",
+    response_model=ChatSynthesis,
+    summary="Summarize saved responses from independently selected models",
+)
+async def summarize_message(
+    conversation_id: uuid.UUID,
+    message_id: uuid.UUID,
+    http_request: Request,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_async_session),
+    settings: Settings = Depends(get_settings),
+) -> ChatSynthesis:
+    # Only the owner can summarize saved, completed responses. Inference uses
+    # their validated BYOK provider, never a global server-side credential.
+    effective_owner = resolve_effective_owner(current_user, None, settings)
+    if settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request, action="chat_summary", limit=12,
+            user_id=effective_owner, settings=settings,
+        )
+    service = ChatService(db_session=db, settings=settings)
+    return await service.summarize_message(
+        conversation_id=conversation_id, message_id=message_id,
+        owner_id=effective_owner,
+    )
+
+
+@router.post(
     "/conversations/{conversation_id}/messages/stream",
     summary="Stream real-time model execution and verification events via SSE",
 )
@@ -204,7 +234,13 @@ async def stream_prompt(
             settings=settings,
         )
 
+    # For SSE, validation must happen before the stream sends an
+    # optimistic REQUEST_ACCEPTED event or triggers any provider call.
+    assert_safe_outbound_prompt(request_data.prompt)
     service = ChatService(db_session=db, settings=settings)
+    # Fail before sending an SSE response: a missing BYOK connection would
+    # otherwise raise after REQUEST_ACCEPTED and corrupt the event stream.
+    await service._owner_model_executor(effective_owner, request_data)
 
     async def _event_generator() -> AsyncGenerator[str, None]:
         # Event 1: REQUEST_ACCEPTED

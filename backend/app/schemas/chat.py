@@ -1,5 +1,7 @@
 """Pydantic v2 schemas for Chat, Conversations, Multi-LLM Execution, and History."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 from typing import Any
@@ -80,6 +82,7 @@ class MessageResponse(BaseModel):
     sequence_number: int
     created_at: datetime
     llm_runs: list[LLMRunResponse] = Field(default_factory=list)
+    synthesis: ChatSynthesis | None = None
 
 
 class ConversationResponse(BaseModel):
@@ -151,6 +154,25 @@ class ChatPromptRequest(BaseModel):
         return v
 
 
+class SynthesisIteration(BaseModel):
+    round: int = Field(ge=1, le=2)
+    critique: str = ""
+    revision_succeeded: bool = False
+
+
+class ChatSynthesis(BaseModel):
+    text: str = ""
+    selected_model: LLMModelSelection | None = None
+    synthesis_focus: str = "balanced"
+    rounds_completed: int = 0
+    iterations: list[SynthesisIteration] = Field(default_factory=list)
+    method: str = "EXTRACTIVE"
+    status: str = "UNVERIFIED"
+    source_models: list[str] = Field(default_factory=list)
+    verification_id: uuid.UUID | None = None
+    evidence_summary: str | None = None
+
+
 class ChatPromptResponse(BaseModel):
     """Aggregated response containing runs for all selected models and verification."""
 
@@ -160,6 +182,7 @@ class ChatPromptResponse(BaseModel):
     runs: list[LLMRunResponse]
     cross_model_disagreement: bool = False
     disagreement_summary: str | None = None
+    synthesis: ChatSynthesis | None = None
 
 
 class UserDeleteDataResponse(BaseModel):

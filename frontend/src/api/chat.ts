@@ -3,7 +3,7 @@
  * Connects to /api/v1/chat endpoints with full multi-model support and SSE streaming.
  */
 
-import { apiClient, getAuthToken } from './client';
+import { apiClient, getAuthToken, API_BASE_URL } from './client';
 import { adaptBackendVerificationToRecord } from './verification';
 import type {
   Conversation,
@@ -46,6 +46,7 @@ export interface BackendMessageResponse {
   sequence_number: number;
   created_at: string;
   llm_runs: BackendLLMRunResponse[];
+  synthesis?: ChatSynthesis | null;
 }
 
 export interface BackendConversationResponse {
@@ -84,6 +85,19 @@ export interface BackendChatPromptRequest {
   };
 }
 
+export interface ChatSynthesis {
+  text: string;
+  method: 'LLM_SYNTHESIS' | 'EXTRACTIVE_FALLBACK' | 'SINGLE_MODEL' | 'LOOP_REFINED';
+  selected_model?: BackendLLMModelSelection | null;
+  synthesis_focus?: string;
+  rounds_completed?: number;
+  iterations?: Array<{round: number; critique: string; revision_succeeded: boolean}>;
+  status: 'EVIDENCE_SUPPORTED' | 'NEEDS_REVIEW' | 'UNVERIFIED';
+  source_models: string[];
+  verification_id?: string | null;
+  evidence_summary?: string | null;
+}
+
 export interface BackendChatPromptResponse {
   conversation_id: string;
   user_message_id: string;
@@ -91,6 +105,7 @@ export interface BackendChatPromptResponse {
   runs: BackendLLMRunResponse[];
   cross_model_disagreement: boolean;
   disagreement_summary?: string | null;
+  synthesis?: ChatSynthesis | null;
 }
 
 /** Map backend status string to frontend ModelResponse status */
@@ -106,7 +121,8 @@ function mapRunStatus(status: string): 'Waiting' | 'Running' | 'Completed' | 'Fa
     case 'UNAVAILABLE':
       return 'Unavailable';
     default:
-      return 'Completed';
+      // Unknown backend statuses are not successful completions.
+      return 'Unavailable';
   }
 }
 
@@ -121,50 +137,61 @@ function buildChatEvaluationFromRuns(runs: BackendLLMRunResponse[], disagreement
   const verif = runWithVerif.verification;
   const verifRecord = adaptBackendVerificationToRecord(verif);
 
-  const claims: ClaimComparisonItem[] = (verifRecord.claims || []).map((c) => ({
-    id: c.id,
-    statement: c.statement,
-    modelAgreement: {
-      agreeCount: runs.filter((r) => r.status === 'COMPLETED').length,
-      totalModels: runs.length,
-      consensusNote: disagreementSummary || 'Model consensus evaluated against verified evidence.',
-    },
-    evidenceSourcesCount: c.evidenceSnippet ? 1 : 0,
-    verificationVerdict: c.status,
-    confidence: c.confidence,
-    evidenceList: c.evidenceSnippet
-      ? [
-          {
-            source: c.sourceTitle || 'Retrieved Evidence',
-            title: c.sourceTitle || 'Verified Document Source',
-            domain: c.domain || 'knowledge-base',
-            url: c.sourceUrl || '#',
-            retrievedTime: c.retrievedAt || new Date().toISOString(),
-            excerpt: c.evidenceSnippet,
-            type: 'Internal KB',
-          },
-        ]
-      : [],
-    modelJudgments: runs.map((r) => ({
-      model: r.model_name,
-      verdict: c.status,
-      reasoning: r.error_message || 'Assessed against factual audit evidence.',
-    })),
-  }));
+  const claims: ClaimComparisonItem[] = (verifRecord.claims || []).map((c) => {
+    const actualEvidence = c.evidence || [];
+    const actualJudges = c.judges || [];
+    return {
+      id: c.id,
+      statement: c.statement,
+      modelAgreement: {
+        agreeCount: 0,
+        totalModels: 0,
+        consensusNote: disagreementSummary ||
+          'Per-claim agreement between the chat models was not measured.',
+      },
+      evidenceSourcesCount: actualEvidence.length,
+      verificationVerdict: c.status,
+      confidence: c.confidence,
+      evidenceList: actualEvidence.map(evidence => ({
+        source: evidence.publisher || evidence.sourceTitle || 'Source not specified',
+        title: evidence.sourceTitle || evidence.documentTitle || 'Evidence source',
+        domain: evidence.sourceUrl ? (() => {
+          try { return new URL(evidence.sourceUrl).hostname; }
+          catch { return 'Not specified'; }
+        })() : 'Not specified',
+        url: evidence.sourceUrl || '',
+        retrievedTime: evidence.publicationDate || 'Not specified',
+        excerpt: evidence.snippet,
+        type: evidence.evidenceSource || 'Source',
+      })),
+      // Only persisted judge evaluations may be attributed to a model.
+      modelJudgments: actualJudges.map(judge => ({
+        model: judge.judgeName,
+        verdict: judge.judgment as VerificationStatus,
+        reasoning: judge.rationale || 'No rationale was provided.',
+      })),
+    };
+  });
 
-  const modelJudgmentsSummary = runs.map((r) => ({
-    model: r.model_name,
-    verdict: verifRecord.status,
-    notes: r.status === 'COMPLETED' ? `Completed in ${r.latency_ms?.toFixed(0) || '0'}ms` : (r.error_message || 'Run failed'),
-  }));
+  const modelJudgmentsSummary: ChatEvaluation['modelJudgmentsSummary'] = [];
+  for (const claim of claims) {
+    for (const judgement of claim.modelJudgments) {
+      modelJudgmentsSummary.push({
+        model: judgement.model,
+        verdict: judgement.verdict,
+        notes: judgement.reasoning,
+      });
+    }
+  }
 
   return {
     id: verif.verification_id || verif.id || `eval-${Date.now()}`,
     overallDecision: verifRecord.status,
     claimsAnalyzed: verifRecord.claimsCount,
     evidenceSourcesCount: verifRecord.evidenceCount,
-    modelsEvaluatedCount: runs.length,
-    decisionRationale: verifRecord.summary || disagreementSummary || 'Multi-model claims verified via authoritative backend verification pipeline.',
+    modelsEvaluatedCount: runs.filter(run => run.status === 'COMPLETED').length,
+    decisionRationale: verifRecord.summary || disagreementSummary ||
+      'No verification summary was supplied by the backend.',
     claims,
     modelJudgmentsSummary,
     finalVerifaiDecision: verifRecord.status,
@@ -176,37 +203,50 @@ export function adaptBackendConversation(detail: BackendConversationDetailRespon
   const messages: ChatMessage[] = [];
   const modelSet = new Set<string>();
 
-  for (const m of detail.messages || []) {
-    if (m.role === 'user') {
+  for (const m of [...(detail.messages || [])].sort((a, b) =>
+    a.sequence_number - b.sequence_number
+  )) {
+    if (m.role.toUpperCase() === 'USER') {
       messages.push({
         id: m.id,
         sender: 'user',
         content: m.content,
         timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       });
-    } else {
-      const modelResponses: ModelResponse[] = (m.llm_runs || []).map((r) => {
-        modelSet.add(r.model_name);
+    }
+    // The backend persists inference runs on the *user* message; there is
+    // intentionally no separately generated ASSISTANT database Message.
+    // Reconstitute a grouped model-response card from the saved runs.
+    if (m.llm_runs && m.llm_runs.length > 0) {
+      const modelResponses: ModelResponse[] = m.llm_runs.map((run) => {
+        modelSet.add(`${run.provider}:${run.model_name}`);
         return {
-          model: r.model_name,
-          provider: r.provider,
-          text: r.response || (r.status === 'FAILED' ? `[Model Error]: ${r.error_message || 'Provider execution failed'}` : ''),
-          status: mapRunStatus(r.status),
-          latencyMs: r.latency_ms ? Math.round(r.latency_ms) : undefined,
-          errorReason: r.error_message || undefined,
+          model: run.model_name,
+          provider: run.provider,
+          text: run.response || '',
+          status: mapRunStatus(run.status),
+          latencyMs: run.latency_ms == null ? undefined : Math.round(run.latency_ms),
+          errorReason: run.error_message || undefined,
         };
       });
-
-      const evaluation = buildChatEvaluationFromRuns(m.llm_runs || []);
-
+      const evaluation = buildChatEvaluationFromRuns(m.llm_runs);
+      messages.push({
+        id: `${m.id}-responses`,
+        sender: 'assistant',
+        content: '',
+        timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        modelResponses,
+        evaluation,
+        synthesis: m.synthesis || undefined,
+        verifiedRecordId: evaluation?.id,
+      });
+    } else if (m.role.toUpperCase() === 'ASSISTANT') {
       messages.push({
         id: m.id,
         sender: 'assistant',
         content: m.content,
         timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        modelResponses,
-        evaluation,
-        verifiedRecordId: evaluation?.id,
+        modelResponses: [],
       });
     }
   }
@@ -248,10 +288,18 @@ export const chatApi = {
     });
   },
 
+  async summarizeResponses(conversationId: string, messageId: string): Promise<ChatSynthesis> {
+    return apiClient<ChatSynthesis>(`/chat/conversations/${conversationId}/messages/${messageId}/summarize`, {
+      method: 'POST',
+      timeoutMs: 120000,
+    });
+  },
+
   async sendMessage(conversationId: string, request: BackendChatPromptRequest): Promise<BackendChatPromptResponse> {
     return apiClient<BackendChatPromptResponse>(`/chat/conversations/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify(request),
+      timeoutMs: 120000,
     });
   },
 
@@ -267,7 +315,7 @@ export const chatApi = {
   ): Promise<() => void> {
     const controller = new AbortController();
     const token = getAuthToken();
-    const url = `/api/v1/chat/conversations/${conversationId}/messages/stream`;
+    const url = `${API_BASE_URL}/chat/conversations/${conversationId}/messages/stream`;
 
     (async () => {
       try {

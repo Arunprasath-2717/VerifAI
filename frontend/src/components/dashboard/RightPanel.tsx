@@ -96,7 +96,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
       </div>
 
       {/* Status Overview Card (Replaces Reference "Followers" Card) */}
-      <section className="bg-white rounded-[2.5rem] p-6 border border-slate-200/70 shadow-sm space-y-5">
+      <section className="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="font-extrabold text-sm text-slate-900 tracking-tight">
             Status Overview
@@ -188,7 +188,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
       </section>
 
       {/* Advanced Reporting Card (Replaces Reference "Buy Pro Account" Card) */}
-      <section className="bg-[#111111] rounded-[2.5rem] p-7 text-white relative overflow-hidden shadow-lg group">
+      <section className="bg-[#111111] rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden shadow-lg group">
         {/* Subtle radial lighting */}
         <div className="absolute -bottom-8 -right-8 w-36 h-36 bg-blue-600/25 rounded-full blur-3xl group-hover:bg-blue-600/35 transition-all pointer-events-none" />
 

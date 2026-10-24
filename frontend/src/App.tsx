@@ -1,34 +1,27 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppShell } from './components/layout/AppShell';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
-// Dedicated Pages
-import { DashboardPage } from './pages/DashboardPage';
-import { VerifyPage } from './pages/VerifyPage';
-import { VerificationResultPage } from './pages/VerificationResultPage';
-import { ChatPage } from './pages/ChatPage';
-import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
-import { HistoryPage } from './pages/HistoryPage';
-import { ReportsPage } from './pages/ReportsPage';
-import { ModelLeaderboardPage } from './pages/ModelLeaderboardPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { SignupPage, LoginPage } from './pages/SignupPage';
-import { TermsPage } from './pages/TermsPage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { LoadingScreen } from './components/common/LoadingScreen';
+// Load screens only when their route is visited. In particular, the public
+// landing page must not load charts, private workspaces, or auth images.
+const LandingPage = React.lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const AppShell = React.lazy(() => import('./components/layout/AppShell').then(m => ({ default: m.AppShell })));
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const VerifyPage = React.lazy(() => import('./pages/VerifyPage').then(m => ({ default: m.VerifyPage })));
+const VerificationResultPage = React.lazy(() => import('./pages/VerificationResultPage').then(m => ({ default: m.VerificationResultPage })));
+const ChatPage = React.lazy(() => import('./pages/ChatPage').then(m => ({ default: m.ChatPage })));
+const KnowledgeBasePage = React.lazy(() => import('./pages/KnowledgeBasePage').then(m => ({ default: m.KnowledgeBasePage })));
+const HistoryPage = React.lazy(() => import('./pages/HistoryPage').then(m => ({ default: m.HistoryPage })));
+const ReportsPage = React.lazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const ModelLeaderboardPage = React.lazy(() => import('./pages/ModelLeaderboardPage').then(m => ({ default: m.ModelLeaderboardPage })));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const LoginPage = React.lazy(() => import('./pages/SignupPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = React.lazy(() => import('./pages/SignupPage').then(m => ({ default: m.SignupPage })));
+const TermsPage = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 
-import { 
-  initialUserSettings, 
-  weeklyChartData, 
-  monthlyChartData, 
-  initialVerifications, 
-  initialDocuments, 
-  initialConversations, 
-  initialProviders, 
-  initialNotifications,
-  initialLeaderboard
-} from './data/mockBackendData';
+
+import { initialUserSettings } from './data/mockBackendData';
 import { VerificationRecord, KnowledgeDocument, Conversation, AIProvider, UserSettings, NotificationItem } from './types';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -44,14 +37,30 @@ import {
   getAuthToken 
 } from './api';
 
+/** Return users to the protected destination they originally requested. */
+function RedirectAfterLogin() {
+  const location = useLocation();
+  const requested = (location.state as { from?: unknown } | null)?.from;
+  const safePath = typeof requested === 'string' &&
+    /^\/(dashboard|chat|verify|verification|knowledge-base|history|reports|model-leaderboard|settings)(\/|$)/.test(requested)
+    ? requested : '/dashboard';
+  return <Navigate to={safePath} replace />;
+}
+
 export default function App() {
   const [userSettings, setUserSettings] = useState<UserSettings>(initialUserSettings);
-  const [verifications, setVerifications] = useState<VerificationRecord[]>(initialVerifications);
-  const [documents, setDocuments] = useState<KnowledgeDocument[]>(initialDocuments);
-  const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [providers, setProviders] = useState<AIProvider[]>(initialProviders);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+  const [verifications, setVerifications] = useState<VerificationRecord[]>([]);
+  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [providers, setProviders] = useState<AIProvider[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [resourceErrors, setResourceErrors] = useState<Record<string, string>>({});
+  // Keep tested model lanes across /chat -> /chat/:conversationId remounts.
+  // No API keys or provider credentials are stored in this state.
+  const [chatSelectedModels, setChatSelectedModels] = useState<string[]>([]);
+  const [chatTestedModels, setChatTestedModels] = useState<Record<string, 'working' | 'failed'>>({});
+
 
   // Handlers
   const handleAddVerification = (record: VerificationRecord) => {
@@ -72,118 +81,98 @@ export default function App() {
     setDocuments(prev => [doc, ...prev]);
   };
 
-  const handleDeleteDocument = async (docId: string) => {
-    try {
-      await knowledgeApi.deleteDocument(docId);
-    } catch {}
+  // The child page performs the deletion; only remove it here on confirmed success.
+  const handleDeleteDocument = (docId: string) => {
     setDocuments(prev => prev.filter(d => d.id !== docId));
   };
 
   const handleAddConversation = (conv: Conversation) => {
-    setConversations(prev => [conv, ...prev]);
+    setConversations(prev => [conv, ...prev.filter(c => c.id !== conv.id)]);
   };
 
   const handleUpdateConversation = (conv: Conversation) => {
-    setConversations(prev => prev.map(c => c.id === conv.id ? conv : c));
+    setConversations(prev => prev.some(c => c.id === conv.id)
+      ? prev.map(c => c.id === conv.id ? conv : c)
+      : [conv, ...prev]
+    );
   };
 
-  const handleToggleProvider = (provId: string) => {
-    setProviders(prev => prev.map(p => {
-      if (p.id === provId) {
-        return {
-          ...p,
-          status: p.status === 'Connected' ? 'Not Connected' : 'Connected'
-        };
-      }
-      return p;
-    }));
+  const handleDeleteConversation = async (conversationId: string): Promise<void> => {
+    const result = await chatApi.deleteConversation(conversationId);
+    if (!result.deleted) {
+      throw new Error('The backend did not confirm chat deletion.');
+    }
+    setConversations(prev => prev.filter(conv => conv.id !== conversationId));
   };
 
-  const handleSaveProviderKey = (
-    provId: string, 
-    data: { 
-      apiKey: string; 
-      keyMasked: string; 
-      baseUrl?: string; 
-      organizationId?: string; 
-      keyLabel?: string; 
-      name?: string; 
+  const handleSaveProviderKey = async (
+    provId: string,
+    data: {
+      apiKey: string;
+      keyMasked: string;
+      baseUrl?: string;
+      organizationId?: string;
+      keyLabel?: string;
+      name?: string;
       models?: string[];
       category?: 'cloud' | 'local' | 'router';
     }
-  ) => {
-    providersApi.saveKey(provId, {
+  ): Promise<void> => {
+    // Never mark a key as linked until the backend has encrypted and stored it.
+    const saved = await providersApi.saveKey(provId, {
       api_key: data.apiKey,
       base_url: data.baseUrl,
       organization_id: data.organizationId,
       key_label: data.keyLabel,
-    }).catch(() => {});
-
-    setProviders(prev => {
-      const exists = prev.some(p => p.id === provId);
-      if (exists) {
-        return prev.map(p => {
-          if (p.id === provId) {
-            return {
-              ...p,
-              status: 'Connected',
-              configuredAt: 'Just now',
-              ...data,
-            };
-          }
-          return p;
-        });
-      } else {
-        const newProv: AIProvider = {
-          id: provId,
-          name: data.name || 'Custom 3rd Party LLM',
-          category: data.category || 'cloud',
-          status: 'Connected',
-          models: data.models && data.models.length > 0 ? data.models : ['Custom Model v1'],
-          configuredAt: 'Just now',
-          keyMasked: data.keyMasked,
-          apiKey: data.apiKey,
-          baseUrl: data.baseUrl,
-          organizationId: data.organizationId,
-          keyLabel: data.keyLabel,
-        };
-        return [...prev, newProv];
-      }
+      name: data.name,
+      models: data.models,
+      category: data.category,
     });
-
-    const provName = data.name || providers.find(p => p.id === provId)?.name || 'Provider';
-    const notif: NotificationItem = {
+    setChatSelectedModels([]);
+    setChatTestedModels({});
+    setProviders(prev => {
+      const existing = prev.find(p => p.id === provId);
+      const confirmed = {
+        ...existing,
+        ...saved,
+        // No raw key is ever retained in provider state.
+        apiKey: undefined,
+      } as AIProvider;
+      return existing
+        ? prev.map(p => p.id === provId ? confirmed : p)
+        : [...prev, confirmed];
+    });
+    setNotifications(prev => [{
       id: `notif-${Date.now()}`,
-      title: `${provName} API Key Linked`,
-      description: `3rd-party LLM key linked to project VerifAI Intelligence Lab. Models are now active.`,
+      title: `${saved.name} API key saved`,
+      description: 'Credential stored by the backend. Test the connection to verify access.',
       timestamp: 'Just now',
       read: false,
       type: 'system',
-      link: '/settings/providers'
-    };
-    setNotifications(prev => [notif, ...prev]);
+      link: '/settings/providers',
+    }, ...prev]);
   };
 
-  const handleUnlinkProvider = (provId: string) => {
-    providersApi.unlinkKey(provId).catch(() => {});
-    setProviders(prev => prev.map(p => {
-      if (p.id === provId) {
-        return {
-          ...p,
-          status: 'Not Connected',
-          apiKey: undefined,
-          keyMasked: undefined,
-          configuredAt: undefined,
-        };
-      }
-      return p;
-    }));
+  const refreshProviders = async (): Promise<void> => {
+    const current = await providersApi.listProviders();
+    setProviders(current);
   };
 
-  const handleClearHistory = () => {
-    historyApi.purgeUserData().catch(() => {});
+  const handleUnlinkProvider = async (provId: string): Promise<void> => {
+    await providersApi.unlinkKey(provId);
+    setChatSelectedModels([]);
+    setChatTestedModels({});
+    setProviders(prev => prev.map(p => p.id === provId
+      ? { ...p, status: 'Not Connected', apiKey: undefined, keyMasked: undefined, configuredAt: undefined }
+      : p));
+  };
+
+  const handleClearHistory = async (): Promise<void> => {
+    const result = await historyApi.purgeUserData();
+    if (!result.success) throw new Error(result.message || 'Unable to purge history.');
     setVerifications([]);
     setConversations([]);
+    setDocuments([]);
   };
 
   const handleMarkAllNotificationsRead = () => {
@@ -210,11 +199,14 @@ export default function App() {
 
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
-  // Validate session on mount
+  // Validate session on mount. Ignore a stale response if the user logs out
+  // or switches accounts before the request finishes.
   React.useEffect(() => {
+    let active = true;
     const token = getAuthToken();
     if (token) {
       authApi.getMe().then(user => {
+        if (!active || getAuthToken() !== token) return;
         setIsAuthenticated(true);
         setUserSettings(prev => ({
           ...prev,
@@ -225,53 +217,62 @@ export default function App() {
           }
         }));
       }).catch(() => {
+        if (!active || getAuthToken() !== token) return;
         authApi.logout();
         setIsAuthenticated(false);
       }).finally(() => {
-        setIsInitializing(false);
+        if (active) setIsInitializing(false);
       });
     } else {
       setIsAuthenticated(false);
-      const timer = setTimeout(() => setIsInitializing(false), 200);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(() => {
+        if (active) setIsInitializing(false);
+      }, 200);
+      return () => { active = false; clearTimeout(timer); };
     }
+    return () => { active = false; };
   }, []);
 
-  // Synchronize authenticated user data and backend resources
+  // Synchronize authenticated user data and backend resources.
+  // Ignore late responses after logout or user changes; an old account must
+  // never repopulate shared frontend state in another session.
   React.useEffect(() => {
-    if (isAuthenticated) {
-      historyApi.listVerifications({ limit: 50 }).then(res => {
-        if (res.items && res.items.length > 0) {
-          setVerifications(res.items);
-        }
-      }).catch(() => {});
+    if (!isAuthenticated) return;
+    let active = true;
+    setResourceErrors({});
+    const reportLoadError = (resource: string, err: unknown) => {
+      if (!active) return;
+      const detail = err instanceof Error ? err.message : 'Request failed';
+      setResourceErrors(prev => ({
+        ...prev,
+        [resource]: `${resource} could not be loaded: ${detail}`,
+      }));
+    };
+    historyApi.listVerifications({ limit: 50 })
+      .then(res => { if (active) setVerifications(res.items ?? []); })
+      .catch(err => reportLoadError('Verification history', err));
 
-      knowledgeApi.listDocuments().then(docs => {
-        if (docs && docs.length > 0) {
-          setDocuments(docs);
-        }
-      }).catch(() => {});
+    knowledgeApi.listDocuments()
+      .then(docs => { if (active) setDocuments(docs); })
+      .catch(err => reportLoadError('Knowledge-base documents', err));
 
-      providersApi.listProviders().then(provs => {
-        if (provs && provs.length > 0) {
-          setProviders(provs);
-        }
-      }).catch(() => {});
+    providersApi.listProviders()
+      .then(provs => { if (active) setProviders(provs); })
+      .catch(err => reportLoadError('AI providers', err));
 
-      chatApi.listConversations({ limit: 50 }).then(res => {
-        if (res.items && res.items.length > 0) {
-          const mapped = res.items.map(c => ({
-            id: c.id,
-            title: c.title,
-            updatedAt: new Date(c.updated_at).toLocaleDateString(),
-            messageCount: c.message_count,
-            models: ['GPT-4o', 'Claude 3.5', 'Gemini 1.5'],
-            messages: [],
-          }));
-          setConversations(mapped);
-        }
-      }).catch(() => {});
-    }
+    chatApi.listConversations({ limit: 50 }).then(res => {
+      if (!active) return;
+      setConversations((res.items ?? []).map(c => ({
+        id: c.id,
+        title: c.title,
+        updatedAt: new Date(c.updated_at).toLocaleDateString(),
+        messageCount: c.message_count,
+        models: [], // Summaries don't contain model selections.
+        messages: [],
+      })));
+    }).catch(err => reportLoadError('Conversations', err));
+
+    return () => { active = false; };
   }, [isAuthenticated]);
 
   const handleAuthSuccess = (userData: { fullName: string; email: string }) => {
@@ -279,6 +280,8 @@ export default function App() {
       localStorage.setItem('verifai_authenticated', 'true');
     } catch {}
     setIsAuthenticated(true);
+    setChatSelectedModels([]);
+    setChatTestedModels({});
     setUserSettings(prev => ({
       ...prev,
       profile: {
@@ -293,6 +296,14 @@ export default function App() {
     firebaseSignOut().catch(() => {});
     authApi.logout();
     setIsAuthenticated(false);
+    setChatSelectedModels([]);
+    setChatTestedModels({});
+    setVerifications([]);
+    setDocuments([]);
+    setConversations([]);
+    setProviders([]);
+    setNotifications([]);
+    setResourceErrors({});
   };
 
   // Synchronize document root with active theme
@@ -309,8 +320,10 @@ export default function App() {
 
   const activeTheme: 'light' | 'dark' = userSettings.appearance.theme === 'dark' ? 'dark' : 'light';
 
+  // Avoid displaying a fabricated full-screen loading experience during
+  // session restoration. Routing starts once auth initialization completes.
   if (isInitializing) {
-    return <LoadingScreen message="Initializing VerifAI Console" />;
+    return null;
   }
 
   return (
@@ -328,27 +341,15 @@ export default function App() {
     >
       <AuthProvider>
         <BrowserRouter>
+          <React.Suspense fallback={null}>
           <Routes>
-          {/* Public Authentication Pages: Entry screen on root '/' */}
-          <Route 
-            path="/" 
-            element={
-              isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <LoginPage 
-                  theme={activeTheme} 
-                  onAuthSuccess={handleAuthSuccess} 
-                  isAuthenticated={isAuthenticated}
-                />
-              )
-            } 
-          />
+          {/* Public marketing homepage; launch CTAs enter the existing auth/app flow. */}
+          <Route path="/" element={<LandingPage isAuthenticated={isAuthenticated} />} />
           <Route 
             path="/login" 
             element={
               isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
+                <RedirectAfterLogin />
               ) : (
                 <LoginPage 
                   theme={activeTheme} 
@@ -362,7 +363,7 @@ export default function App() {
             path="/signup" 
             element={
               isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
+                <RedirectAfterLogin />
               ) : (
                 <SignupPage 
                   theme={activeTheme} 
@@ -376,7 +377,7 @@ export default function App() {
             path="/auth" 
             element={
               isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
+                <RedirectAfterLogin />
               ) : (
                 <LoginPage 
                   theme={activeTheme} 
@@ -403,6 +404,7 @@ export default function App() {
               isAuthenticated ? (
                 <AppShell
                   userSettings={userSettings}
+                  dataLoadErrors={Object.values(resourceErrors)}
                   notifications={notifications}
                   onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
                   searchQuery={searchQuery}
@@ -412,7 +414,7 @@ export default function App() {
                   onLogout={handleLogout}
                 />
               ) : (
-                <Navigate to="/" replace />
+                <Navigate to="/login" state={{ from: window.location.pathname + window.location.search }} replace />
               )
             }
           >
@@ -423,8 +425,6 @@ export default function App() {
             element={
               <DashboardPage
                 verifications={verifications}
-                weeklyChartData={weeklyChartData}
-                monthlyChartData={monthlyChartData}
                 userName={userSettings.profile.fullName}
                 theme={activeTheme}
               />
@@ -449,25 +449,18 @@ export default function App() {
 
           {/* 4. AI Chat Workspace */}
           <Route 
-            path="/chat" 
+            path="/chat/:conversationId?"
             element={
               <ChatPage
                 conversations={conversations}
                 onAddConversation={handleAddConversation}
                 onUpdateConversation={handleUpdateConversation}
-                providers={providers}
-                theme={activeTheme}
-              />
-            } 
-          />
-          <Route 
-            path="/chat/:conversationId" 
-            element={
-              <ChatPage
-                conversations={conversations}
-                onAddConversation={handleAddConversation}
-                onUpdateConversation={handleUpdateConversation}
-                providers={providers}
+                onProvidersChanged={refreshProviders}
+                onDeleteConversation={handleDeleteConversation}
+                selected={chatSelectedModels}
+                setSelected={setChatSelectedModels}
+                testedModels={chatTestedModels}
+                setTestedModels={setChatTestedModels}
                 theme={activeTheme}
               />
             } 
@@ -514,8 +507,6 @@ export default function App() {
             path="/reports" 
             element={
               <ReportsPage
-                weeklyChartData={weeklyChartData}
-                monthlyChartData={monthlyChartData}
                 theme={activeTheme}
               />
             } 
@@ -524,7 +515,6 @@ export default function App() {
             path="/reports/models" 
             element={
               <ModelLeaderboardPage
-                leaderboardData={initialLeaderboard}
                 theme={activeTheme}
               />
             } 
@@ -533,7 +523,6 @@ export default function App() {
             path="/leaderboard" 
             element={
               <ModelLeaderboardPage
-                leaderboardData={initialLeaderboard}
                 theme={activeTheme}
               />
             } 
@@ -547,9 +536,9 @@ export default function App() {
                 userSettings={userSettings}
                 onUpdateUserSettings={setUserSettings}
                 providers={providers}
-                onToggleProvider={handleToggleProvider}
                 onSaveProviderKey={handleSaveProviderKey}
                 onUnlinkProvider={handleUnlinkProvider}
+                onRefreshProviders={refreshProviders}
                 onClearHistory={handleClearHistory}
                 theme={activeTheme}
               />
@@ -562,9 +551,9 @@ export default function App() {
                 userSettings={userSettings}
                 onUpdateUserSettings={setUserSettings}
                 providers={providers}
-                onToggleProvider={handleToggleProvider}
                 onSaveProviderKey={handleSaveProviderKey}
                 onUnlinkProvider={handleUnlinkProvider}
+                onRefreshProviders={refreshProviders}
                 onClearHistory={handleClearHistory}
                 theme={activeTheme}
               />
@@ -573,13 +562,13 @@ export default function App() {
 
           </Route>
 
-          {/* Dedicated Preview & Diagnostic Routes */}
-          <Route path="/loading" element={<LoadingScreen />} />
+          {/* Diagnostic routes */}
           <Route path="/404" element={<NotFoundPage isAuthenticated={isAuthenticated} />} />
 
           {/* Global Catch-all 404 Route */}
           <Route path="*" element={<NotFoundPage isAuthenticated={isAuthenticated} />} />
         </Routes>
+          </React.Suspense>
       </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

@@ -1,0 +1,42 @@
+/*
+ * Authenticated workspace chrome: one animated desktop dock column,
+ * shared content boundaries for sticky toolbar and route content.
+ */
+.verifai-workspace,
+.verifai-workspace-container,
+.verifai-workspace-header,
+.verifai-topbar-frame,
+.verifai-topbar {
+  min-width: 0;
+}
+.verifai-topbar-frame {
+  isolation: isolate;
+  width: 100%;
+}
+.verifai-sidebar-column {
+  min-width: 0;
+}
+.verifai-sidebar {
+  min-width: 0;
+  contain: layout style;
+}
+@media (min-width: 1024px) {
+  .verifai-sidebar[data-mobile="false"] .verifai-sidebar-reveal {
+    transition-property: max-width, opacity, transform, margin, padding;
+    transition-duration: .85s, .36s, .72s, .72s, .72s;
+    transition-timing-function: cubic-bezier(.22,1,.36,1);
+    transition-delay: 0s;
+  }
+  .verifai-sidebar[data-mobile="false"][data-expanded="true"] .verifai-sidebar-reveal {
+    transition-delay: 0s, .13s, 0s, 0s, 0s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .verifai-sidebar-reveal {
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .verifai-topbar-frame {
+    transition: none !important;
+  }
+}

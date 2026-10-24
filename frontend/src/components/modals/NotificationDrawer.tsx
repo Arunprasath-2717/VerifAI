@@ -42,20 +42,20 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                 ? { duration: 0.2 }
                 : { type: 'spring', stiffness: 350, damping: 30 }
             }
-            className="relative z-10 w-full max-w-sm h-full shadow-2xl p-6 flex flex-col border-l transition-colors bg-[#FFFDFA] border-[#E9D6C4] text-[#2E0A12] dark:bg-[#23262F] dark:border-[#333742] dark:text-white"
+            className="relative z-10 w-full max-w-sm h-full shadow-2xl p-6 flex flex-col border-l transition-colors bg-[#FFFFFF] border-[#74C69D] text-[#1B4332] dark:bg-[#23262F] dark:border-[#333742] dark:text-white"
           >
             {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#E9D6C4] dark:border-[#333742]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#74C69D] dark:border-[#333742]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#FBF1E3] text-[#800020] border border-[#E9D6C4] dark:bg-[#181A20] dark:text-[#B6FF2E] dark:border-[#B6FF2E]/30">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#D8F3DC] text-[#1B4332] border border-[#74C69D] dark:bg-[#181A20] dark:text-[#B6FF2E] dark:border-[#B6FF2E]/30">
                   <Bell size={16} />
                 </div>
-                <h3 className="font-extrabold text-base text-[#2E0A12] dark:text-white">Notifications</h3>
+                <h3 className="font-extrabold text-base text-[#1B4332] dark:text-white">Notifications</h3>
               </div>
               <button
                 onClick={onClose}
                 aria-label="Close Notifications"
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors bg-[#FBF1E3] hover:bg-[#EFE0D1] text-[#6C3B45] dark:bg-[#181A20] dark:hover:bg-[#2A2E38] dark:text-slate-300 cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors bg-[#D8F3DC] hover:bg-[#D8F3DC] text-[#356B52] dark:bg-[#181A20] dark:hover:bg-[#2A2E38] dark:text-slate-300 cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -63,12 +63,12 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
             {/* Actions Bar */}
             <div className="py-3 flex justify-between items-center text-xs">
-              <span className="font-semibold text-[#8A6A72] dark:text-slate-400">
+              <span className="font-semibold text-[#356B52] dark:text-slate-400">
                 {notifications.filter(n => !n.read).length} unread
               </span>
               <button
                 onClick={onMarkAllAsRead}
-                className="font-bold flex items-center gap-1 cursor-pointer transition-colors text-[#800020] hover:text-[#6E1B33] dark:text-[#B6FF2E] dark:hover:text-[#A3E823]"
+                className="font-bold flex items-center gap-1 cursor-pointer transition-colors text-[#1B4332] hover:text-[#1B4332] dark:text-[#B6FF2E] dark:hover:text-[#A3E823]"
               >
                 <CheckCheck size={14} />
                 <span>Mark all read</span>
@@ -89,25 +89,25 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                   }}
                   className={`p-4 rounded-2xl border transition-all ${
                     item.read 
-                      ? 'bg-[#FBF1E3]/60 border-[#E9D6C4]/60 opacity-75 dark:bg-[#181A20]/40 dark:border-[#333742]' 
-                      : 'bg-[#FBF1E3] border-[#E9D6C4] shadow-xs dark:bg-[#181A20] dark:border-[#333742] dark:shadow-md'
+                      ? 'bg-[#D8F3DC]/60 border-[#74C69D]/60 opacity-75 dark:bg-[#181A20]/40 dark:border-[#333742]' 
+                      : 'bg-[#D8F3DC] border-[#74C69D] shadow-xs dark:bg-[#181A20] dark:border-[#333742] dark:shadow-md'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <span className="text-xs font-bold leading-tight text-[#2E0A12] dark:text-white">
+                    <span className="text-xs font-bold leading-tight text-[#1B4332] dark:text-white">
                       {item.title}
                     </span>
                     {!item.read && (
-                      <span className="w-2 h-2 rounded-full shrink-0 bg-[#800020] dark:bg-[#B6FF2E] shadow-[0_0_6px_#B6FF2E]" />
+                      <span className="w-2 h-2 rounded-full shrink-0 bg-[#1B4332] dark:bg-[#B6FF2E] shadow-[0_0_6px_#B6FF2E]" />
                     )}
                   </div>
-                  <p className="text-[11px] leading-relaxed mb-2 text-[#6C3B45] dark:text-slate-300">
+                  <p className="text-[11px] leading-relaxed mb-2 text-[#356B52] dark:text-slate-300">
                     {item.description}
                   </p>
-                  <div className="flex items-center justify-between text-[10px] text-[#8A6A72] dark:text-slate-400">
+                  <div className="flex items-center justify-between text-[10px] text-[#356B52] dark:text-slate-400">
                     <span>{item.timestamp}</span>
                     {item.link && (
-                      <span className="font-semibold flex items-center gap-0.5 text-[#800020] dark:text-[#B6FF2E]">
+                      <span className="font-semibold flex items-center gap-0.5 text-[#1B4332] dark:text-[#B6FF2E]">
                         <span>View</span>
                         <ExternalLink size={10} />
                       </span>

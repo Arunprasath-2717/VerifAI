@@ -1,16 +1,52 @@
 export type VerificationStatus = 'SUPPORTED' | 'CONTRADICTED' | 'UNKNOWN' | 'UNAVAILABLE' | 'FAILED';
 
+export interface VerificationEvidence {
+  id: string;
+  snippet: string;
+  sourceUrl?: string;
+  sourceTitle?: string;
+  publisher?: string;
+  publicationDate?: string;
+  retrieverName?: string;
+  evidenceSource?: string;
+  documentTitle?: string;
+  relevanceScore?: number;
+  authorityScore?: number;
+}
+
+export interface VerificationJudge {
+  id: string;
+  judgeName: string;
+  judgment: string;
+  confidence?: number;
+  rationale?: string;
+  evidenceReferences?: string[];
+}
+
+export interface VerificationAuditEntry {
+  id: string;
+  stage: string;
+  eventType: string;
+  status: string;
+  message: string;
+  timestamp?: string;
+}
+
 export interface ClaimItem {
   id: string;
   statement: string;
   status: VerificationStatus;
-  confidence: number; // 0 to 1
+  confidence?: number; // Reported only when measured; 0 to 1
   evidenceSnippet?: string;
   sourceTitle?: string;
   sourceUrl?: string;
   contradictionReason?: string;
   domain?: string;
   retrievedAt?: string;
+  evidence?: VerificationEvidence[];
+  judges?: VerificationJudge[];
+  explanation?: string;
+  unknownReason?: string;
 }
 
 export interface VerificationRecord {
@@ -29,6 +65,7 @@ export interface VerificationRecord {
   model: string;
   modelsUsed?: string[];
   claims?: ClaimItem[];
+  auditTrail?: VerificationAuditEntry[];
   verificationMode?: 'PRIVATE_KB_ONLY' | 'PRIVATE_KB_PLUS_WEB';
 }
 
@@ -74,7 +111,7 @@ export interface ClaimComparisonItem {
   };
   evidenceSourcesCount: number;
   verificationVerdict: VerificationStatus;
-  confidence: number;
+  confidence?: number;
   evidenceList: {
     source: string;
     title: string;
@@ -82,7 +119,7 @@ export interface ClaimComparisonItem {
     url: string;
     retrievedTime: string;
     excerpt: string;
-    type: 'Primary Research' | 'Government/Regulatory' | 'Benchmark Report' | 'Internal KB';
+    type: string; // Preserve actual backend evidence source category.
   }[];
   modelJudgments: {
     model: string;
@@ -112,6 +149,7 @@ export interface ChatMessage {
   sender: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  synthesis?: import('../api/chat').ChatSynthesis;
   modelResponses?: ModelResponse[];
   evaluation?: ChatEvaluation;
   verifiedRecordId?: string;
@@ -173,7 +211,7 @@ export interface AIProvider {
   id: string;
   name: string;
   category: 'cloud' | 'local' | 'router';
-  status: 'Connected' | 'Not Connected' | 'Unavailable' | 'Error';
+  status: 'Connected' | 'Saved' | 'Not Connected' | 'Unavailable' | 'Error';
   models: string[];
   configuredAt?: string;
   keyMasked?: string;

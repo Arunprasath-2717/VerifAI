@@ -8,7 +8,7 @@ Architecture:
 
 import logging
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
@@ -41,6 +41,32 @@ def get_auth_service(
         settings=settings,
         token_verifier=verify_firebase_id_token,
     )
+
+
+@router.get(
+    "/auth/username-availability",
+    summary="Check case-insensitive username availability",
+)
+async def check_username_availability(
+    http_request: Request,
+    username: str = Query(
+        min_length=3, max_length=64, pattern=r"^[a-zA-Z0-9_-]{3,64}$"
+    ),
+    db: AsyncSession = Depends(get_async_session),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, str | bool]:
+    """Advisory public lookup; database unique index decides actual signup."""
+    if settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request,
+            action="username_availability",
+            limit=30,
+            window_seconds=60.0,
+            settings=settings,
+        )
+    normalized = username.strip().lower()
+    user = await UserRepository(db).get_by_username(normalized)
+    return {"username": normalized, "available": user is None}
 
 
 @router.post(

@@ -34,11 +34,11 @@ export const BorderGlowButton: React.FC<BorderGlowButtonProps> = ({
 
   // Theme-aware HSL and mesh gradient palettes
   const defaultDarkGlow = '80 100 60'; // Electric Lime Spark
-  const defaultLightGlow = '348 100 25'; // Deep Burgundy
+  const defaultLightGlow = '152 42 49'; // Forest / mint glow
   const resolvedGlowColor = glowColor || (isDark ? defaultDarkGlow : defaultLightGlow);
 
   const defaultDarkColors = ['#B6FF2E', '#A3E823', '#2E3340'];
-  const defaultLightColors = ['#800020', '#D45060', '#F3E6D5'];
+  const defaultLightColors = ['#1B4332', '#40916C', '#74C69D'];
   const resolvedColors = colors || (isDark ? defaultDarkColors : defaultLightColors);
 
   // Background and text styling based on variant & theme
@@ -52,9 +52,9 @@ export const BorderGlowButton: React.FC<BorderGlowButtonProps> = ({
         };
       } else {
         return {
-          bg: '#800020',
-          textClass: 'text-[#FFF9F2] font-bold',
-          borderClass: 'border-[#6E001A] shadow-md shadow-[#800020]/25',
+          bg: '#74C69D',
+          textClass: 'text-[#102D21] font-bold',
+          borderClass: 'border-[#40916C] shadow-md shadow-[#1B4332]/15',
         };
       }
     } else if (variant === 'accent') {
@@ -66,9 +66,9 @@ export const BorderGlowButton: React.FC<BorderGlowButtonProps> = ({
         };
       } else {
         return {
-          bg: '#F3E6D5',
-          textClass: 'text-[#4A0A18] font-extrabold',
-          borderClass: 'border-[#D4B8A4] shadow-xs',
+          bg: '#D8F3DC',
+          textClass: 'text-[#1B4332] font-extrabold',
+          borderClass: 'border-[#74C69D] shadow-xs',
         };
       }
     } else {
@@ -82,8 +82,8 @@ export const BorderGlowButton: React.FC<BorderGlowButtonProps> = ({
       } else {
         return {
           bg: '#FFFFFF',
-          textClass: 'text-[#5C3040] hover:text-[#1E0A10] font-bold',
-          borderClass: 'border-[#E5D3C0]',
+          textClass: 'text-[#1B4332] hover:text-[#163E2D] font-bold',
+          borderClass: 'border-[#74C69D]',
         };
       }
     }

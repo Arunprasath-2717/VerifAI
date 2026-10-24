@@ -1,10 +1,11 @@
 """Repository for User persistence and identity management."""
 
 import logging
+import re
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -32,8 +33,8 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     async def get_by_username(self, username: str) -> User | None:
-        """Retrieve user by username."""
-        stmt = select(User).where(User.username == username.strip())
+        """Retrieve a username case-insensitively, including legacy accounts."""
+        stmt = select(User).where(func.lower(User.username) == username.strip().lower())
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -42,7 +43,10 @@ class UserRepository:
         clean_email = email.strip().lower()
         clean_username = username.strip()
         stmt = select(User).where(
-            or_(User.email == clean_email, User.username == clean_username)
+            or_(
+                User.email == clean_email,
+                func.lower(User.username) == clean_username.lower(),
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
@@ -93,17 +97,18 @@ class UserRepository:
             await self.session.commit()
             return existing_by_email, False
 
-        base_username = (
-            display_name.strip().replace(" ", "_")
-            if display_name
-            else f"fb_{firebase_uid[:8]}"
+        suggested = (
+            display_name.strip().lower().replace(" ", "_") if display_name else ""
         )
+        base_username = re.sub(r"[^a-z0-9_-]", "_", suggested).strip("_-")
+        if len(base_username) < 3:
+            base_username = f"fb_{deterministic_id.hex[:10]}"
+        base_username = base_username[:48]
         user_name = base_username
-
-        # Ensure username uniqueness
+        # The database unique index remains the authority for concurrent writes.
         candidate = await self.get_by_username(user_name)
         if candidate and candidate.id != deterministic_id:
-            user_name = f"{base_username}_{deterministic_id.hex[:6]}"
+            user_name = f"{base_username}_{deterministic_id.hex[:12]}"
 
         now = datetime.now(UTC)
         new_user = User(
@@ -131,7 +136,9 @@ class UserRepository:
         except Exception:
             await self.session.rollback()
             # If concurrent request already inserted the user, retrieve it
-            retried = await self.get_by_id(deterministic_id) or await self.get_by_email(user_email)
+            retried = await self.get_by_id(deterministic_id) or await self.get_by_email(
+                user_email
+            )
             if retried:
                 return retried, False
             raise

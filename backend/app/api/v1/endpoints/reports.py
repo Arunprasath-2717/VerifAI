@@ -37,7 +37,10 @@ router = APIRouter(prefix="/reports", tags=["Reports & Analytics"])
     "/analytics",
     response_model=ReportsAnalyticsResponse,
     summary="Get Verification and Model Analytics",
-    description="Aggregates model usage frequency, evidence source distributions, and historical verification trajectories.",
+    description=(
+        "Aggregates model usage, evidence sources, and historical "
+        "verification activity."
+    ),
 )
 async def get_reports_analytics(
     timeframe: str = Query(default="30D", description="Timeframe: 7D, 30D, 90D, 1Y"),
@@ -51,42 +54,115 @@ async def get_reports_analytics(
 
     days_map = {"7D": 7, "30D": 30, "90D": 90, "1Y": 365}
     num_days = days_map.get(timeframe.upper().strip(), 30)
-    start_date = now - timedelta(days=num_days)
+    # Include today and the preceding N-1 complete UTC calendar days.
+    start_date = (now - timedelta(days=num_days - 1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    end_date = (now + timedelta(days=1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
-    # 1. Verification aggregate counts in timeframe
-    jobs_stmt = select(VerificationJob).where(
+    # 1. Aggregate in SQL. Avoid materializing every VerificationJob (and
+    # evidence timestamp) over a potentially year-long reporting period.
+    totals_stmt = select(
+        func.count(VerificationJob.id),
+        func.coalesce(func.sum(VerificationJob.total_claims), 0),
+        func.coalesce(func.sum(VerificationJob.supported_claims), 0),
+        func.coalesce(func.sum(VerificationJob.contradicted_claims), 0),
+        func.coalesce(func.sum(VerificationJob.unknown_claims), 0),
+        func.coalesce(
+            func.sum(func.coalesce(VerificationJob.trust_score, 0.0)), 0.0
+        ),
+    ).where(
         VerificationJob.owner_id == effective_owner,
         VerificationJob.created_at >= start_date,
+        VerificationJob.created_at < end_date,
     )
-    jobs = (await db.execute(jobs_stmt)).scalars().all()
-    total_verifs = len(jobs)
+    (
+        total_verifs,
+        total_claims,
+        total_supported,
+        total_contradicted,
+        total_unknown,
+        summed_trust,
+    ) = (await db.execute(totals_stmt)).one()
 
-    total_claims = sum(j.total_claims for j in jobs)
-    total_supported = sum(j.supported_claims for j in jobs)
-    total_contradicted = sum(j.contradicted_claims for j in jobs)
-    total_unknown = sum(j.unknown_claims for j in jobs)
-
-    avg_trust = (
-        round(sum((j.trust_score or 0.0) for j in jobs) / total_verifs, 2)
-        if total_verifs > 0
-        else 0.94
+    avg_trust = round(summed_trust / total_verifs, 2) if total_verifs else 0.0
+    supported_pct = (
+        round(total_supported / total_claims * 100, 1) if total_claims else 0.0
     )
-    supported_pct = round((total_supported / total_claims * 100), 1) if total_claims > 0 else 78.5
-    contradicted_pct = round((total_contradicted / total_claims * 100), 1) if total_claims > 0 else 14.2
-    unknown_pct = round((total_unknown / total_claims * 100), 1) if total_claims > 0 else 7.3
+    contradicted_pct = (
+        round(total_contradicted / total_claims * 100, 1) if total_claims else 0.0
+    )
+    unknown_pct = round(total_unknown / total_claims * 100, 1) if total_claims else 0.0
 
-    # 2. Timeseries Chart Data
+    # 2. Fetch daily GROUP BY aggregates (at most 365 rows per series).
+    # For PostgreSQL, explicitly convert timestamptz to UTC before date().
+    bind_getter = getattr(db, "get_bind", None)
+    bind = bind_getter() if callable(bind_getter) else None
+    postgres = getattr(getattr(bind, "dialect", None), "name", "") == "postgresql"
+
+    def utc_date(column):
+        timestamp = func.timezone("UTC", column) if postgres else column
+        return func.date(timestamp)
+
+    job_date = utc_date(VerificationJob.created_at)
+    job_daily_stmt = (
+        select(
+            job_date,
+            func.count(VerificationJob.id),
+            func.coalesce(func.sum(VerificationJob.total_claims), 0),
+        )
+        .where(
+            VerificationJob.owner_id == effective_owner,
+            VerificationJob.created_at >= start_date,
+            VerificationJob.created_at < end_date,
+        )
+        .group_by(job_date)
+    )
+    job_daily_rows = (await db.execute(job_daily_stmt)).all()
+    jobs_by_day = {
+        day.isoformat() if hasattr(day, "isoformat") else str(day):
+            (int(count), int(claims))
+        for day, count, claims in job_daily_rows
+        if day is not None
+    }
+
+    evidence_date = utc_date(RetrievedEvidence.created_at)
+    evidence_daily_stmt = (
+        select(evidence_date, func.count(RetrievedEvidence.id))
+        .join(ExtractedClaim, RetrievedEvidence.claim_id == ExtractedClaim.id)
+        .join(VerificationJob, ExtractedClaim.verification_id == VerificationJob.id)
+        .where(
+            VerificationJob.owner_id == effective_owner,
+            RetrievedEvidence.created_at >= start_date,
+            RetrievedEvidence.created_at < end_date,
+        )
+        .group_by(evidence_date)
+    )
+    evidence_daily_rows = (await db.execute(evidence_daily_stmt)).all()
+    evidence_by_day = {
+        day.isoformat() if hasattr(day, "isoformat") else str(day): int(count)
+        for day, count in evidence_daily_rows
+        if day is not None
+    }
+
     chart_points: list[ChartPointSchema] = []
     step_days = 1 if num_days <= 30 else (3 if num_days <= 90 else 14)
     current_cursor = start_date
-    while current_cursor < now:
-        next_cursor = min(current_cursor + timedelta(days=step_days), now)
-        v_count = sum(
-            1 for j in jobs if current_cursor <= j.created_at < next_cursor
-        )
-        c_count = sum(
-            j.total_claims for j in jobs if current_cursor <= j.created_at < next_cursor
-        )
+    while current_cursor < end_date:
+        next_cursor = min(current_cursor + timedelta(days=step_days), end_date)
+        verifications = 0
+        claims = 0
+        evidence = 0
+        day_cursor = current_cursor
+        while day_cursor < next_cursor:
+            day_key = day_cursor.date().isoformat()
+            day_verifs, day_claims = jobs_by_day.get(day_key, (0, 0))
+            verifications += day_verifs
+            claims += day_claims
+            evidence += evidence_by_day.get(day_key, 0)
+            day_cursor += timedelta(days=1)
         day_label = (
             current_cursor.strftime("%a")
             if num_days <= 7
@@ -96,19 +172,22 @@ async def get_reports_analytics(
             ChartPointSchema(
                 day=day_label,
                 date=current_cursor.strftime("%Y-%m-%d"),
-                verifications=v_count,
-                claims=c_count,
-                evidence=max(c_count * 3, v_count * 2),
+                verifications=verifications,
+                claims=claims,
+                evidence=evidence,
             )
         )
         current_cursor = next_cursor
 
-    # 3. Model Usage Breakdown (from LLMRun)
+    # 3. Model Usage Breakdown: completed inference only, not failed probes.
+    # Previous versions counted invalid/failed attempted routes as productive use.
     model_usage_stmt = (
         select(LLMRun.model_name, func.count(LLMRun.id))
         .where(
             LLMRun.owner_id == effective_owner,
             LLMRun.started_at >= start_date,
+            LLMRun.started_at < end_date,
+            LLMRun.status == "COMPLETED",
         )
         .group_by(LLMRun.model_name)
         .order_by(desc(func.count(LLMRun.id)))
@@ -119,14 +198,6 @@ async def get_reports_analytics(
     for m_name, count in model_usage_rows:
         model_usage.append(ModelUsageItem(model=m_name, usage=count))
 
-    if not model_usage:
-        model_usage = [
-            ModelUsageItem(model="GPT-4o", usage=48),
-            ModelUsageItem(model="Claude 3.5 Sonnet", usage=36),
-            ModelUsageItem(model="Gemini 1.5 Pro", usage=28),
-            ModelUsageItem(model="Llama 3.3", usage=14),
-        ]
-
     # 4. Evidence Sources Breakdown
     evidence_stmt = (
         select(RetrievedEvidence.publisher, func.count(RetrievedEvidence.id))
@@ -135,6 +206,9 @@ async def get_reports_analytics(
         .where(
             VerificationJob.owner_id == effective_owner,
             VerificationJob.created_at >= start_date,
+            VerificationJob.created_at < end_date,
+            RetrievedEvidence.created_at >= start_date,
+            RetrievedEvidence.created_at < end_date,
         )
         .group_by(RetrievedEvidence.publisher)
         .order_by(desc(func.count(RetrievedEvidence.id)))
@@ -147,14 +221,6 @@ async def get_reports_analytics(
             evidence_sources.append(
                 EvidenceSourceDomainItem(domain=pub.strip(), count=count)
             )
-
-    if not evidence_sources:
-        evidence_sources = [
-            EvidenceSourceDomainItem(domain="Academic Registries", count=184),
-            EvidenceSourceDomainItem(domain="EPA / Regulatory", count=142),
-            EvidenceSourceDomainItem(domain="arXiv / Open Science", count=98),
-            EvidenceSourceDomainItem(domain="Private Vault Docs", count=64),
-        ]
 
     return ReportsAnalyticsResponse(
         timeframe=timeframe,

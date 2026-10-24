@@ -93,7 +93,7 @@ def test_save_returns_masked_key_and_never_raw(client: TestClient) -> None:
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["status"] == "Connected"
+    assert body["status"] == "Saved"
     assert body["keyMasked"] != RAW_KEY
     assert RAW_KEY not in resp.text
 
@@ -108,7 +108,7 @@ def test_credential_persists_and_is_encrypted_at_rest(
 
     listed = client.get("/api/v1/providers", headers=headers).json()
     openai = next(p for p in listed if p["id"] == "prov-openai")
-    assert openai["status"] == "Connected"
+    assert openai["status"] == "Saved"
     assert RAW_KEY not in str(listed)
 
     # Read the stored row directly and confirm only ciphertext is persisted.
@@ -180,9 +180,7 @@ def test_cross_user_access_is_isolated(client: TestClient) -> None:
 
     # Alice's credential is untouched by Bob's delete attempt.
     alice_view = client.get("/api/v1/providers", headers=alice).json()
-    assert (
-        next(p for p in alice_view if p["id"] == "prov-groq")["status"] == "Connected"
-    )
+    assert next(p for p in alice_view if p["id"] == "prov-groq")["status"] == "Saved"
 
 
 def test_unknown_provider_is_rejected(client: TestClient) -> None:
@@ -288,3 +286,53 @@ def test_test_route_uses_stored_key_and_persists_status(
     assert body["status"] == "VALID"
     assert seen["auth"] == f"Bearer {RAW_KEY}"
     assert RAW_KEY not in resp.text
+
+
+def test_custom_provider_can_be_saved_listed_and_tested(client: TestClient) -> None:
+    from app.api.v1.endpoints import providers as providers_module
+
+    headers, _ = _login(client, "custom_user")
+    custom_id = "prov-custom-myllm"
+    save_resp = client.post(
+        f"/api/v1/providers/{custom_id}/key",
+        json={
+            "apiKey": "sk-custom-secret-key-12345",
+            "name": "Enterprise Custom Gateway",
+            "baseUrl": "https://custom.internal.ai/v1",
+            "category": "cloud",
+        },
+        headers=headers,
+    )
+    assert save_resp.status_code == 200, save_resp.text
+    saved = save_resp.json()
+    assert saved["id"] == custom_id
+    assert saved["status"] == "Saved"
+    assert saved["baseUrl"] == "https://custom.internal.ai/v1"
+    assert saved["keyMasked"].startswith("sk-c")
+
+    # List providers includes the custom provider
+    list_resp = client.get("/api/v1/providers", headers=headers)
+    assert list_resp.status_code == 200
+    custom_items = [p for p in list_resp.json() if p["id"] == custom_id]
+    assert len(custom_items) == 1
+    assert custom_items[0]["status"] == "Saved"
+
+    # Test the custom provider endpoint with MockTransport
+    seen_url: list[str] = []
+
+    def custom_handler(request: httpx.Request) -> httpx.Response:
+        seen_url.append(str(request.url))
+        return httpx.Response(200, json={"data": []})
+
+    token = providers_module._CHECK_TRANSPORT.set(httpx.MockTransport(custom_handler))
+    try:
+        test_resp = client.post(f"/api/v1/providers/{custom_id}/test", headers=headers)
+    finally:
+        providers_module._CHECK_TRANSPORT.reset(token)
+
+    assert test_resp.status_code == 200
+    test_body = test_resp.json()
+    assert test_body["success"] is True
+    assert test_body["status"] == "VALID"
+    assert len(seen_url) == 1
+    assert seen_url[0] == "https://custom.internal.ai/v1/models"

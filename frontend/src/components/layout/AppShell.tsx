@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from 'motion/react';
+import '../../styles/OliveLightTheme.css';
+import './WorkspaceChrome.css';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { NotificationDrawer } from '../modals/NotificationDrawer';
@@ -41,6 +43,7 @@ export const MOTION_STAGGER = 0.04;
 
 interface AppShellProps {
   userSettings: UserSettings;
+  dataLoadErrors?: string[];
   notifications: NotificationItem[];
   onMarkAllNotificationsRead: () => void;
   searchQuery: string;
@@ -52,6 +55,7 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({
   userSettings,
+  dataLoadErrors = [],
   notifications,
   onMarkAllNotificationsRead,
   searchQuery,
@@ -69,6 +73,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const shouldReduceMotion = useReducedMotion();
   const isDark = theme === 'dark';
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
+  const isChatWorkspace = location.pathname === '/chat' || location.pathname.startsWith('/chat/');
 
   // --------------------------------------------------------------------------
   // 1. SCROLL PROGRESS INDICATOR (Kinetic Spring Smoothing)
@@ -122,10 +127,10 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   return (
     <div
-      className={`min-h-screen flex font-sans antialiased overflow-x-hidden transition-colors duration-500 relative ${
+      className={`min-h-screen flex font-sans antialiased overflow-x-clip transition-colors duration-500 relative ${!isDark ? 'verifai-olive-shell ' : ''}${
         isDark
           ? 'bg-[#181A20] text-slate-100 selection:bg-[#B6FF2E] selection:text-[#181A20]'
-          : 'bg-[#FFF9F2] text-[#2E0A12] selection:bg-[#800020] selection:text-[#FFF9F2]'
+          : 'bg-[#D8F3DC] text-[#1B4332] selection:bg-[#74C69D] selection:text-[#1B4332]'
       }`}
     >
       {/* ───────────────────────────────────────────────────────────────────
@@ -138,10 +143,10 @@ export const AppShell: React.FC<AppShellProps> = ({
           scaleX: shouldReduceMotion ? 1 : smoothScrollProgress,
           background: isDark
             ? 'linear-gradient(90deg, #B6FF2E 0%, #A3E823 50%, #B6FF2E 100%)'
-            : 'linear-gradient(90deg, #800020 0%, #D45060 50%, #800020 100%)',
+            : 'linear-gradient(90deg, #1B4332 0%, #74C69D 54%, #40916C 100%)',
           boxShadow: isDark
             ? '0 0 12px rgba(182, 255, 46, 0.65)'
-            : '0 0 10px rgba(128, 0, 32, 0.45)',
+            : '0 0 10px rgba(27, 67, 50, 0.30)',
         }}
       />
 
@@ -161,29 +166,30 @@ export const AppShell: React.FC<AppShellProps> = ({
             height: 520,
             background: isDark
               ? 'radial-gradient(circle, rgba(182, 255, 46, 0.045) 0%, rgba(182, 255, 46, 0) 70%)'
-              : 'radial-gradient(circle, rgba(128, 0, 32, 0.035) 0%, rgba(128, 0, 32, 0) 70%)',
+              : 'radial-gradient(circle, rgba(27, 67, 50, 0.035) 0%, rgba(27, 67, 50, 0) 70%)',
           }}
         />
       )}
 
-      {/* ───────────────────────────────────────────────────────────────────
-          SCENE 3: Desktop Fixed Sidebar Dock (Kinetic Spring Expansion)
-          ─────────────────────────────────────────────────────────────────── */}
+      {/* Desktop dock lives INSIDE its only animated layout column.
+          Sidebar and content never compete over different widths. */}
       <motion.div
-        className="hidden lg:block shrink-0 ml-4"
-        animate={{ width: isSidebarHovered ? 270 : 84 }}
+        className="verifai-sidebar-column hidden lg:block shrink-0 self-stretch pl-3"
+        animate={{ width: isSidebarHovered ? 272 : 76 }}
         transition={
           shouldReduceMotion
-            ? { duration: 0.1 }
-            : { duration: 1.0, ease: [0.16, 1, 0.3, 1] }
+            ? { duration: 0 }
+            : { duration: 0.9, ease: [0.22, 1, 0.36, 1] }
         }
       >
-        <Sidebar
-          userSettings={userSettings}
-          onHoverChange={setIsSidebarHovered}
-          theme={theme}
-          onLogout={onLogout}
-        />
+        <div className="sticky top-3 h-[calc(100dvh-1.5rem)] min-h-0">
+          <Sidebar
+            userSettings={userSettings}
+            onHoverChange={setIsSidebarHovered}
+            theme={theme}
+            onLogout={onLogout}
+          />
+        </div>
       </motion.div>
 
       {/* ───────────────────────────────────────────────────────────────────
@@ -209,7 +215,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                   ? { duration: MOTION_DURATIONS.fast }
                   : { ...MOTION_EASINGS.spring, stiffness: 320, damping: 30 }
               }
-              className="relative z-50 h-full w-[280px] shadow-2xl"
+              className="relative z-50 h-full w-[min(280px,calc(100vw-24px))] shadow-2xl"
             >
               <Sidebar
                 userSettings={userSettings}
@@ -226,28 +232,33 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* ───────────────────────────────────────────────────────────────────
           SCENE 5: Main Workspace Container & Dynamic Sticky Header
           ─────────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col px-4 sm:px-8 py-6 max-w-[1600px] mx-auto w-full min-w-0 transition-all duration-500">
-        <header
-          className={`sticky top-0 z-30 transition-all duration-300 -mx-4 sm:-mx-8 px-4 sm:px-8 pt-2 pb-4 ${
-            isScrolled
-              ? isDark
-                ? 'bg-[#181A20]/80 backdrop-blur-md border-b border-[#333742]/60 shadow-lg shadow-black/20'
-                : 'bg-[#FFF9F2]/80 backdrop-blur-md border-b border-[#E9D6C4]/60 shadow-md shadow-[#800020]/05'
-              : 'bg-transparent'
-          }`}
-        >
-          <Topbar
-            userSettings={userSettings}
-            notifications={notifications}
-            onOpenNotifications={() => setIsNotificationsOpen(true)}
-            onOpenMobileMenu={() => setIsMobileDrawerOpen(true)}
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange}
-            theme={theme}
-            onToggleTheme={onToggleTheme}
-            onLogout={onLogout}
-          />
-        </header>
+      <div className={`verifai-workspace flex-1 flex flex-col min-w-0 w-full px-3 sm:px-5 py-3 ${isChatWorkspace ? 'lg:px-3 xl:px-4' : 'lg:px-6 xl:px-8'}`}>
+        <div className={`verifai-workspace-container flex-1 flex flex-col w-full min-w-0 ${isChatWorkspace ? 'max-w-none' : 'max-w-[1800px] mx-auto'}`}>
+          <header
+            className="verifai-workspace-header sticky top-2 z-30 w-full min-w-0 pb-3"
+          >
+            <div className={`verifai-topbar-frame rounded-2xl border px-3 sm:px-4 lg:px-5 py-2.5 transition-[box-shadow,border-color] duration-300 ${
+              isDark
+                ? isScrolled
+                  ? 'bg-[#23262F]/95 border-[#414651] shadow-xl shadow-black/20 backdrop-blur-xl'
+                  : 'bg-[#23262F]/95 border-[#333742] shadow-sm backdrop-blur-xl'
+                : isScrolled
+                  ? 'bg-white/95 border-[#74C69D] shadow-[0_12px_32px_-20px_rgba(27,67,50,0.28)] backdrop-blur-xl'
+                  : 'bg-white/95 border-[#D8F3DC] shadow-[0_5px_18px_-15px_rgba(27,67,50,0.22)] backdrop-blur-xl'
+            }`}>
+              <Topbar
+                userSettings={userSettings}
+                notifications={notifications}
+                onOpenNotifications={() => setIsNotificationsOpen(true)}
+                onOpenMobileMenu={() => setIsMobileDrawerOpen(true)}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                theme={theme}
+                onToggleTheme={onToggleTheme}
+                onLogout={onLogout}
+              />
+            </div>
+          </header>
 
         {/* ─────────────────────────────────────────────────────────────────
             SCENE 6: Dynamic Page Content (Kinetic Route Transitions)
@@ -255,6 +266,14 @@ export const AppShell: React.FC<AppShellProps> = ({
         <main
           className={`flex-1 w-full min-w-0 mt-2 ${!isDashboard ? 'non-dashboard-workspace' : ''}`}
         >
+          {dataLoadErrors.length > 0 && (
+            <div role="alert" className="mb-4 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
+              Some account data could not be loaded. Refresh after restoring the connection.
+              <ul className="mt-2 space-y-1 list-disc pl-4">
+                {dataLoadErrors.map(message => <li key={message}>{message}</li>)}
+              </ul>
+            </div>
+          )}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
@@ -283,6 +302,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             </motion.div>
           </AnimatePresence>
         </main>
+        </div>
       </div>
 
       {/* ───────────────────────────────────────────────────────────────────

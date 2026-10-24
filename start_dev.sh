@@ -23,7 +23,8 @@ fi
 # 2. Check / Start FastAPI backend on port 8000
 if ! lsof -i :8000 >/dev/null 2>&1 && ! curl -s http://localhost:8000/api/v1/health >/dev/null 2>&1; then
   echo "[+] Launching FastAPI backend on http://localhost:8000..."
-  nohup "$SCRIPT_DIR/.venv/bin/python" -m uvicorn app.main:app --app-dir "$SCRIPT_DIR/backend" --host 0.0.0.0 --port 8000 > /tmp/verifai_backend.log 2>&1 &
+  nohup "$SCRIPT_DIR/.venv/bin/python" -m uvicorn app.main:app --app-dir "$SCRIPT_DIR/backend" --host 0.0.0.0 --port 8000 </dev/null > /tmp/verifai_backend.log 2>&1 &
+  disown $! 2>/dev/null || true
   sleep 2
 else
   echo "[✓] FastAPI backend is already active on port 8000."
@@ -40,7 +41,8 @@ fi
 # 4. Check / Start Frontend dev server on port 3000
 if ! lsof -i :3000 >/dev/null 2>&1 && ! curl -s http://localhost:3000 >/dev/null 2>&1; then
   echo "[+] Launching Frontend dev server on http://localhost:3000..."
-  (cd "$SCRIPT_DIR/frontend" && nohup npm run dev > /tmp/verifai_frontend.log 2>&1 &)
+  (cd "$SCRIPT_DIR/frontend" && nohup npm run dev </dev/null > /tmp/verifai_frontend.log 2>&1 &)
+  disown $! 2>/dev/null || true
   sleep 3
 fi
 

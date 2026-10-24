@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { VerificationRecord, ClaimItem, VerificationStatus } from '../types';
+import type { VerificationRecord, ClaimItem, VerificationStatus, VerificationEvidence, VerificationJudge, VerificationAuditEntry } from '../types';
 
 export interface VerificationCreatePayload {
   text?: string;
@@ -27,17 +27,18 @@ export interface BackendEvidence {
   snippet: string;
   retriever_name: string;
   evidence_source: string;
-  relevance_score?: number;
-  authority_score?: number;
+  document_title?: string | null;
+  relevance_score?: number | null;
+  authority_score?: number | null;
 }
 
 export interface BackendJudgeEvaluation {
   id: string;
   judge_name: string;
   judgment: string;
-  confidence?: number;
-  rationale?: string;
-  evidence_references?: any;
+  confidence?: number | null;
+  rationale?: string | null;
+  evidence_references?: string[] | null;
 }
 
 export interface BackendClaim {
@@ -103,34 +104,80 @@ export function adaptBackendVerificationToRecord(job: BackendVerificationRespons
   const timeFormatted = validDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
   let totalEvidence = 0;
-  const mappedClaims: ClaimItem[] = (job.claims || []).map((c: any) => {
-    totalEvidence += (c.evidence || []).length;
-    const topEv = c.evidence?.[0];
+  const mappedClaims: ClaimItem[] = (job.claims || []).map((c: BackendClaim, index: number) => {
+    // Preserve every evidence and judge record, rather than only the first
+    // evidence snippet. Tabs must reflect the actual verification response.
+    const evidence: VerificationEvidence[] = (c.evidence || []).map((entry, evidenceIndex) => ({
+      id: entry.id || `claim-${index}-evidence-${evidenceIndex}`,
+      snippet: entry.snippet || '',
+      sourceUrl: entry.source_url || undefined,
+      sourceTitle: entry.source_title || undefined,
+      publisher: entry.publisher || undefined,
+      publicationDate: entry.publication_date || undefined,
+      retrieverName: entry.retriever_name || undefined,
+      evidenceSource: entry.evidence_source || undefined,
+      documentTitle: entry.document_title || undefined,
+      relevanceScore: typeof entry.relevance_score === 'number' ? entry.relevance_score : undefined,
+      authorityScore: typeof entry.authority_score === 'number' ? entry.authority_score : undefined,
+    }));
+    const judges: VerificationJudge[] = (c.judges || []).map((judge, judgeIndex) => ({
+      id: judge.id || `claim-${index}-judge-${judgeIndex}`,
+      judgeName: judge.judge_name,
+      judgment: judge.judgment,
+      confidence: typeof judge.confidence === 'number' ? judge.confidence : undefined,
+      rationale: judge.rationale || undefined,
+      evidenceReferences: judge.evidence_references || undefined,
+    }));
+    totalEvidence += evidence.length;
+    const topEv = evidence[0];
     return {
-      id: c.id || `claim-${Math.random().toString(36).substring(2, 7)}`,
-      statement: c.claim_text || c.statement || '',
-      status: (c.verdict || c.status || 'UNKNOWN') as VerificationStatus,
-      confidence: c.confidence !== undefined && c.confidence !== null ? c.confidence : 0.85,
-      evidenceSnippet: topEv?.snippet || c.evidenceSnippet,
-      sourceTitle: topEv?.source_title || topEv?.publisher || c.sourceTitle || 'Authoritative Source',
-      sourceUrl: topEv?.source_url || c.sourceUrl,
-      domain: topEv?.publisher || (topEv?.source_url ? (() => { try { return new URL(topEv.source_url).hostname; } catch { return 'registry.org'; } })() : (c.domain || 'registry.org')),
-      retrievedAt: c.retrievedAt || 'Verified by Engine',
-      contradictionReason: (c.verdict === 'CONTRADICTED' || c.status === 'CONTRADICTED') ? (c.explanation || c.contradictionReason) : undefined,
+      id: c.id || `claim-${index}`,
+      statement: c.claim_text || (c as any).statement || '',
+      status: (c.verdict || (c as any).status || 'UNKNOWN') as VerificationStatus,
+      confidence: typeof c.confidence === 'number' ? c.confidence : undefined,
+      evidence,
+      judges,
+      evidenceSnippet: topEv?.snippet || (c as any).evidenceSnippet,
+      sourceTitle: topEv?.sourceTitle || topEv?.publisher || (c as any).sourceTitle,
+      sourceUrl: topEv?.sourceUrl || (c as any).sourceUrl,
+      domain: topEv?.sourceUrl ? (() => {
+        try { return new URL(topEv.sourceUrl).hostname; } catch { return undefined; }
+      })() : (c as any).domain,
+      retrievedAt: (c as any).retrievedAt,
+      explanation: c.explanation || undefined,
+      unknownReason: c.unknown_reason || undefined,
+      contradictionReason: (c.verdict === 'CONTRADICTED' || (c as any).status === 'CONTRADICTED')
+        ? c.explanation || (c as any).contradictionReason : undefined,
     };
   });
+  const auditTrail: VerificationAuditEntry[] = (job.audit_trail || []).map(
+    (event: BackendAuditRecord, index: number) => ({
+      id: event.id || `audit-${index}`,
+      stage: event.stage,
+      eventType: event.event_type,
+      status: event.status,
+      message: event.message,
+      timestamp: event.timestamp,
+    })
+  );
 
-  // Calculate overall status
-  let overallStatus: VerificationStatus = 'SUPPORTED';
-  if (job.contradicted_claims > 0 || job.status === 'CONTRADICTED') {
+  // Distinguish pipeline status from actual claim judgments. Missing, partial,
+  // or failed evaluations must never be interpreted as fully SUPPORTED.
+  let overallStatus: VerificationStatus = 'UNKNOWN';
+  if (job.status === 'FAILED' || job.status === 'UNAVAILABLE') {
+    overallStatus = job.status;
+  } else if (job.contradicted_claims > 0 || job.status === 'CONTRADICTED') {
     overallStatus = 'CONTRADICTED';
-  } else if ((job.unknown_claims > 0 && job.supported_claims === 0) || job.status === 'UNKNOWN') {
+  } else if (job.unknown_claims > 0 || job.status === 'UNKNOWN') {
     overallStatus = 'UNKNOWN';
-  } else if (job.status === 'FAILED') {
-    overallStatus = 'FAILED';
+  } else if (job.supported_claims > 0 && job.supported_claims === job.total_claims) {
+    overallStatus = 'SUPPORTED';
   }
 
-  const recordId = job.verification_id || job.id || job.job_id || `verif-${Date.now()}`;
+  const recordId = job.verification_id || job.id || job.job_id;
+  if (!recordId) {
+    throw new Error('Verification response does not contain a valid record ID.');
+  }
   const inputText = job.input_text || job.originalAnswer || job.query || '';
 
   return {
@@ -146,10 +193,9 @@ export function adaptBackendVerificationToRecord(job: BackendVerificationRespons
     contradictedCount: job.contradicted_claims ?? mappedClaims.filter(c => c.status === 'CONTRADICTED').length,
     unknownCount: job.unknown_claims ?? mappedClaims.filter(c => c.status === 'UNKNOWN').length,
     evidenceCount: totalEvidence,
-    model: 'Tri-Model Calibrated Consensus',
-    modelsUsed: ['GPT-4o', 'Claude 3.5', 'Gemini 1.5'],
+    model: 'Backend verification',
     claims: mappedClaims,
-    verificationMode: 'PRIVATE_KB_PLUS_WEB',
+    auditTrail,
   };
 }
 
@@ -168,6 +214,8 @@ export const verificationApi = {
     const raw = await apiClient<BackendVerificationResponse>('/verification', {
       method: 'POST',
       body: JSON.stringify(body),
+      // Verification may perform multiple sequential retrieval/judge operations.
+      timeoutMs: 120000,
     });
     return adaptBackendVerificationToRecord(raw);
   },

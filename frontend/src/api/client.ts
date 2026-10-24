@@ -3,11 +3,10 @@
  * Normalizes HTTP requests, handles Bearer authentication, and standardizes error responses.
  */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:8000/api/v1'
-    : '/api/v1');
+// Same-origin calls work with Vite's /api proxy in development and a reverse
+// proxy in production. An explicit override is still supported for deployments
+// where the API is hosted on another origin.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export interface ApiErrorDetails {
   code?: string;
@@ -35,20 +34,24 @@ export class ApiError extends Error {
 
 export function getAuthToken(): string | null {
   try {
-    return localStorage.getItem('verifai_token');
+    return sessionStorage.getItem('verifai_token')
+      || localStorage.getItem('verifai_token');
   } catch {
     return null;
   }
 }
 
-export function setAuthToken(token: string | null): void {
+/** Session-only login makes "Keep me signed in" an actual choice. */
+export function setAuthToken(token: string | null, persistent = true): void {
   try {
+    for (const storage of [localStorage, sessionStorage]) {
+      storage.removeItem('verifai_token');
+      storage.removeItem('verifai_authenticated');
+    }
     if (token) {
-      localStorage.setItem('verifai_token', token);
-      localStorage.setItem('verifai_authenticated', 'true');
-    } else {
-      localStorage.removeItem('verifai_token');
-      localStorage.removeItem('verifai_authenticated');
+      const storage = persistent ? localStorage : sessionStorage;
+      storage.setItem('verifai_token', token);
+      storage.setItem('verifai_authenticated', 'true');
     }
   } catch {}
 }

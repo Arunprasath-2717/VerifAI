@@ -47,8 +47,8 @@ def test_readiness_probe_returns_503_when_unready(
     assert data["dependencies"]["database"]["status"] == "unconfigured"
     assert data["dependencies"]["storage"]["configured"] is False
     assert data["dependencies"]["storage"]["status"] == "unconfigured"
-    assert data["dependencies"]["auth"]["configured"] is False
-    assert data["dependencies"]["auth"]["status"] == "unconfigured"
+    assert data["dependencies"]["auth"]["configured"] is True
+    assert data["dependencies"]["auth"]["status"] == "available"
     # Ensure no passwords or sensitive URLs leaked in response
     assert "password" not in str(data)
     assert "postgresql://" not in str(data)
@@ -74,20 +74,67 @@ def test_readiness_probe_database_unavailable_mocked(client: TestClient) -> None
 
 
 def test_readiness_probe_database_available_mocked(client: TestClient) -> None:
-    """Verify readiness reflects mocked DB availability (still 503 unready)."""
+    """A configured JWT service and responsive DB can actually become ready."""
     mock_db_result = {"configured": True, "status": "available"}
     with patch(
         "app.api.v1.endpoints.health.check_database_connectivity",
         new=AsyncMock(return_value=mock_db_result),
     ):
         response = client.get("/api/v1/ready")
-        assert response.status_code == 503
-        assert "x-request-id" in response.headers
-        data = response.json()
-        assert data["dependencies"]["database"] == {
-            "configured": True,
-            "status": "available",
-        }
+    assert response.status_code == 200
+    assert "x-request-id" in response.headers
+    data = response.json()
+    assert data["status"] == "ready"
+    assert data["ready"] is True
+    assert data["dependencies"]["database"] == mock_db_result
+    assert data["dependencies"]["storage"] == {
+        "configured": True,
+        "status": "available",
+        "backend": "database",
+    }
+    assert data["dependencies"]["auth"] == {
+        "configured": True,
+        "status": "available",
+        "check": "configuration_only",
+    }
+
+
+def test_readiness_fails_closed_when_jwt_missing(
+    app: FastAPI, client: TestClient
+) -> None:
+    unconfigured_auth = Settings(
+        _env_file=None,
+        ENVIRONMENT="testing",
+        JWT_SECRET="",
+        FIREBASE_AUTH_ENABLED=False,
+    )
+    app.dependency_overrides[get_settings] = lambda: unconfigured_auth
+    with patch(
+        "app.api.v1.endpoints.health.check_database_connectivity",
+        new=AsyncMock(return_value={"configured": True, "status": "available"}),
+    ):
+        response = client.get("/api/v1/ready")
+    assert response.status_code == 503
+    assert response.json()["dependencies"]["auth"]["status"] == "unconfigured"
+
+
+def test_readiness_fails_when_firebase_enabled_without_project(
+    app: FastAPI, client: TestClient
+) -> None:
+    incomplete_auth = Settings(
+        _env_file=None,
+        ENVIRONMENT="testing",
+        FIREBASE_AUTH_ENABLED=True,
+        FIREBASE_PROJECT_ID="",
+    )
+    app.dependency_overrides[get_settings] = lambda: incomplete_auth
+    with patch(
+        "app.api.v1.endpoints.health.check_database_connectivity",
+        new=AsyncMock(return_value={"configured": True, "status": "available"}),
+    ):
+        response = client.get("/api/v1/ready")
+    assert response.status_code == 503
+    assert response.json()["dependencies"]["auth"]["status"] == "unconfigured"
 
 
 def test_unversioned_root_health_not_mounted_negative_control(

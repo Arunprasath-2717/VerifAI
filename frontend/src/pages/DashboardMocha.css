@@ -1,0 +1,380 @@
+/*
+ * VerifAI light-dashboard mirror of the existing dark dashboard.
+ * Shared JSX / live data / controls; this stylesheet applies only to .mocha-dashboard
+ * (the wrapper is NOT present in dark mode).
+ * Palette: white #FFF, pale mint #D8F3DC, mint #74C69D, olive #40916C,
+ * deep green #1B4332; literal black for primary light-theme typography.
+ */
+.mocha-dashboard {
+  --ld-bg: #ffffff;
+  --ld-ink: #000000;
+  --ld-quiet: #355747;
+  --ld-line: #B9E2C8;
+  --ld-soft: #EFFAF1;
+  --ld-mint: #74C69D;
+  --ld-green: #40916C;
+  --ld-deep: #1B4332;
+  color:var(--ld-ink);
+  letter-spacing:-.012em;
+}
+.mocha-dashboard ::selection { background:#74C69D;color:#000; }
+/* Match the dark dashboard's vertical cadence, not the older separate light tree. */
+.mocha-dashboard.space-y-7 > :not([hidden]) ~ :not([hidden]) { margin-top:18px; }
+
+/* Hero material: existing digital orb/energy-line artwork, recolored to mint. */
+.mocha-dashboard .mocha-dashboard-hero {
+  border:1px solid #ACDDC0 !important;
+  border-radius:17px !important;
+  min-height:265px;
+  background-color:#F0FFF2 !important;
+  background-size:cover !important;
+  background-position:center right !important;
+  background-repeat:no-repeat !important;
+  box-shadow:0 14px 36px -32px rgba(27,67,50,.27) !important;
+  isolation:isolate;
+}
+.mocha-dashboard .mocha-dashboard-hero:before,
+.mocha-dashboard .mocha-dashboard-hero:after { display:none !important; }
+.mocha-dashboard .mocha-dashboard-hero > .relative.z-10 {
+  gap:20px;
+}
+.mocha-dashboard .mocha-hero-kicker > span {
+  background:#E6F9E9 !important;
+  border:1px solid #D1EFDA !important;
+  box-shadow:none !important;
+  color:#000 !important;
+  padding:6px 12px !important;
+  font-size:11px;
+  letter-spacing:.04em;
+}
+.mocha-dashboard .mocha-hero-kicker > span > span:first-child {
+  background:#40916C !important;
+  box-shadow:none !important;
+}
+.mocha-dashboard .mocha-dashboard-hero h1 {
+  font-weight:830;
+  font-size:clamp(24px,2.2vw,36px);
+  letter-spacing:-.03em;
+  line-height:1.2;
+  color:#000 !important;
+}
+.verifai-olive-shell .mocha-dashboard .mocha-dashboard-hero h1 span {
+  color:#1B4332 !important;
+  -webkit-text-fill-color:#1B4332 !important;
+}
+.mocha-dashboard .mocha-dashboard-intro {
+  color:#233D32 !important;
+  line-height:1.65;
+  font-size:14px;
+  max-width:610px;
+}
+.mocha-dashboard .mocha-hero-primary,
+.mocha-dashboard .mocha-hero-outline {
+  border-radius:11px !important;
+  min-height:43px;
+  padding:10px 16px !important;
+  color:#000 !important;
+  font-weight:760;
+  box-shadow:none !important;
+  transform:none;
+  transition:background-color .18s ease,border-color .18s ease !important;
+}
+.mocha-dashboard .mocha-hero-primary {
+  background:#74C69D !important;
+  border:1px solid #40916C !important;
+}
+.mocha-dashboard .mocha-hero-primary:hover { background:#9EDCB4 !important; }
+.mocha-dashboard .mocha-hero-outline {
+  background:#FFFFFFF2 !important;
+  border:1px solid #B2DEC3 !important;
+}
+.mocha-dashboard .mocha-hero-outline:hover { background:#EAF9EF !important;border-color:#74C69D !important;}
+.mocha-dashboard .mocha-hero-outline svg { color:#1B4332 !important; }
+
+/* Measured trust status is a factual detail, not a fabricated score. */
+.mocha-dashboard .mocha-trust-panel {
+  background:rgba(255,255,255,.96) !important;
+  border:1px solid #CBEBDA !important;
+  color:#000 !important;
+  border-radius:16px !important;
+  padding:19px 20px !important;
+  width:100% !important;
+  box-shadow:0 17px 34px -28px rgba(27,67,50,.32) !important;
+  backdrop-filter:blur(9px);
+}
+.mocha-dashboard .mocha-trust-panel :is(p,div,span) {
+  border-color:#E5F1EA;
+  color:#000 !important;
+}
+.mocha-dashboard .mocha-trust-panel > div:first-child > span:first-child {
+  font-size:11px;
+  letter-spacing:.05em;
+  color:#000 !important;
+}
+.mocha-dashboard .mocha-trust-panel > div:first-child > span:last-child {
+  background:#40916C !important;
+  box-shadow:0 0 0 4px #E6F9E9 !important;
+}
+.mocha-dashboard .mocha-trust-panel .font-mono.rounded-full {
+  background:#D8F3DC !important;
+  color:#000 !important;
+  border:1px solid #CAE7D3 !important;
+}
+.mocha-dashboard .mocha-trust-panel .border-t span {
+  font-size:11px;
+}
+.mocha-dashboard .mocha-trust-panel .border-t div > span:last-child {
+  color:#1B4332 !important;
+  font-weight:740;
+}
+.mocha-dashboard .mocha-trust-panel svg { color:#40916C !important; }
+
+/* Stats share the dark cards' markup: icon / Open / label / measured value. */
+.mocha-dashboard .lt-kpi-card {
+  background:#FFF !important;
+  border:1px solid #C2E5CD !important;
+  border-radius:16px !important;
+  min-height:158px;
+  padding:17px 18px !important;
+  box-shadow:0 11px 26px -27px rgba(27,67,50,.3) !important;
+  transform:none;
+  transition:border-color .2s ease,box-shadow .2s ease !important;
+}
+.mocha-dashboard .lt-kpi-card:before,
+.mocha-dashboard .lt-kpi-card:after { content:none !important; }
+.mocha-dashboard .lt-kpi-card > .absolute { display:none; }
+.mocha-dashboard .lt-kpi-card:hover {
+  border-color:#74C69D !important;
+  box-shadow:0 16px 26px -26px rgba(27,67,50,.4) !important;
+}
+.mocha-dashboard .lt-kpi-card .w-9.h-9 {
+  width:41px !important;
+  height:41px !important;
+  background:#E7F8EC !important;
+  border:1px solid #D0EDDA !important;
+  border-radius:12px !important;
+  color:#1B4332 !important;
+}
+.mocha-dashboard .lt-kpi-card .w-9.h-9 svg { color:#1B4332 !important; }
+.mocha-dashboard .lt-kpi-card .inline-flex.items-center.gap-1 {
+  background:#F0FAF3 !important;
+  color:#000 !important;
+  border:1px solid #D0EDDA !important;
+  font-size:11px !important;
+  padding:6px 11px !important;
+  border-radius:18px !important;
+}
+.mocha-dashboard .lt-kpi-card :is(p,h4,span) { color:#000 !important; }
+.mocha-dashboard .lt-kpi-card p.uppercase {
+  font-size:11px !important;
+  letter-spacing:.05em;
+  color:#3D5668 !important;
+}
+.mocha-dashboard .lt-kpi-card h4 {
+  font-size:33px !important;
+  line-height:1.02;
+  font-variant-numeric:tabular-nums;
+  color:#000 !important;
+  font-weight:840 !important;
+}
+.mocha-dashboard .lt-kpi-card .dashboard-stat-sparkline { display:none !important; }
+.mocha-dashboard .lt-kpi-card .flex.flex-col.items-end.gap-1 { gap:0 !important; }
+.mocha-dashboard .lt-kpi-card .flex.flex-col.items-end.gap-1 > span {
+  font-size:11px !important;
+  color:#344E5E !important;
+  white-space:nowrap;
+}
+.mocha-dashboard .lt-kpi-card > div:last-child { padding-top:5px; }
+
+/* Leaderboard shell and exact controls from the dark dashboard. */
+.mocha-dashboard .lt-section-card:not(.mocha-dashboard-hero) {
+  background:#FFF !important;
+  border:1px solid #BCE2C9 !important;
+  border-radius:17px !important;
+  box-shadow:0 11px 30px -32px rgba(27,67,50,.32) !important;
+}
+.mocha-dashboard .lt-section-card:not(.mocha-dashboard-hero) > .absolute { display:none !important; }
+.mocha-dashboard .lt-section-card > .relative.z-10.border-b,
+.mocha-dashboard .lt-section-card .relative.z-10.flex.border-b {
+  border-color:#D9EDE0 !important;
+}
+.mocha-dashboard .lt-section-card h3 {
+  font-size:19px;
+  font-weight:820;
+  letter-spacing:-.02em;
+  color:#000 !important;
+}
+.mocha-dashboard .lt-section-card h3 + span {
+  border:0 !important;
+  background:#D8F3DC !important;
+  border-radius:16px;
+  font-size:10px !important;
+  color:#000 !important;
+  white-space:nowrap;
+}
+.mocha-dashboard .lt-section-card p {
+  color:#354D64 !important;
+}
+.mocha-dashboard .lt-section-card .w-8.h-8 {
+  background:#E6F9EC !important;
+  color:#1B4332 !important;
+  border:1px solid #D1EED9 !important;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 > .p-1.rounded-xl {
+  background:#F5F8F6 !important;
+  border:1px solid #E1EFE5 !important;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 > .p-1.rounded-xl button {
+  color:#000 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 > .p-1.rounded-xl button[class*="bg-\\[\\#1B4332\\]"] {
+  background:#74C69D !important;
+  border-radius:9px;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 > button {
+  background:#FFF !important;
+  border:1px solid #ADDCC0 !important;
+  color:#000 !important;
+  box-shadow:none !important;
+  border-radius:11px;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 > button:hover { background:#EAF8ED !important; }
+.mocha-dashboard .mocha-empty-state {
+  background:#F8FCF9 !important;
+  border:1px solid #DAECE0 !important;
+  border-radius:13px !important;
+  box-shadow:none !important;
+  padding-block:20px !important;
+}
+.mocha-dashboard .mocha-empty-icon {
+  background:#DFF8E5 !important;
+  border-radius:13px !important;
+  color:#1B4332 !important;
+  box-shadow:none !important;
+}
+.mocha-dashboard .mocha-empty-state p.font-extrabold {
+  color:#000 !important;
+  font-size:13px;
+}
+.mocha-dashboard .mocha-empty-state p.mt-1 { color:#43566C !important; }
+.mocha-dashboard .mocha-empty-state button {
+  background:#FFF !important;
+  color:#000 !important;
+  border:1px solid #ADDCC0 !important;
+  font-size:12px;
+  min-height:39px;
+  border-radius:10px !important;
+}
+
+/* Scoped action engines adopt the same panel vocabulary, not a second UI. */
+.mocha-dashboard > section.space-y-4 {
+  border:1px solid #BFE3CA;
+  border-radius:16px;
+  background:#FFF;
+  padding:19px 20px 22px;
+}
+.mocha-dashboard > section.space-y-4 > .flex h3 {
+  font-size:18px;
+  font-weight:820;
+  color:#000 !important;
+}
+.mocha-dashboard > section.space-y-4 > .flex p { color:#425A67 !important; }
+.mocha-dashboard > section.space-y-4 .font-mono span { color:#1B4332 !important; }
+.mocha-dashboard .border-glow-card {
+  box-shadow:none !important;
+  transition:transform .2s ease,border-color .2s ease !important;
+}
+.mocha-dashboard .border-glow-card:hover { transform:translateY(-2px); }
+.mocha-dashboard .lt-progress-track { background:#E4F5E9 !important; }
+.mocha-dashboard .lt-progress-fill-primary { background:#40916C !important; }
+.mocha-dashboard .mocha-active-pill { background:#74C69D !important; color:#000 !important; }
+.mocha-dashboard .recharts-tooltip-wrapper { filter:drop-shadow(0 8px 14px rgba(27,67,50,.11)); }
+.mocha-dashboard :is(button,a,[role="link"],[tabindex="0"]):focus-visible {
+  outline:3px solid #40916C !important;
+  outline-offset:3px;
+}
+@media (max-width:1180px) {
+  .mocha-dashboard .mocha-dashboard-hero { min-height:0; }
+  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-8 { grid-column:span 7/span 7; }
+  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-4 { grid-column:span 5/span 5; }
+  .mocha-dashboard .lt-kpi-card { min-height:151px; }
+}
+@media (max-width:1023px) {
+  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-8,
+  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-4 { grid-column:auto; }
+  .mocha-dashboard .mocha-dashboard-hero {
+    background-position:62% center !important;
+  }
+  .mocha-dashboard .mocha-dashboard-hero .relative.z-10 > div:first-child { max-width:680px; }
+}
+@media (max-width:767px) {
+  .mocha-dashboard .mocha-dashboard-hero { border-radius:15px !important;background-position:75% center !important; }
+  .mocha-dashboard .mocha-dashboard-hero > .relative.z-10 { gap:0; }
+  .mocha-dashboard .mocha-dashboard-hero h1 { font-size:27px;letter-spacing:-.02em; }
+  .mocha-dashboard .mocha-dashboard-intro { font-size:13px; }
+  .mocha-dashboard .lt-kpi-card { padding:15px !important; min-height:140px; }
+  .mocha-dashboard .lt-kpi-card h4 { font-size:29px !important; }
+  .mocha-dashboard .lt-kpi-card .flex.items-end.justify-between { gap:8px; }
+  .mocha-dashboard .lt-kpi-card .flex.flex-col.items-end.gap-1 > span { white-space:normal;text-align:right; }
+  .mocha-dashboard .lt-section-card .flex.items-center.gap-3 { flex-wrap:wrap; }
+  .mocha-dashboard .lt-section-card h3 + span { display:none; }
+  .mocha-dashboard > section.space-y-4 { padding:16px; }
+}
+@media (max-width:440px) {
+  .mocha-dashboard .mocha-dashboard-hero .pt-2.flex { align-items:stretch; }
+  .mocha-dashboard .mocha-dashboard-hero .pt-2.flex button { flex:1 1 100%;justify-content:center; }
+  .mocha-dashboard .lt-kpi-card p.uppercase { font-size:10px !important; }
+  .mocha-dashboard .lt-kpi-card .inline-flex.items-center.gap-1 { padding:4px 8px !important; }
+  .mocha-dashboard .lt-section-card > .relative.z-10.flex { gap:12px; }
+  .mocha-dashboard .lt-section-card .flex.items-center.gap-3 > button { width:100%;justify-content:center; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .mocha-dashboard :is(.lt-kpi-card,.border-glow-card,button) { transition-duration:.01ms !important; }
+  .mocha-dashboard .lt-card-entrance { animation:none !important; }
+}
+
+/* Resolve the authenticated light-shell button override explicitly; the first
+   verification action must retain its mint fill in default/hover/focus states. */
+html[data-theme="light"] .verifai-olive-shell .mocha-dashboard .mocha-dashboard-hero button.mocha-hero-primary,
+html:not(.dark) .verifai-olive-shell .mocha-dashboard .mocha-dashboard-hero button.mocha-hero-primary {
+  background-color:#74C69D !important;
+  background-image:none !important;
+  border-color:#40916C !important;
+  color:#000 !important;
+}
+html[data-theme="light"] .verifai-olive-shell .mocha-dashboard .mocha-dashboard-hero button.mocha-hero-primary:hover,
+html:not(.dark) .verifai-olive-shell .mocha-dashboard .mocha-dashboard-hero button.mocha-hero-primary:hover {
+  background-color:#9EDCB4 !important;
+}
+/* Controls may move to the next line; the words inside must never wrap. */
+.mocha-dashboard .lt-section-card > .relative.z-10.flex {
+  flex-wrap:wrap;
+  align-items:center;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 {
+  flex-shrink:0;
+  flex-wrap:nowrap;
+  gap:10px;
+}
+.mocha-dashboard .lt-section-card .flex.items-center.gap-3 button {
+  white-space:nowrap !important;
+  min-height:38px;
+}
+.mocha-dashboard .lt-kpi-card h4 {
+  font-family:inherit !important;
+  letter-spacing:-.03em;
+}
+@media (max-width:767px) {
+  .mocha-dashboard .mocha-dashboard-hero::before {
+    display:block !important;
+    content:"";
+    position:absolute;
+    inset:0;
+    border:0;
+    border-radius:0;
+    background:linear-gradient(180deg, rgba(255,255,255,.92) 0%,rgba(255,255,255,.81) 58%,rgba(255,255,255,.16) 100%);
+    pointer-events:none;
+  }
+}

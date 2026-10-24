@@ -16,3 +16,11 @@ mcp
 frontend/node_modules
 *.md
 !README.md
+
+# Never embed runtime secrets in image layers or build contexts.
+.env
+.env.*
+**/.env
+**/.env.*
+**/.env/**
+**/.env.*/**

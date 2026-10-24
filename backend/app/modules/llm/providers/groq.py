@@ -7,6 +7,7 @@ import httpx
 
 from app.core.config import Settings, get_settings
 from app.modules.llm.models import LLMExecutionResult
+from app.modules.llm.providers.byok_transport import CHAT_PROVIDER_TRANSPORT
 from app.modules.llm.providers.interface import BaseLLMProvider
 from app.modules.token_budget.estimator import TokenEstimator
 
@@ -67,7 +68,9 @@ class GroqProvider(BaseLLMProvider):
         last_error = None
         last_status_code = None
 
-        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
+        async with httpx.AsyncClient(
+            timeout=timeout_seconds, transport=CHAT_PROVIDER_TRANSPORT.get()
+        ) as client:
             for attempt in range(max_retries + 1):
                 try:
                     resp = await client.post(url, headers=headers, json=payload)
@@ -130,7 +133,10 @@ class GroqProvider(BaseLLMProvider):
                         status="FAILED",
                         latency_ms=round(elapsed, 2),
                         error_code=f"HTTP_{resp.status_code}",
-                        error_message=f"Groq error ({resp.status_code}): {resp.text[:300]}",
+                        error_message=(
+                            f"Provider returned HTTP {resp.status_code}. "
+                            "Check the key, rate limit and model availability."
+                        ),
                         retry_count=retries_used,
                     )
                 except (httpx.TimeoutException, httpx.NetworkError) as net_err:

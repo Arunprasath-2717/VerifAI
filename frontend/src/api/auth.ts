@@ -20,89 +20,54 @@ export interface TokenResponse {
 
 export interface RegisterPayload {
   email: string;
+  username: string;
   password: string;
-  username?: string;
-  full_name?: string;
-  terms_accepted?: boolean;
+  terms_accepted: boolean;
+}
+
+export interface UsernameAvailability {
+  username: string;
+  available: boolean;
 }
 
 export interface LoginPayload {
-  email?: string;
-  username?: string;
-  email_or_username?: string;
-  username_or_email?: string;
+  email_or_username: string;
   password: string;
 }
 
 export const authApi = {
+  async checkUsername(username: string): Promise<UsernameAvailability> {
+    return apiClient<UsernameAvailability>('/auth/username-availability', {
+      method: 'GET',
+      params: { username: username.trim().toLowerCase() },
+      timeoutMs: 10000,
+    });
+  },
+
   async register(data: RegisterPayload): Promise<UserResponse> {
-    const base = (data.username || data.full_name || data.email.split('@')[0] || 'user')
-      .replace(/[^a-zA-Z0-9_-]/g, '_')
-      .toLowerCase();
-    
-    let cleanUsername = base.length < 3 ? `${base}_usr` : base.slice(0, 64);
-
-    try {
-      const user = await apiClient<UserResponse>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: data.email.trim().toLowerCase(),
-          username: cleanUsername,
-          password: data.password,
-          terms_accepted: data.terms_accepted ?? true,
-        }),
-      });
-
-      // Automatically authenticate session upon successful registration
-      try {
-        await authApi.login({
-          email_or_username: data.email.trim().toLowerCase(),
-          password: data.password,
-        });
-      } catch {}
-
-      return user;
-    } catch (err: any) {
-      // If username was already taken, retry with random suffix if user didn't specify custom username
-      if (err?.message?.toLowerCase().includes('username') && !data.username) {
-        const uniqueUsername = `${cleanUsername.slice(0, 56)}_${Math.floor(1000 + Math.random() * 9000)}`;
-        const user = await apiClient<UserResponse>('/auth/register', {
-          method: 'POST',
-          body: JSON.stringify({
-            email: data.email.trim().toLowerCase(),
-            username: uniqueUsername,
-            password: data.password,
-          }),
-        });
-
-        try {
-          await authApi.login({
-            email_or_username: data.email.trim().toLowerCase(),
-            password: data.password,
-          });
-        } catch {}
-
-        return user;
-      }
-      throw err;
-    }
+    // Never silently replace a requested username with a random suffix.
+    // Availability previews are advisory; the backend unique index is final.
+    return apiClient<UserResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: data.username.trim().toLowerCase(),
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        terms_accepted: data.terms_accepted,
+      }),
+    });
   },
 
   async login(data: LoginPayload): Promise<TokenResponse> {
-    const identifier = (data.email_or_username || data.username_or_email || data.email || data.username || '').trim();
-    
-    const res = await apiClient<TokenResponse>('/auth/login', {
+    const result = await apiClient<TokenResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({
-        email_or_username: identifier,
+        email_or_username: data.email_or_username.trim(),
         password: data.password,
       }),
     });
-
-    if (res.access_token) {
-      setAuthToken(res.access_token);
-    }
-    return res;
+    if (result.access_token) setAuthToken(result.access_token);
+    return result;
   },
 
   async firebaseAuth(

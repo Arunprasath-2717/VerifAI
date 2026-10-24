@@ -78,7 +78,7 @@ class UserRegisterRequest(BaseModel):
                 "Username must be 3-64 characters and contain only "
                 "letters, numbers, dashes, or underscores."
             )
-        return clean
+        return clean.lower()
 
     @field_validator("password", mode="after")
     @classmethod

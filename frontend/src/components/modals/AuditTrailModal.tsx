@@ -21,13 +21,11 @@ export const AuditTrailModal: React.FC<AuditTrailModalProps> = ({
   if (!isOpen) return null;
 
   const auditDigest = {
-    auditProtocol: 'VERIFAI-CORROBORATE-V2.6',
+    exportType: 'verifai-session-verifications',
     generatedAt: new Date().toISOString(),
-    organization: 'VerifAI Enterprise Trust Vault',
-    auditor: user.fullName || user.name || 'Arun Prasath',
+    auditor: user.fullName || user.name || 'Unspecified',
     email: user.email,
     sessionVerificationCount: verifications.length,
-    merkleRootHash: '0x8f4c71a3992b8d0e74f67c3125ea03b44b8214f526365da98e6c43141f2378a9',
     records: verifications.map(v => ({
       id: v.id,
       query: v.query,
@@ -57,72 +55,60 @@ export const AuditTrailModal: React.FC<AuditTrailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#FFFDFA] dark:bg-[#1E2129] rounded-[2.5rem] w-full max-w-2xl border border-[#E9D6C4] dark:border-[#333742] shadow-2xl p-6 md:p-8 space-y-6 my-8 animate-in fade-in zoom-in-95 text-[#2E0A12] dark:text-white">
+      <div className="bg-[#FFFFFF] dark:bg-[#1E2129] rounded-2xl w-full max-w-2xl border border-[#74C69D] dark:border-[#333742] shadow-2xl p-5 sm:p-6 md:p-7 space-y-5 my-8 animate-in fade-in zoom-in-95 text-[#1B4332] dark:text-white">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#E9D6C4] dark:border-[#333742]">
+        <div className="flex items-center justify-between pb-4 border-b border-[#74C69D] dark:border-[#333742]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#800020] dark:bg-[#181A20] text-[#FBF1E3] dark:text-[#B6FF2E] flex items-center justify-center border border-[#800020] dark:border-[#B6FF2E]/30">
+            <div className="w-10 h-10 rounded-2xl bg-[#1B4332] dark:bg-[#181A20] text-[#D8F3DC] dark:text-[#B6FF2E] flex items-center justify-center border border-[#1B4332] dark:border-[#B6FF2E]/30">
               <FileCheck2 size={20} />
             </div>
             <div>
-              <h3 className="font-extrabold text-lg text-[#2E0A12] dark:text-white tracking-tight">
-                Institutional Audit Trail
+              <h3 className="font-extrabold text-lg text-[#1B4332] dark:text-white tracking-tight">
+                Verification Session Export
               </h3>
-              <p className="text-xs text-[#8A6A72] dark:text-slate-400 font-medium">
-                Cryptographically signed evidence ledger for regulatory compliance & audits
+              <p className="text-xs text-[#356B52] dark:text-slate-400 font-medium">
+                JSON export of visible verification records; no cryptographic signature is attached.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-[#FBF1E3] hover:bg-[#EFE0D1] text-[#6C3B45] dark:bg-[#181A20] dark:hover:bg-[#2A2E38] dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-[#D8F3DC] hover:bg-[#D8F3DC] text-[#356B52] dark:bg-[#181A20] dark:hover:bg-[#2A2E38] dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Cryptographic verification banner */}
-        <div className="p-4 bg-[#FBF1E3] dark:bg-[#181A20] rounded-2xl border border-[#E9D6C4] dark:border-[#333742] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#2E0A12] dark:text-slate-200 flex items-center gap-1.5">
-              <Hash size={14} className="text-[#800020] dark:text-[#B6FF2E]" />
-              Merkle Root Signature
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#D8AE9B]/30 text-[#800020] border border-[#D8AE9B] dark:bg-[#B6FF2E]/15 dark:text-[#B6FF2E] dark:border-[#B6FF2E]/30">
-              IMMUTABLE
-            </span>
-          </div>
-          <p className="font-mono text-[11px] text-[#6C3B45] dark:text-slate-300 break-all bg-[#FFFDFA] dark:bg-[#14161C] p-2.5 rounded-xl border border-[#E9D6C4] dark:border-[#2D313D]">
-            {auditDigest.merkleRootHash}
-          </p>
-        </div>
+        <p className="p-3 text-xs text-[#356B52] dark:text-slate-300 bg-[#D8F3DC] dark:bg-[#14161C] border border-[#74C69D] dark:border-[#333742] rounded-xl">
+          This export contains the verification data displayed in this session. It is not a signed Merkle ledger or an independently validated compliance artifact.
+        </p>
 
         {/* Audit summary metrics */}
         <div className="grid grid-cols-3 gap-3 text-xs">
-          <div className="p-3 bg-[#FBF1E3] dark:bg-[#181A20] rounded-2xl border border-[#E9D6C4] dark:border-[#333742]">
-            <span className="text-[#8A6A72] dark:text-slate-400 block font-medium">Auditor</span>
-            <span className="font-bold text-[#2E0A12] dark:text-white">{user.fullName || user.name || 'Arun Prasath'}</span>
+          <div className="p-3 bg-[#D8F3DC] dark:bg-[#181A20] rounded-2xl border border-[#74C69D] dark:border-[#333742]">
+            <span className="text-[#356B52] dark:text-slate-400 block font-medium">Auditor</span>
+            <span className="font-bold text-[#1B4332] dark:text-white">{user.fullName || user.name || 'Arun Prasath'}</span>
           </div>
-          <div className="p-3 bg-[#FBF1E3] dark:bg-[#181A20] rounded-2xl border border-[#E9D6C4] dark:border-[#333742]">
-            <span className="text-[#8A6A72] dark:text-slate-400 block font-medium">Verified Records</span>
-            <span className="font-bold text-[#2E0A12] dark:text-white">{verifications.length} verified</span>
+          <div className="p-3 bg-[#D8F3DC] dark:bg-[#181A20] rounded-2xl border border-[#74C69D] dark:border-[#333742]">
+            <span className="text-[#356B52] dark:text-slate-400 block font-medium">Verified Records</span>
+            <span className="font-bold text-[#1B4332] dark:text-white">{verifications.length} records</span>
           </div>
-          <div className="p-3 bg-[#FBF1E3] dark:bg-[#181A20] rounded-2xl border border-[#E9D6C4] dark:border-[#333742]">
-            <span className="text-[#8A6A72] dark:text-slate-400 block font-medium">Protocol</span>
-            <span className="font-bold text-[#2E0A12] dark:text-white">v2.6 CBER</span>
+          <div className="p-3 bg-[#D8F3DC] dark:bg-[#181A20] rounded-2xl border border-[#74C69D] dark:border-[#333742]">
+            <span className="text-[#356B52] dark:text-slate-400 block font-medium">Protocol</span>
+            <span className="font-bold text-[#1B4332] dark:text-white">JSON (unsigned)</span>
           </div>
         </div>
 
         {/* Code / JSON Preview */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <label className="font-bold text-[#2E0A12] dark:text-slate-200">Audit Ledger Payload</label>
+            <label className="font-bold text-[#1B4332] dark:text-slate-200">Audit Ledger Payload</label>
             <button
               onClick={handleCopy}
-              className="text-xs text-[#800020] dark:text-[#B6FF2E] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+              className="text-xs text-[#1B4332] dark:text-[#B6FF2E] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
             >
-              {copied ? <Check size={13} className="text-[#800020] dark:text-[#B6FF2E]" /> : <Copy size={13} />}
+              {copied ? <Check size={13} className="text-[#1B4332] dark:text-[#B6FF2E]" /> : <Copy size={13} />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
@@ -132,17 +118,17 @@ export const AuditTrailModal: React.FC<AuditTrailModalProps> = ({
         </div>
 
         {/* Footer actions */}
-        <div className="pt-2 flex justify-between items-center border-t border-[#E9D6C4] dark:border-[#333742]">
+        <div className="pt-2 flex justify-between items-center border-t border-[#74C69D] dark:border-[#333742]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-[#8A6A72] hover:text-[#2E0A12] dark:text-slate-400 dark:hover:text-white cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-[#356B52] hover:text-[#1B4332] dark:text-slate-400 dark:hover:text-white cursor-pointer"
           >
             Cancel
           </button>
           <div className="flex gap-2">
             <button
               onClick={handleDownload}
-              className="bg-[#800020] hover:bg-[#711C32] text-[#FBF1E3] dark:bg-[#B6FF2E] dark:hover:bg-[#A3E823] dark:text-[#181A20] px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              className="bg-[#1B4332] hover:bg-[#163E2D] text-[#D8F3DC] dark:bg-[#B6FF2E] dark:hover:bg-[#A3E823] dark:text-[#181A20] px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <Download size={14} />
               <span>Download JSON Trail</span>

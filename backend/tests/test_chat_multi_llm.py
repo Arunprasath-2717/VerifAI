@@ -1,7 +1,5 @@
 """Automated tests for Chat, Multi-LLM execution, SSE streaming, and History lifecycle."""
 
-import json
-
 import pytest
 from starlette.testclient import TestClient
 
@@ -25,7 +23,12 @@ def _register_and_login(
     """Helper to register and login a test user, returning (token, user_id)."""
     reg_res = client.post(
         "/api/v1/auth/register",
-        json={"email": email, "username": username, "password": "StrongPassword2026!", "terms_accepted": True},
+        json={
+            "email": email,
+            "username": username,
+            "password": "StrongPassword2026!",
+            "terms_accepted": True,
+        },
     )
     assert reg_res.status_code == 201
     user_id = reg_res.json()["id"]
@@ -165,18 +168,15 @@ def test_multi_llm_truthful_unavailable_state(client: TestClient):
             "verify": True,
         },
     )
-    assert prompt_resp.status_code == 200
-    data = prompt_resp.json()
-
-    assert data["conversation_id"] == conv_id
-    assert len(data["runs"]) == 2
-
-    # Zero mock text returned; structured UNAVAILABLE state
-    for run in data["runs"]:
-        assert run["status"] == "UNAVAILABLE"
-        assert run["error_code"] == "CREDENTIALS_MISSING"
-        assert "not configured" in run["error_message"].lower()
-        assert run["response"] is None
+    assert prompt_resp.status_code == 400
+    assert "verify" in prompt_resp.json()["error"]["message"].lower()
+    # Rejected prompts must neither be forwarded nor saved as model runs.
+    assert (
+        client.get(f"/api/v1/chat/conversations/{conv_id}", headers=headers).json()[
+            "messages"
+        ]
+        == []
+    )
 
 
 def test_chat_sse_streaming_lifecycle_events(client: TestClient):
@@ -202,28 +202,14 @@ def test_chat_sse_streaming_lifecycle_events(client: TestClient):
             "verify": False,
         },
     )
-    assert stream_resp.status_code == 200
-    assert "text/event-stream" in stream_resp.headers["content-type"]
-
-    events = []
-    for line in stream_resp.text.strip().split("\n\n"):
-        if not line:
-            continue
-        event_name = None
-        event_data = None
-        for subline in line.split("\n"):
-            if subline.startswith("event: "):
-                event_name = subline.replace("event: ", "").strip()
-            elif subline.startswith("data: "):
-                event_data = json.loads(subline.replace("data: ", "").strip())
-        if event_name and event_data:
-            events.append((event_name, event_data))
-
-    event_types = [e[0] for e in events]
-    assert "REQUEST_ACCEPTED" in event_types
-    assert "MODEL_REQUEST_STARTED" in event_types
-    assert "MODEL_FAILED" in event_types or "MODEL_RESPONSE_COMPLETED" in event_types
-    assert "COMPLETE" in event_types
+    assert stream_resp.status_code == 400
+    assert "REQUEST_ACCEPTED" not in stream_resp.text
+    assert (
+        client.get(f"/api/v1/chat/conversations/{conv_id}", headers=headers).json()[
+            "messages"
+        ]
+        == []
+    )
 
 
 def test_history_endpoints_and_filtering(client: TestClient):
@@ -322,7 +308,7 @@ def test_openrouter_groq_omniroute_provider_handling(client: TestClient):
             "models": [
                 {
                     "provider": "openrouter",
-                    "model_name": "meta-llama/llama-3.3-70b-instruct",
+                    "model_name": "meta-llama/llama-3.3-70b-instruct:free",
                 },
                 {"provider": "groq", "model_name": "openai/gpt-oss-20b"},
                 {"provider": "omniroute", "model_name": "gemini-3.7-flash"},
@@ -330,28 +316,15 @@ def test_openrouter_groq_omniroute_provider_handling(client: TestClient):
             "verify": False,
         },
     )
-    assert prompt_resp.status_code == 200
-    data = prompt_resp.json()
-    assert len(data["runs"]) == 3
-    providers = {r["provider"] for r in data["runs"]}
-    assert providers == {"openrouter", "groq", "omniroute"}
-    for run in data["runs"]:
-        prov = run["provider"]
-        if prov == "openrouter":
-            assert run["status"] in ("COMPLETED", "UNAVAILABLE")
-            if run["status"] == "COMPLETED":
-                assert isinstance(run["response"], str)
-                assert len(run["response"]) > 0
-        elif prov == "groq":
-            assert run["status"] in ("COMPLETED", "UNAVAILABLE")
-            if run["status"] == "COMPLETED":
-                assert isinstance(run["response"], str)
-                assert len(run["response"]) > 0
-        elif prov == "omniroute":
-            # OmniRoute returns FAILED (HTTP_402 Insufficient wallet balance) or UNAVAILABLE
-            assert run["status"] in ("FAILED", "UNAVAILABLE", "COMPLETED")
-            if run["status"] == "FAILED":
-                assert run["error_code"] == "HTTP_402"
+    assert prompt_resp.status_code == 400
+    rejection = prompt_resp.json()["error"]["message"].lower()
+    assert "byok connection" in rejection or "unsupported provider" in rejection
+    assert (
+        client.get(f"/api/v1/chat/conversations/{conv_id}", headers=headers).json()[
+            "messages"
+        ]
+        == []
+    )
 
 
 def test_credential_redaction_and_leakage_prevention():

@@ -1,6 +1,7 @@
 """Schemas for AI provider management and secure key configuration."""
 
 from typing import Literal
+
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
@@ -10,7 +11,7 @@ class AIProviderItem(BaseModel):
     id: str
     name: str
     category: Literal["cloud", "local", "router"]
-    status: Literal["Connected", "Not Connected", "Unavailable", "Error"]
+    status: Literal["Connected", "Saved", "Not Connected", "Unavailable", "Error"]
     models: list[str] = Field(default_factory=list)
     configuredAt: str | None = None
     keyMasked: str | None = None

@@ -34,6 +34,35 @@ export interface BackendModelCatalogResponse {
   providers: BackendProviderCatalog[];
 }
 
+export type LiveBenchSuiteKey =
+  | 'agentic' | 'design' | 'coding' | 'browser'
+  | 'data_analysis' | 'research' | 'reasoning';
+
+export interface PublicLeaderboardModel {
+  id: string;
+  rank: number;
+  name: string;
+  organization: string;
+  overall_score: number;
+  suite_scores: Record<LiveBenchSuiteKey, number | null>;
+  suite_coverage: number;
+}
+
+export interface PublicLeaderboardSnapshot {
+  schema_version: number;
+  benchmark: string;
+  benchmark_release: string;
+  source_updated_at: string;
+  retrieved_at: string;
+  source_url: string;
+  data_url: string;
+  methodology_url: string;
+  refresh_policy: string;
+  score_description: string;
+  total_models: number;
+  models: PublicLeaderboardModel[];
+}
+
 export interface BackendLeaderboardResponse {
   total_models: number;
   updated_at: string;
@@ -72,6 +101,13 @@ export const modelsApi = {
       providers: (resp.providers || []).map(adaptBackendProviderCatalog),
       recommended: resp.recommended_defaults || [],
     };
+  },
+
+  async getPublicLeaderboard(): Promise<PublicLeaderboardSnapshot> {
+    return apiClient<PublicLeaderboardSnapshot>('/models/public-benchmarks', {
+      method: 'GET',
+      timeoutMs: 12000,
+    });
   },
 
   async getModelLeaderboard(): Promise<ModelLeaderboardEntry[]> {

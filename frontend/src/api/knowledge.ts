@@ -97,7 +97,7 @@ export function adaptBackendDocumentToFrontend(doc: BackendDocumentResponse): Kn
     }),
     chunksCount: doc.chunk_count,
     category: doc.content_type.split('/')[1]?.toUpperCase() || 'DOCUMENT',
-    reliabilityScore: 0.98,
+    // No document reliability score is provided by the indexing API.
     description: doc.description || undefined,
   };
 }
@@ -130,22 +130,10 @@ export const knowledgeApi = {
     if (title) formData.append('title', title);
     if (description) formData.append('description', description);
 
-    const token = getAuthToken();
-    const resp = await fetch('/api/v1/knowledge/upload', {
+    const doc = await apiClient<BackendDocumentResponse>('/knowledge/upload', {
       method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        'X-Request-ID': `req-upload-${Date.now()}`,
-      },
       body: formData,
     });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({ message: 'File upload failed' }));
-      throw new Error(err?.message || err?.detail || 'File upload failed');
-    }
-
-    const doc: BackendDocumentResponse = await resp.json();
     return adaptBackendDocumentToFrontend(doc);
   },
 

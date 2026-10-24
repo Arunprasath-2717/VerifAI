@@ -407,9 +407,9 @@ export function HaloButton({
             "relative flex min-h-11 min-w-0 select-none items-center gap-2.5 rounded-full px-6 py-2.5",
             "border border-slate-200/90 dark:border-[#333742] text-slate-900 dark:text-white cursor-pointer",
             "shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_1px_2px_rgba(0,0,0,0.04),0_4px_14px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_4px_14px_rgba(0,0,0,0.4)]",
-            "outline-none focus-visible:ring-2 focus-visible:ring-[#800020]/40 dark:focus-visible:ring-[#B6FF2E]/40",
+            "outline-none focus-visible:ring-2 focus-visible:ring-[#1B4332]/40 dark:focus-visible:ring-[#B6FF2E]/40",
             "transition-[transform,background-color,backdrop-filter,border-color,box-shadow] duration-200 ease-out",
-            "hover:border-[#800020]/50 dark:hover:border-[#B6FF2E]/60 hover:shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.08)]",
+            "hover:border-[#1B4332]/50 dark:hover:border-[#B6FF2E]/60 hover:shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.08)]",
             "enabled:active:scale-[0.96] motion-reduce:enabled:active:scale-100",
             "disabled:pointer-events-none disabled:opacity-50",
             translucent && "backdrop-blur-xl backdrop-saturate-150"

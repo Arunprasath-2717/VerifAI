@@ -960,33 +960,24 @@ export const initialProviders: AIProvider[] = [
     id: 'prov-openai',
     name: 'OpenAI',
     category: 'cloud',
-    status: 'Connected',
-    models: ['GPT-5.6 Sol', 'GPT-5.6 Terra', 'GPT-4o', 'GPT-OSS 120B'],
-    configuredAt: 'Aug 14, 2026',
-    keyMasked: 'sk-proj-...8a9f',
-    keyLabel: 'Primary Production Key',
+    status: 'Not Connected',
+    models: ['GPT-4o', 'GPT-4o-mini', 'o1-preview', 'o3-mini'],
     docsUrl: 'https://platform.openai.com/api-keys'
   },
   {
     id: 'prov-anthropic',
     name: 'Anthropic',
     category: 'cloud',
-    status: 'Connected',
-    models: ['Claude 3.5 Sonnet', 'Claude 3 Opus', 'Claude 3.5 Haiku'],
-    configuredAt: 'Aug 18, 2026',
-    keyMasked: 'sk-ant-...42c1',
-    keyLabel: 'Claude Production Workspace',
+    status: 'Not Connected',
+    models: ['Claude 3.5 Sonnet', 'Claude 3.5 Haiku', 'Claude 3 Opus'],
     docsUrl: 'https://console.anthropic.com/settings/keys'
   },
   {
     id: 'prov-google',
     name: 'Google Gemini',
     category: 'cloud',
-    status: 'Connected',
-    models: ['Gemini 3.1 Pro', 'Gemini 3.8 Flash', 'Gemini 2.5 Pro'],
-    configuredAt: 'Sep 01, 2026',
-    keyMasked: 'AIzaSy...7890',
-    keyLabel: 'Google AI Studio Key',
+    status: 'Not Connected',
+    models: ['Gemini 1.5 Pro', 'Gemini 1.5 Flash', 'Gemini 2.0 Flash'],
     docsUrl: 'https://aistudio.google.com/apikey'
   },
   {
@@ -998,15 +989,28 @@ export const initialProviders: AIProvider[] = [
     docsUrl: 'https://console.groq.com/keys'
   },
   {
+    id: 'prov-mistral',
+    name: 'Mistral AI',
+    category: 'cloud',
+    status: 'Not Connected',
+    models: ['Mistral Large 2', 'Mistral Small', 'Codestral'],
+    docsUrl: 'https://console.mistral.ai/api-keys'
+  },
+  {
+    id: 'prov-deepseek',
+    name: 'DeepSeek',
+    category: 'cloud',
+    status: 'Not Connected',
+    models: ['DeepSeek R1', 'DeepSeek V3'],
+    docsUrl: 'https://platform.deepseek.com/api_keys'
+  },
+  {
     id: 'prov-ollama',
     name: 'Ollama (Local / Air-Gapped)',
     category: 'local',
-    status: 'Connected',
-    models: ['Gemma 4 12B (Local)', 'Phi-4 14B (Local)', 'Llama 3.3 8B (Local)', 'DeepSeek R1 14B (Local)'],
-    configuredAt: 'Sep 10, 2026',
-    keyMasked: 'http://localhost:11434',
+    status: 'Not Connected',
+    models: ['Llama 3.3 8B (Local)', 'DeepSeek R1 14B (Local)', 'Phi-4 14B (Local)'],
     baseUrl: 'http://localhost:11434',
-    keyLabel: 'Local Inference Daemon',
     docsUrl: 'https://ollama.com'
   },
   {
@@ -1014,8 +1018,16 @@ export const initialProviders: AIProvider[] = [
     name: 'OpenRouter / OmniRoute Gateway',
     category: 'router',
     status: 'Not Connected',
-    models: ['DeepSeek R1', 'DeepSeek V3', 'Qwen 2.5 72B', 'Mistral Large 3', 'Cohere Command R+', 'xAI Grok 2'],
+    models: ['DeepSeek R1', 'DeepSeek V3', 'Qwen 2.5 72B', 'Mistral Large 3'],
     docsUrl: 'https://openrouter.ai/keys'
+  },
+  {
+    id: 'prov-custom',
+    name: 'Custom OpenAI-Compatible API',
+    category: 'cloud',
+    status: 'Not Connected',
+    models: ['Custom-Model-v1'],
+    docsUrl: ''
   }
 ];
 

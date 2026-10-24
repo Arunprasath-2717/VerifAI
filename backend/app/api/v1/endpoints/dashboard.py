@@ -41,7 +41,10 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard & Metrics"])
     "/stats",
     response_model=DashboardStatsResponse,
     summary="Get Consolidated Dashboard Statistics",
-    description="Calculates real-time verification counts, claims, evidence sources, timeseries curves, and recent jobs.",
+    description=(
+        "Calculates verification counts, claims, evidence, "
+        "timeseries curves, and recent jobs."
+    ),
 )
 async def get_dashboard_stats(
     current_user: User | None = Depends(get_optional_current_user),
@@ -87,66 +90,101 @@ async def get_dashboard_stats(
     )
     conv_count = (await db.execute(conv_count_stmt)).scalar_one() or 0
 
-    # 5. Timeseries Chart Data: 7 Days and 30 Days
-    async def build_chart_data(num_days: int) -> list[ChartPointSchema]:
-        points: list[ChartPointSchema] = []
-        for d in range(num_days - 1, -1, -1):
-            day_start = (now - timedelta(days=d)).replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
-            day_end = day_start + timedelta(days=1)
+    # 5. Timeseries: group in SQL once per source instead of three queries
+    # per calendar day (previously 111 count queries per dashboard request).
+    # Both charts are derived from the same 30-day window in UTC.
+    first_day = (now - timedelta(days=29)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    end_day = (now + timedelta(days=1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
-            # Verifications on this day
-            day_v_stmt = select(func.count(VerificationJob.id)).where(
-                VerificationJob.owner_id == effective_owner,
-                VerificationJob.created_at >= day_start,
-                VerificationJob.created_at < day_end,
-            )
-            day_v = (await db.execute(day_v_stmt)).scalar_one() or 0
+    # PostgreSQL timestamptz-to-date otherwise uses the DB session's timezone.
+    # SQLite does not expose timezone(), so the simpler date() is used there.
+    bind_getter = getattr(db, "get_bind", None)
+    bind = bind_getter() if callable(bind_getter) else None
+    postgres = getattr(getattr(bind, "dialect", None), "name", "") == "postgresql"
 
-            # Claims on this day
-            day_c_stmt = (
-                select(func.count(ExtractedClaim.id))
-                .join(
-                    VerificationJob, ExtractedClaim.verification_id == VerificationJob.id
-                )
-                .where(
-                    VerificationJob.owner_id == effective_owner,
-                    ExtractedClaim.created_at >= day_start,
-                    ExtractedClaim.created_at < day_end,
-                )
-            )
-            day_c = (await db.execute(day_c_stmt)).scalar_one() or 0
+    def utc_date(column: Any) -> Any:
+        timestamp = func.timezone("UTC", column) if postgres else column
+        return func.date(timestamp)
 
-            # Evidence on this day
-            day_e_stmt = (
-                select(func.count(RetrievedEvidence.id))
-                .join(ExtractedClaim, RetrievedEvidence.claim_id == ExtractedClaim.id)
-                .join(
-                    VerificationJob, ExtractedClaim.verification_id == VerificationJob.id
-                )
-                .where(
-                    VerificationJob.owner_id == effective_owner,
-                    RetrievedEvidence.created_at >= day_start,
-                    RetrievedEvidence.created_at < day_end,
-                )
-            )
-            day_e = (await db.execute(day_e_stmt)).scalar_one() or 0
+    job_day = utc_date(VerificationJob.created_at)
+    claim_day = utc_date(ExtractedClaim.created_at)
+    evidence_day = utc_date(RetrievedEvidence.created_at)
+    conversation_day = utc_date(Conversation.created_at)
 
-            day_label = day_start.strftime("%a") if num_days <= 7 else day_start.strftime("%b %d")
-            points.append(
-                ChartPointSchema(
-                    day=day_label,
-                    date=day_start.strftime("%Y-%m-%d"),
-                    verifications=day_v,
-                    claims=day_c,
-                    evidence=day_e,
-                )
-            )
-        return points
+    async def grouped_daily_counts(query: Any) -> dict[str, int]:
+        rows = (await db.execute(query)).all()
+        return {
+            day.isoformat() if hasattr(day, "isoformat") else str(day): int(count)
+            for day, count in rows
+            if day is not None
+        }
 
-    weekly_points = await build_chart_data(7)
-    monthly_points = await build_chart_data(30)
+    jobs_by_day = await grouped_daily_counts(
+        select(job_day, func.count(VerificationJob.id))
+        .where(
+            VerificationJob.owner_id == effective_owner,
+            VerificationJob.created_at >= first_day,
+            VerificationJob.created_at < end_day,
+        )
+        .group_by(job_day)
+    )
+    claims_by_day = await grouped_daily_counts(
+        select(claim_day, func.count(ExtractedClaim.id))
+        .join(VerificationJob, ExtractedClaim.verification_id == VerificationJob.id)
+        .where(
+            VerificationJob.owner_id == effective_owner,
+            ExtractedClaim.created_at >= first_day,
+            ExtractedClaim.created_at < end_day,
+        )
+        .group_by(claim_day)
+    )
+    evidence_by_day = await grouped_daily_counts(
+        select(evidence_day, func.count(RetrievedEvidence.id))
+        .join(ExtractedClaim, RetrievedEvidence.claim_id == ExtractedClaim.id)
+        .join(VerificationJob, ExtractedClaim.verification_id == VerificationJob.id)
+        .where(
+            VerificationJob.owner_id == effective_owner,
+            RetrievedEvidence.created_at >= first_day,
+            RetrievedEvidence.created_at < end_day,
+        )
+        .group_by(evidence_day)
+    )
+    conversations_by_day = await grouped_daily_counts(
+        select(conversation_day, func.count(Conversation.id))
+        .where(
+            Conversation.owner_id == effective_owner,
+            Conversation.created_at >= first_day,
+            Conversation.created_at < end_day,
+        )
+        .group_by(conversation_day)
+    )
+
+    monthly_points: list[ChartPointSchema] = []
+    for offset in range(30):
+        day = first_day + timedelta(days=offset)
+        day_key = day.date().isoformat()
+        monthly_points.append(
+            ChartPointSchema(
+                day=day.strftime("%b %d"),
+                date=day_key,
+                verifications=jobs_by_day.get(day_key, 0),
+                claims=claims_by_day.get(day_key, 0),
+                evidence=evidence_by_day.get(day_key, 0),
+            )
+        )
+    weekly_points = [
+        point.model_copy(
+            update={"day": datetime.fromisoformat(point.date).strftime("%a")}
+        )
+        for point in monthly_points[-7:]
+    ]
+    weekly_conversations = [
+        conversations_by_day.get(point.date, 0) for point in weekly_points
+    ]
 
     # 6. Recent Verifications (Latest 5)
     recent_jobs_stmt = (
@@ -172,81 +210,35 @@ async def get_dashboard_stats(
         StatCardMetric(
             title="Verifications",
             value=str(verif_count),
-            trend="+12%" if verif_count > 0 else "0%",
+            trend="N/A",
             sub="Executed audits",
-            sparkline=[p.verifications for p in weekly_points] if weekly_points else [0],
+            sparkline=[p.verifications for p in weekly_points],
         ),
         StatCardMetric(
             title="Claims Analyzed",
             value=str(claims_count),
-            trend="+10%" if claims_count > 0 else "0%",
+            trend="N/A",
             sub="Atomic propositions",
             sparkline=[p.claims for p in weekly_points] if weekly_points else [0],
         ),
         StatCardMetric(
             title="Evidence Sources",
             value=str(total_evidence_sources),
-            trend="+5%" if total_evidence_sources > 0 else "0%",
+            trend="N/A",
             sub="Vault & web corpus",
             sparkline=[p.evidence for p in weekly_points] if weekly_points else [0],
         ),
         StatCardMetric(
             title="Conversations",
             value=str(conv_count),
-            trend="+8%" if conv_count > 0 else "0%",
+            trend="N/A",
             sub="Multi-model threads",
-            sparkline=[min(conv_count, 10)] * 7,
+            sparkline=weekly_conversations,
         ),
     ]
 
-    # 8. Leaderboard Preview
-    leaderboard_preview = [
-        DashboardLeaderboardEntry(
-            rank=1,
-            model="Claude 3.5 Sonnet",
-            provider="Anthropic",
-            accuracy=96.2,
-            hallucination_rate=1.8,
-            latency_ms=680,
-            certified=True,
-        ),
-        DashboardLeaderboardEntry(
-            rank=2,
-            model="GPT-4o",
-            provider="OpenAI",
-            accuracy=94.8,
-            hallucination_rate=2.4,
-            latency_ms=720,
-            certified=True,
-        ),
-        DashboardLeaderboardEntry(
-            rank=3,
-            model="Gemini 1.5 Pro",
-            provider="Google",
-            accuracy=93.6,
-            hallucination_rate=3.1,
-            latency_ms=810,
-            certified=True,
-        ),
-        DashboardLeaderboardEntry(
-            rank=4,
-            model="Llama 3.3 70B",
-            provider="Meta / Groq",
-            accuracy=91.4,
-            hallucination_rate=4.2,
-            latency_ms=390,
-            certified=True,
-        ),
-        DashboardLeaderboardEntry(
-            rank=5,
-            model="Mistral Large 2",
-            provider="Mistral",
-            accuracy=90.8,
-            hallucination_rate=4.6,
-            latency_ms=750,
-            certified=True,
-        ),
-    ]
+    # No benchmark aggregates are calculated here; never publish fabricated rankings.
+    leaderboard_preview: list[DashboardLeaderboardEntry] = []
 
     return DashboardStatsResponse(
         verifications_count=verif_count,

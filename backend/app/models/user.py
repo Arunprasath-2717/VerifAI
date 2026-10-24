@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Index, String
+from sqlalchemy import Boolean, DateTime, Index, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import GUID, Base, TimestampMixin
@@ -59,6 +59,9 @@ class User(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_users_email_active", "email", "is_active"),
         Index("ix_users_username_active", "username", "is_active"),
+        # PostgreSQL/SQLite enforce uniqueness regardless of capitalization,
+        # including simultaneous registrations in separate backend workers.
+        Index("uq_users_username_lower", func.lower(username), unique=True),
     )
 
     def __repr__(self) -> str:

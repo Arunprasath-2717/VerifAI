@@ -54,14 +54,10 @@ export interface AnalyticsReportResponse {
 }
 
 export const reportsApi = {
-  async getAnalytics(period: '7d' | '30d' | '90d' | string = '30d'): Promise<AnalyticsReportResponse> {
-    const tf = period.toUpperCase();
+  async getAnalytics(timeframe: '7D' | '30D' | '90D' | '1Y' = '30D'): Promise<AnalyticsReportResponse> {
     return apiClient<AnalyticsReportResponse>('/reports/analytics', {
       method: 'GET',
-      params: { 
-        timeframe: tf.endsWith('D') ? tf : `${tf}D`,
-        period,
-      },
+      params: { timeframe },
     });
   },
 };

@@ -54,19 +54,36 @@ async def get_ready(
     """
     db_check = await check_database_connectivity(settings=settings)
 
-    dependencies = {
-        "database": db_check,
-        "storage": {
-            "configured": False,
-            "status": "unconfigured",
-        },
-        "auth": {
-            "configured": False,
-            "status": "unconfigured",
-        },
+    # Knowledge documents and evidence are stored in the same SQL database.
+    # There is no independently configured object-storage service to probe.
+    storage_check = {
+        "configured": db_check["configured"],
+        "status": db_check["status"],
+        "backend": "database",
     }
 
-    # All critical dependencies must be configured and available for readiness
+    # JWT signing/verification is local. Check its configuration, not token issuance
+    # or a remote Firebase/JWKS endpoint on every Kubernetes readiness probe.
+    # This is a configuration check, NOT a live identity-provider health check.
+    jwt_secret = settings.JWT_SECRET.get_secret_value().strip()
+    firebase_configured = (
+        not settings.FIREBASE_AUTH_ENABLED
+        or bool(settings.FIREBASE_PROJECT_ID.strip())
+    )
+    auth_configured = bool(jwt_secret) and firebase_configured
+    auth_check = {
+        "configured": auth_configured,
+        "status": "available" if auth_configured else "unconfigured",
+        "check": "configuration_only",
+    }
+
+    dependencies = {
+        "database": db_check,
+        "storage": storage_check,
+        "auth": auth_check,
+    }
+
+    # Readiness checks local configuration plus live database connectivity.
     is_ready = all(
         dep.get("configured") is True and dep.get("status") == "available"
         for dep in dependencies.values()

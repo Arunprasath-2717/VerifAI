@@ -5,6 +5,8 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
+
 from app.core.config import Settings, get_settings
 from app.core.errors import (
     AppError,
@@ -66,7 +68,7 @@ class AuthenticationService:
             )
 
         email_clean = request.email.strip().lower()
-        username_clean = request.username.strip()
+        username_clean = request.username.strip().lower()
 
         existing = await self.user_repo.get_by_email_or_username(
             email=email_clean, username=username_clean
@@ -93,7 +95,21 @@ class AuthenticationService:
         new_user.created_at = now
         new_user.updated_at = now
 
-        created_user = await self.user_repo.create(new_user)
+        try:
+            created_user = await self.user_repo.create(new_user)
+        except IntegrityError as exc:
+            # Frontend and pre-checks are advisory; handle concurrent writes
+            # under the database unique index as an expected 409 conflict.
+            await self.user_repo.session.rollback()
+            existing_email = await self.user_repo.get_by_email(email_clean)
+            raise ConflictError(
+                message=(
+                    "Email is already registered."
+                    if existing_email
+                    else "Username is already taken."
+                ),
+                details={"field": "email" if existing_email else "username"},
+            ) from exc
         logger.info("Registered user %s (email=%s)", created_user.id, email_clean)
 
         # Persist mandatory legal consent audit record

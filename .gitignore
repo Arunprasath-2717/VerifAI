@@ -51,3 +51,6 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Impeccable review artifacts
+.impeccable/
