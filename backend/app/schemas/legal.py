@@ -13,11 +13,21 @@ class LegalVersionsResponse(BaseModel):
 
     terms_version: str = Field(..., description="Active version of Terms & Conditions.")
     privacy_version: str = Field(..., description="Active version of Privacy Policy.")
-    terms_effective_date: str = Field(..., description="Effective date for Terms & Conditions.")
-    privacy_effective_date: str = Field(..., description="Effective date for Privacy Policy.")
-    legal_contact_email: str = Field(..., description="Configured operator legal contact address.")
-    governing_law: str = Field(..., description="Designated governing jurisdiction placeholder.")
-    minimum_age_requirement: str = Field(..., description="Configured minimum age requirement.")
+    terms_effective_date: str = Field(
+        ..., description="Effective date for Terms & Conditions."
+    )
+    privacy_effective_date: str = Field(
+        ..., description="Effective date for Privacy Policy."
+    )
+    legal_contact_email: str = Field(
+        ..., description="Configured operator legal contact address."
+    )
+    governing_law: str = Field(
+        ..., description="Designated governing jurisdiction placeholder."
+    )
+    minimum_age_requirement: str = Field(
+        ..., description="Configured minimum age requirement."
+    )
 
 
 class ConsentCreateRequest(BaseModel):
@@ -25,9 +35,20 @@ class ConsentCreateRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    terms_version: str = Field(..., min_length=1, max_length=32, description="Agreed Terms & Conditions version.")
-    privacy_version: str = Field(..., min_length=1, max_length=32, description="Agreed Privacy Policy version.")
-    action_source: str = Field(default="user_settings", max_length=64, description="Context or origin of consent action.")
+    terms_version: str = Field(
+        ...,
+        min_length=1,
+        max_length=32,
+        description="Agreed Terms & Conditions version.",
+    )
+    privacy_version: str = Field(
+        ..., min_length=1, max_length=32, description="Agreed Privacy Policy version."
+    )
+    action_source: str = Field(
+        default="user_settings",
+        max_length=64,
+        description="Context or origin of consent action.",
+    )
 
 
 class UserConsentResponse(BaseModel):

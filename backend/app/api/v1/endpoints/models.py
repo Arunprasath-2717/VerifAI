@@ -21,7 +21,9 @@ class ModelItem(BaseModel):
 
     id: str = Field(description="Unique model identifier passed to inference APIs")
     name: str = Field(description="Human-readable model display name")
-    family: str = Field(description="Model family, e.g. GPT, Claude, Gemini, Llama, Qwen, DeepSeek")
+    family: str = Field(
+        description="Model family, e.g. GPT, Claude, Gemini, Llama, Qwen, DeepSeek"
+    )
     model_type: Literal["proprietary", "open-weight", "local"] = Field(
         description="Licensing & deployment type"
     )
@@ -30,15 +32,21 @@ class ModelItem(BaseModel):
         description="Supported capabilities: text, vision, reasoning, coding, rerank",
     )
     context_window: int = Field(description="Maximum context window tokens")
-    max_output_tokens: int = Field(default=4096, description="Maximum completion tokens")
-    recommended: bool = Field(default=False, description="Whether recommended in default benchmark set")
+    max_output_tokens: int = Field(
+        default=4096, description="Maximum completion tokens"
+    )
+    recommended: bool = Field(
+        default=False, description="Whether recommended in default benchmark set"
+    )
     description: str | None = None
 
 
 class ProviderCatalog(BaseModel):
     """Catalog of models provided by an individual inference provider or gateway."""
 
-    provider: str = Field(description="Canonical provider key: openai, anthropic, google, etc.")
+    provider: str = Field(
+        description="Canonical provider key: openai, anthropic, google, etc."
+    )
     name: str = Field(description="Provider display name")
     category: Literal["cloud", "local", "router"] = Field(
         description="Provider architecture tier"
@@ -65,7 +73,8 @@ class ModelCatalogResponse(BaseModel):
     summary="Get Dynamic Model Catalog",
     description=(
         "Returns the complete ecosystem of proprietary, open-weight, and local models "
-        "dynamically annotated with live provider credential connectivity, capabilities, "
+        "dynamically annotated with live provider credential connectivity, "
+        "capabilities, "
         "and token context windows."
     ),
 )
@@ -86,7 +95,10 @@ async def get_model_catalog(
             context_window=1050000,
             max_output_tokens=16384,
             recommended=True,
-            description="Frontier high-intelligence reasoning flagship for deep claim deconstruction.",
+            description=(
+                "Frontier high-intelligence reasoning flagship for deep claim "
+                "deconstruction."
+            ),
         ),
         ModelItem(
             id="gpt-5.6-terra",
@@ -97,7 +109,10 @@ async def get_model_catalog(
             context_window=500000,
             max_output_tokens=8192,
             recommended=False,
-            description="Balanced frontier model optimized for high-throughput enterprise verification.",
+            description=(
+                "Balanced frontier model optimized for high-throughput enterprise "
+                "verification."
+            ),
         ),
         ModelItem(
             id="gpt-5.6-luna",
@@ -108,7 +123,9 @@ async def get_model_catalog(
             context_window=200000,
             max_output_tokens=4096,
             recommended=False,
-            description="Fast, low-latency reasoning variant for instant verification triage.",
+            description=(
+                "Fast, low-latency reasoning variant for instant verification triage."
+            ),
         ),
         ModelItem(
             id="gpt-4o",
@@ -141,7 +158,10 @@ async def get_model_catalog(
             context_window=131072,
             max_output_tokens=4096,
             recommended=False,
-            description="OpenAI open-weight foundation model for transparent self-hosted benchmarking.",
+            description=(
+                "OpenAI open-weight foundation model for transparent self-hosted "
+                "benchmarking."
+            ),
         ),
     ]
 
@@ -157,7 +177,10 @@ async def get_model_catalog(
             context_window=200000,
             max_output_tokens=8192,
             recommended=True,
-            description="Frontier reasoning and factual nuance leader with high claim corroboration precision.",
+            description=(
+                "Frontier reasoning and factual nuance leader with high claim "
+                "corroboration precision."
+            ),
         ),
         ModelItem(
             id="claude-3-opus",
@@ -168,7 +191,9 @@ async def get_model_catalog(
             context_window=200000,
             max_output_tokens=4096,
             recommended=False,
-            description="Deep synthetic analysis model for highly technical cross-examination.",
+            description=(
+                "Deep synthetic analysis model for highly technical cross-examination."
+            ),
         ),
         ModelItem(
             id="claude-3-5-haiku",
@@ -179,7 +204,9 @@ async def get_model_catalog(
             context_window=200000,
             max_output_tokens=4096,
             recommended=False,
-            description="Ultra-fast proposition verification and initial snippet filtering.",
+            description=(
+                "Ultra-fast proposition verification and initial snippet filtering."
+            ),
         ),
     ]
 
@@ -195,7 +222,9 @@ async def get_model_catalog(
             context_window=1000000,
             max_output_tokens=8192,
             recommended=True,
-            description="1M+ token context window leader for full-document corpus grounding.",
+            description=(
+                "1M+ token context window leader for full-document corpus grounding."
+            ),
         ),
         ModelItem(
             id="gemini-3.1-pro",
@@ -206,7 +235,9 @@ async def get_model_catalog(
             context_window=2000000,
             max_output_tokens=8192,
             recommended=True,
-            description="Deep multi-step reasoning flagship with 2M token context capability.",
+            description=(
+                "Deep multi-step reasoning flagship with 2M token context capability."
+            ),
         ),
         ModelItem(
             id="gemini-2.5-pro",
@@ -244,7 +275,9 @@ async def get_model_catalog(
             context_window=128000,
             max_output_tokens=4096,
             recommended=True,
-            description="Sub-second verification responses powered by Groq LPU silicon.",
+            description=(
+                "Sub-second verification responses powered by Groq LPU silicon."
+            ),
         ),
         ModelItem(
             id="mixtral-8x7b-32768",
@@ -271,7 +304,10 @@ async def get_model_catalog(
             context_window=64000,
             max_output_tokens=8192,
             recommended=True,
-            description="Reinforcement-learning reasoning model for deep contradiction proofing.",
+            description=(
+                "Reinforcement-learning reasoning model for deep contradiction "
+                "proofing."
+            ),
         ),
         ModelItem(
             id="deepseek/deepseek-chat",
@@ -282,7 +318,9 @@ async def get_model_catalog(
             context_window=64000,
             max_output_tokens=8192,
             recommended=False,
-            description="671B MoE architecture with exceptional factual retrieval fidelity.",
+            description=(
+                "671B MoE architecture with exceptional factual retrieval fidelity."
+            ),
         ),
         ModelItem(
             id="mistralai/mistral-large-2411",
@@ -293,7 +331,9 @@ async def get_model_catalog(
             context_window=128000,
             max_output_tokens=4096,
             recommended=True,
-            description="European sovereign open-weight flagship with multi-lingual reasoning.",
+            description=(
+                "European sovereign open-weight flagship with multi-lingual reasoning."
+            ),
         ),
         ModelItem(
             id="qwen/qwen-2.5-72b-instruct",
@@ -304,7 +344,10 @@ async def get_model_catalog(
             context_window=131072,
             max_output_tokens=4096,
             recommended=True,
-            description="Top-tier open-weight reasoning model matching frontier proprietary baselines.",
+            description=(
+                "Top-tier open-weight reasoning model matching frontier proprietary"
+                " baselines."
+            ),
         ),
         ModelItem(
             id="qwen/qwen-2.5-coder-32b-instruct",
@@ -315,7 +358,10 @@ async def get_model_catalog(
             context_window=131072,
             max_output_tokens=4096,
             recommended=False,
-            description="Domain specialist for verifying code correctness and technical syntaxes.",
+            description=(
+                "Domain specialist for verifying code correctness and technical "
+                "syntaxes."
+            ),
         ),
         ModelItem(
             id="cohere/command-r-plus",
@@ -326,7 +372,9 @@ async def get_model_catalog(
             context_window=128000,
             max_output_tokens=4096,
             recommended=False,
-            description="Specialized RAG and enterprise evidence retrieval foundation model.",
+            description=(
+                "Specialized RAG and enterprise evidence retrieval foundation model."
+            ),
         ),
         ModelItem(
             id="x-ai/grok-2-1212",
@@ -337,7 +385,9 @@ async def get_model_catalog(
             context_window=131072,
             max_output_tokens=4096,
             recommended=False,
-            description="Independent proprietary baseline for non-consensus verification tests.",
+            description=(
+                "Independent proprietary baseline for non-consensus verification tests."
+            ),
         ),
     ]
 
@@ -352,7 +402,10 @@ async def get_model_catalog(
             context_window=262144,
             max_output_tokens=4096,
             recommended=True,
-            description="Latest open-weight Gemma architecture running privately with 256K context.",
+            description=(
+                "Latest open-weight Gemma architecture running privately with 256K "
+                "context."
+            ),
         ),
         ModelItem(
             id="phi4:14b",
@@ -363,7 +416,10 @@ async def get_model_catalog(
             context_window=16384,
             max_output_tokens=4096,
             recommended=True,
-            description="Synthetic high-quality reasoning model suited for local air-gapped deployments.",
+            description=(
+                "Synthetic high-quality reasoning model suited for local air-gapped"
+                " deployments."
+            ),
         ),
         ModelItem(
             id="llama3.3:8b",
@@ -374,7 +430,9 @@ async def get_model_catalog(
             context_window=128000,
             max_output_tokens=4096,
             recommended=False,
-            description="Lightweight local model for privacy-first proposition extraction.",
+            description=(
+                "Lightweight local model for privacy-first proposition extraction."
+            ),
         ),
         ModelItem(
             id="deepseek-r1:14b",
@@ -385,7 +443,10 @@ async def get_model_catalog(
             context_window=64000,
             max_output_tokens=4096,
             recommended=False,
-            description="Locally hosted distilled reasoning model for offline verification checks.",
+            description=(
+                "Locally hosted distilled reasoning model for offline verification "
+                "checks."
+            ),
         ),
     ]
 
@@ -476,7 +537,10 @@ class ModelLeaderboardResponseItem(BaseModel):
     "/leaderboard",
     response_model=list[ModelLeaderboardResponseItem],
     summary="Get Empirical Model Benchmark Leaderboard",
-    description="Returns empirical benchmarks, hallucination resistance rates, and category rankings across frontier models.",
+    description=(
+        "Returns empirical benchmarks, hallucination resistance rates, and category"
+        " rankings across frontier models."
+    ),
 )
 async def get_model_leaderboard() -> list[ModelLeaderboardResponseItem]:
     """Return no rankings until a persisted benchmark evaluation pipeline exists.
@@ -535,6 +599,7 @@ class PublicLeaderboardSnapshot(BaseModel):
 )
 async def get_public_benchmarks() -> PublicLeaderboardSnapshot:
     from fastapi import HTTPException
+
     from app.modules.benchmarks.public_leaderboard import (
         PublicBenchmarkRefreshError,
         load_public_snapshot,
@@ -546,5 +611,8 @@ async def get_public_benchmarks() -> PublicLeaderboardSnapshot:
         logger.warning("Public benchmark snapshot unavailable: %s", type(exc).__name__)
         raise HTTPException(
             status_code=503,
-            detail="Public benchmark snapshot is unavailable; retry after the weekly refresh.",
+            detail=(
+                "Public benchmark snapshot is unavailable; retry after the weekly "
+                "refresh."
+            ),
         ) from exc

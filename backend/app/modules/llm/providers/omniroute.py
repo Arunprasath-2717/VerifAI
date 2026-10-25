@@ -86,7 +86,9 @@ class OmniRouteProvider(BaseLLMProvider):
                                 status="FAILED",
                                 latency_ms=round(elapsed, 2),
                                 error_code="EMPTY_CHOICES",
-                                error_message="OmniRoute returned no completion choices.",
+                                error_message=(
+                                    "OmniRoute returned no completion choices."
+                                ),
                                 retry_count=retries_used,
                             )
 

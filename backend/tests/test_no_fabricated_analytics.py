@@ -31,12 +31,14 @@ class EmptyDatabase:
 
 
 def test_empty_reports_contain_no_made_up_benchmarks():
-    reports = asyncio.run(get_reports_analytics(
-        timeframe="7D",
-        current_user=None,
-        db=EmptyDatabase(),
-        settings=Settings(ENVIRONMENT="testing"),
-    ))
+    reports = asyncio.run(
+        get_reports_analytics(
+            timeframe="7D",
+            current_user=None,
+            db=EmptyDatabase(),
+            settings=Settings(ENVIRONMENT="testing"),
+        )
+    )
     assert reports.total_verifications == 0
     assert reports.total_claims == 0
     assert reports.average_trust_score == 0
@@ -49,11 +51,13 @@ def test_empty_reports_contain_no_made_up_benchmarks():
 
 
 def test_empty_dashboard_does_not_invent_rankings():
-    dashboard = asyncio.run(get_dashboard_stats(
-        current_user=None,
-        db=EmptyDatabase(),
-        settings=Settings(ENVIRONMENT="testing"),
-    ))
+    dashboard = asyncio.run(
+        get_dashboard_stats(
+            current_user=None,
+            db=EmptyDatabase(),
+            settings=Settings(ENVIRONMENT="testing"),
+        )
+    )
     assert dashboard.verifications_count == 0
     assert dashboard.leaderboard_preview == []
     assert all(point.verifications == 0 for point in dashboard.weekly_chart_data)

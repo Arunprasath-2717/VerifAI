@@ -70,9 +70,7 @@ async def get_reports_analytics(
         func.coalesce(func.sum(VerificationJob.supported_claims), 0),
         func.coalesce(func.sum(VerificationJob.contradicted_claims), 0),
         func.coalesce(func.sum(VerificationJob.unknown_claims), 0),
-        func.coalesce(
-            func.sum(func.coalesce(VerificationJob.trust_score, 0.0)), 0.0
-        ),
+        func.coalesce(func.sum(func.coalesce(VerificationJob.trust_score, 0.0)), 0.0),
     ).where(
         VerificationJob.owner_id == effective_owner,
         VerificationJob.created_at >= start_date,
@@ -122,8 +120,10 @@ async def get_reports_analytics(
     )
     job_daily_rows = (await db.execute(job_daily_stmt)).all()
     jobs_by_day = {
-        day.isoformat() if hasattr(day, "isoformat") else str(day):
-            (int(count), int(claims))
+        day.isoformat() if hasattr(day, "isoformat") else str(day): (
+            int(count),
+            int(claims),
+        )
         for day, count, claims in job_daily_rows
         if day is not None
     }

@@ -133,7 +133,9 @@ class GeminiProvider(BaseLLMProvider):
                         status="FAILED",
                         latency_ms=round(elapsed, 2),
                         error_code=f"HTTP_{resp.status_code}",
-                        error_message=f"Gemini error ({resp.status_code}): {resp.text[:300]}",
+                        error_message=(
+                            f"Gemini error ({resp.status_code}): {resp.text[:300]}"
+                        ),
                         retry_count=retries_used,
                     )
                 except (httpx.TimeoutException, httpx.NetworkError) as net_err:

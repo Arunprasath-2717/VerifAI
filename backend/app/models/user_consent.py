@@ -10,7 +10,8 @@ from app.models.base import GUID, Base, TimestampMixin
 
 
 class UserConsent(Base, TimestampMixin):
-    """Immutable audit record of user acceptance of Terms & Conditions and Privacy Policy."""
+    """Immutable audit record of user acceptance of Terms & Conditions and
+    Privacy Policy."""
 
     __tablename__ = "user_consents"
 
@@ -63,6 +64,7 @@ class UserConsent(Base, TimestampMixin):
     def __repr__(self) -> str:
         return (
             f"<UserConsent(id={self.id}, user_id={self.user_id}, "
-            f"terms_version='{self.terms_version}', privacy_version='{self.privacy_version}', "
+            f"terms_version='{self.terms_version}', "
+            f"privacy_version='{self.privacy_version}', "
             f"consented_at={self.consented_at})>"
         )

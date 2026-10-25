@@ -38,49 +38,76 @@ def test_dashboard_aggregates_timestamps_in_four_grouped_queries():
             Base.metadata.create_all(engine)
 
             maker = sessionmaker(engine, expire_on_commit=False)
-            today = datetime.now(UTC).replace(hour=12, minute=0, second=0, microsecond=0)
+            today = datetime.now(UTC).replace(
+                hour=12, minute=0, second=0, microsecond=0
+            )
             recent_id, older_id, other_id = (uuid.uuid4() for _ in range(3))
             recent_claim, other_claim = uuid.uuid4(), uuid.uuid4()
             with maker() as session:
-                session.add_all([
-                    VerificationJob(
-                        id=recent_id, owner_id="default_dev_user", input_text="recent",
-                        created_at=today, total_claims=1,
-                    ),
-                    VerificationJob(
-                        id=older_id, owner_id="default_dev_user", input_text="older",
-                        created_at=today - timedelta(days=12), total_claims=0,
-                    ),
-                    VerificationJob(
-                        id=other_id, owner_id="unrelated", input_text="other tenant",
-                        created_at=today, total_claims=1,
-                    ),
-                    ExtractedClaim(
-                        id=recent_claim, verification_id=recent_id,
-                        claim_index=0, claim_text="recent claim",
-                        start_offset=0, end_offset=12, created_at=today,
-                    ),
-                    ExtractedClaim(
-                        id=other_claim, verification_id=other_id,
-                        claim_index=0, claim_text="not the tenant's claim",
-                        start_offset=0, end_offset=22, created_at=today,
-                    ),
-                    RetrievedEvidence(
-                        claim_id=recent_claim, snippet="real saved evidence",
-                        retriever_name="test", created_at=today,
-                    ),
-                    RetrievedEvidence(
-                        claim_id=other_claim, snippet="another tenant's evidence",
-                        retriever_name="test", created_at=today,
-                    ),
-                    Conversation(
-                        owner_id="default_dev_user", title="recent conversation",
-                        created_at=today,
-                    ),
-                ])
+                session.add_all(
+                    [
+                        VerificationJob(
+                            id=recent_id,
+                            owner_id="default_dev_user",
+                            input_text="recent",
+                            created_at=today,
+                            total_claims=1,
+                        ),
+                        VerificationJob(
+                            id=older_id,
+                            owner_id="default_dev_user",
+                            input_text="older",
+                            created_at=today - timedelta(days=12),
+                            total_claims=0,
+                        ),
+                        VerificationJob(
+                            id=other_id,
+                            owner_id="unrelated",
+                            input_text="other tenant",
+                            created_at=today,
+                            total_claims=1,
+                        ),
+                        ExtractedClaim(
+                            id=recent_claim,
+                            verification_id=recent_id,
+                            claim_index=0,
+                            claim_text="recent claim",
+                            start_offset=0,
+                            end_offset=12,
+                            created_at=today,
+                        ),
+                        ExtractedClaim(
+                            id=other_claim,
+                            verification_id=other_id,
+                            claim_index=0,
+                            claim_text="not the tenant's claim",
+                            start_offset=0,
+                            end_offset=22,
+                            created_at=today,
+                        ),
+                        RetrievedEvidence(
+                            claim_id=recent_claim,
+                            snippet="real saved evidence",
+                            retriever_name="test",
+                            created_at=today,
+                        ),
+                        RetrievedEvidence(
+                            claim_id=other_claim,
+                            snippet="another tenant's evidence",
+                            retriever_name="test",
+                            created_at=today,
+                        ),
+                        Conversation(
+                            owner_id="default_dev_user",
+                            title="recent conversation",
+                            created_at=today,
+                        ),
+                    ]
+                )
                 session.commit()
 
             statements = []
+
             def record_statement(_conn, _cursor, statement, _params, _context, _many):
                 if statement.lstrip().upper().startswith("SELECT"):
                     statements.append(statement)
@@ -89,7 +116,8 @@ def test_dashboard_aggregates_timestamps_in_four_grouped_queries():
             try:
                 with maker() as session:
                     result = await get_dashboard_stats(
-                        current_user=None, db=AsyncExecuteAdapter(session),
+                        current_user=None,
+                        db=AsyncExecuteAdapter(session),
                         settings=Settings(_env_file=None, ENVIRONMENT="testing"),
                     )
             finally:

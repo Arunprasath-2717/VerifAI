@@ -96,17 +96,19 @@ class OwnerOpenAICompatibleProvider(BaseLLMProvider):
             # Recent OpenAI reasoning families require max_completion_tokens.
             # Generic OpenAI-compatible providers may only accept max_tokens.
             if self._name == "groq" or (
-                self._name == "openai" and model_name.lower().startswith(
-                    ("gpt-5", "gpt-6", "o1", "o3", "o4")
-                )
+                self._name == "openai"
+                and model_name.lower().startswith(("gpt-5", "gpt-6", "o1", "o3", "o4"))
             ):
                 payload["max_completion_tokens"] = max_tokens
             else:
                 payload["max_tokens"] = max_tokens
-            # Small reasoning probes otherwise exhaust output tokens without visible text.
-            if (self._name == "groq"
+            # Small reasoning probes otherwise exhaust output tokens without
+            # visible text.
+            if (
+                self._name == "groq"
                 and model_name.lower() in ("openai/gpt-oss-120b", "openai/gpt-oss-20b")
-                and max_tokens <= 256):
+                and max_tokens <= 256
+            ):
                 payload["reasoning_effort"] = "low"
         try:
             async with httpx.AsyncClient(
@@ -139,7 +141,8 @@ class OwnerOpenAICompatibleProvider(BaseLLMProvider):
             content = message.get("content") if isinstance(message, dict) else None
             if isinstance(content, list):
                 content = "\n".join(
-                    part.get("text", "") for part in content
+                    part.get("text", "")
+                    for part in content
                     if isinstance(part, dict) and isinstance(part.get("text"), str)
                 )
             if not isinstance(content, str) or not content.strip():
@@ -147,8 +150,11 @@ class OwnerOpenAICompatibleProvider(BaseLLMProvider):
                 return result(
                     "FAILED",
                     code="EMPTY_OUTPUT_BUDGET" if exhausted else "EMPTY_RESPONSE",
-                    message=("Model exhausted the output budget without visible text."
-                             if exhausted else "The provider did not return a text completion."),
+                    message=(
+                        "Model exhausted the output budget without visible text."
+                        if exhausted
+                        else "The provider did not return a text completion."
+                    ),
                 )
             return result(
                 "COMPLETED",
