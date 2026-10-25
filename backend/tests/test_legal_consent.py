@@ -3,12 +3,9 @@
 import uuid
 from datetime import UTC, datetime
 
-import pytest
 from starlette.testclient import TestClient
 
 from app.core.config import get_settings
-from app.models.user_consent import UserConsent
-from app.repositories.user_consent import UserConsentRepository
 
 
 def test_legal_versions_endpoint(client: TestClient) -> None:
@@ -54,7 +51,9 @@ def test_registration_blocked_without_consent(client: TestClient) -> None:
     assert "terms & conditions" in str(res2.json()).lower()
 
 
-def test_registration_succeeds_with_consent_and_persists_audit(client: TestClient) -> None:
+def test_registration_succeeds_with_consent_and_persists_audit(
+    client: TestClient,
+) -> None:
     """Verify that registration succeeds with consent and records authoritative server-UTC audit entry."""
     settings = get_settings()
     email = f"consenting_{uuid.uuid4().hex[:6]}@example.com"

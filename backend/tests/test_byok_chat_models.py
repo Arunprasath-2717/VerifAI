@@ -274,8 +274,11 @@ def test_groq_and_free_openrouter_execute_with_owners_credentials(client):
         assert all("global" not in str(item) for item in seen)
 
         summary_response = client.post(
-            "/api/v1/chat/conversations/" + conversation_id
-            + "/messages/" + prompted.json()["user_message_id"] + "/summarize",
+            "/api/v1/chat/conversations/"
+            + conversation_id
+            + "/messages/"
+            + prompted.json()["user_message_id"]
+            + "/summarize",
             headers=alice,
         )
         assert summary_response.status_code == 200, summary_response.text
@@ -291,10 +294,7 @@ def test_groq_and_free_openrouter_execute_with_owners_credentials(client):
         assert len(detail["messages"]) == 1
         assert detail["messages"][0]["role"] == "USER"
         assert len(detail["messages"][0]["llm_runs"]) == 2
-        assert (
-            detail["messages"][0]["synthesis"]["text"]
-            == summary["text"]
-        )
+        assert detail["messages"][0]["synthesis"]["text"] == summary["text"]
 
         # Paid OpenRouter routes fail *before* another message is recorded.
         blocked = client.post(
@@ -613,9 +613,7 @@ def test_three_independent_models_run_concurrently_and_synthesize(client):
         persisted = client.get(
             f"/api/v1/chat/conversations/{conv}", headers=user
         ).json()
-        assert (
-            persisted["messages"][0]["synthesis"]["text"] == summary["text"]
-        )
+        assert persisted["messages"][0]["synthesis"]["text"] == summary["text"]
         assert len(persisted["messages"][0]["llm_runs"]) == 3
 
         # A single model may not be sent three times as distinct lanes.

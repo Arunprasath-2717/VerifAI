@@ -24,7 +24,10 @@ router = APIRouter()
     response_model=LegalVersionsResponse,
     status_code=status.HTTP_200_OK,
     summary="Get Active Legal Document Versions",
-    description="Returns current authoritative versions, effective dates, and contact details for Terms & Privacy Policy.",
+    description=(
+        "Returns current authoritative versions, effective dates, and contact "
+        "details for Terms & Privacy Policy."
+    ),
 )
 async def get_legal_versions(
     settings: Settings = Depends(get_settings),
@@ -46,7 +49,10 @@ async def get_legal_versions(
     response_model=list[UserConsentResponse],
     status_code=status.HTTP_200_OK,
     summary="Get Current User's Consent History",
-    description="Returns all historical consent audit records for the authenticated user, strictly isolated to their user ID.",
+    description=(
+        "Returns all historical consent audit records for the authenticated user, "
+        "strictly isolated to their user ID."
+    ),
 )
 async def get_my_consents(
     current_user: User = Depends(get_current_user),
@@ -73,7 +79,10 @@ async def get_my_consents(
     response_model=UserConsentResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Record or Re-accept Legal Terms Consent",
-    description="Allows an authenticated user to record acceptance of updated Terms & Conditions and Privacy Policy.",
+    description=(
+        "Allows an authenticated user to record acceptance of updated Terms & "
+        "Conditions and Privacy Policy."
+    ),
 )
 async def record_user_consent(
     payload: ConsentCreateRequest,

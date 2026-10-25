@@ -66,9 +66,8 @@ async def get_ready(
     # or a remote Firebase/JWKS endpoint on every Kubernetes readiness probe.
     # This is a configuration check, NOT a live identity-provider health check.
     jwt_secret = settings.JWT_SECRET.get_secret_value().strip()
-    firebase_configured = (
-        not settings.FIREBASE_AUTH_ENABLED
-        or bool(settings.FIREBASE_PROJECT_ID.strip())
+    firebase_configured = not settings.FIREBASE_AUTH_ENABLED or bool(
+        settings.FIREBASE_PROJECT_ID.strip()
     )
     auth_configured = bool(jwt_secret) and firebase_configured
     auth_check = {

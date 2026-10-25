@@ -39,10 +39,10 @@ from app.schemas.chat import (
     ChatPromptRequest,
     ChatPromptResponse,
     ChatSynthesis,
-    LLMModelSelection,
     ConversationCreateRequest,
     ConversationDetailResponse,
     ConversationResponse,
+    LLMModelSelection,
     LLMRunResponse,
     MessageResponse,
 )
@@ -326,30 +326,35 @@ class ChatService:
         owner_id: str,
     ) -> ChatSynthesis:
         """Summarize completed persisted answers only after the owner clicks."""
-        conv = (await self.db.execute(
-            select(Conversation).where(Conversation.id == conversation_id)
-        )).scalar_one_or_none()
+        conv = (
+            await self.db.execute(
+                select(Conversation).where(Conversation.id == conversation_id)
+            )
+        ).scalar_one_or_none()
         if conv is None:
             raise NotFoundError("Conversation not found.")
         if conv.owner_id != owner_id:
             raise ForbiddenError("Access denied: You do not own this conversation.")
 
-        message = (await self.db.execute(
-            select(Message)
-            .where(
-                Message.id == message_id,
-                Message.conversation_id == conversation_id,
-                Message.owner_id == owner_id,
-                Message.role == "USER",
+        message = (
+            await self.db.execute(
+                select(Message)
+                .where(
+                    Message.id == message_id,
+                    Message.conversation_id == conversation_id,
+                    Message.owner_id == owner_id,
+                    Message.role == "USER",
+                )
+                .options(selectinload(Message.llm_runs))
             )
-            .options(selectinload(Message.llm_runs))
-        )).scalar_one_or_none()
+        ).scalar_one_or_none()
         if message is None:
             raise NotFoundError("Message not found in this conversation.")
 
         runs = sorted(message.llm_runs, key=lambda r: (r.started_at, str(r.id)))
         complete = [
-            run for run in runs
+            run
+            for run in runs
             if run.status == "COMPLETED" and (run.response or "").strip()
         ]
         if not complete:
@@ -387,14 +392,22 @@ class ChatService:
             # unavailable credentials must not trigger unowned fallback.
             try:
                 request = ChatPromptRequest(
-                    prompt=message.content, models=[target], verify=False,
+                    prompt=message.content,
+                    models=[target],
+                    verify=False,
                 )
                 executor = await self._owner_model_executor(owner_id, request)
                 responses = await executor.execute_models(
-                    prompt=summary_prompt, models=[target], max_tokens=1200,
+                    prompt=summary_prompt,
+                    models=[target],
+                    max_tokens=1200,
                 )
                 result = responses[0] if responses else None
-                if result and result.status == "COMPLETED" and (result.response or "").strip():
+                if (
+                    result
+                    and result.status == "COMPLETED"
+                    and (result.response or "").strip()
+                ):
                     synthesis = ChatSynthesis(
                         text=redact_credentials(result.response or "")[:12000],
                         method="LLM_SYNTHESIS",
@@ -414,7 +427,9 @@ class ChatService:
             except Exception as exc:
                 logger.warning(
                     "On-demand summary failed using %s/%s (%s)",
-                    run.provider, run.model_name, type(exc).__name__,
+                    run.provider,
+                    run.model_name,
+                    type(exc).__name__,
                 )
 
         raise BadRequestError(

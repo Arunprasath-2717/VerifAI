@@ -363,7 +363,10 @@ class VerificationOrchestrator:
                         est_tokens = TokenEstimator.estimate_tokens(combined_text)
                         if not await budget.can_spend(est_tokens):
                             logger.warning(
-                                "Budget exhausted before judge %s on claim %d; skipping.",
+                                (
+                                    "Budget exhausted before judge %s on claim %d; "
+                                    "skipping."
+                                ),
                                 judge.name,
                                 item.index,
                             )
@@ -380,7 +383,8 @@ class VerificationOrchestrator:
                         try:
                             eval_data = await judge.evaluate(item.text, evidence_items)
                             judge_evaluations.append(eval_data)
-                            # Record actual usage (use estimate for deterministic judges)
+                            # Record actual usage (use estimate for
+                            # deterministic judges)
                             await budget.record_usage(
                                 operation="CLAIM_EVALUATION",
                                 provider="deterministic",
@@ -644,7 +648,7 @@ class VerificationOrchestrator:
                 if budget_status.records:
                     token_repo = TokenUsageRepository(session=db_session)
                     await token_repo.save_records(
-                        records=[r for r in budget._records],  # noqa: SLF001
+                        records=list(budget._records),  # noqa: SLF001
                         owner_id=effective_owner,
                         verification_id=verification_id,
                     )

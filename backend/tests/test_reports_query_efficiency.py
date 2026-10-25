@@ -38,54 +38,81 @@ def test_reports_group_totals_with_owner_isolation_and_five_queries():
             maker = sessionmaker(engine, expire_on_commit=False)
 
             with maker() as session:
-                session.add_all([
-                    VerificationJob(
-                        id=today_id, owner_id="default_dev_user",
-                        input_text="today", created_at=today, trust_score=0.8,
-                        total_claims=1, supported_claims=1,
-                    ),
-                    VerificationJob(
-                        id=older_id, owner_id="default_dev_user",
-                        input_text="older", created_at=today-timedelta(days=4),
-                        trust_score=0.6, total_claims=0,
-                    ),
-                    VerificationJob(
-                        id=foreign_id, owner_id="another_user",
-                        input_text="foreign", created_at=today,
-                        total_claims=1, contradicted_claims=1,
-                    ),
-                    ExtractedClaim(
-                        id=today_claim_id, verification_id=today_id,
-                        claim_index=0, claim_text="supported", start_offset=0,
-                        end_offset=9, created_at=today,
-                    ),
-                    ExtractedClaim(
-                        id=foreign_claim_id, verification_id=foreign_id,
-                        claim_index=0, claim_text="foreign", start_offset=0,
-                        end_offset=7, created_at=today,
-                    ),
-                    RetrievedEvidence(
-                        claim_id=today_claim_id, publisher="Evidence Registry",
-                        snippet="measured result", retriever_name="test",
-                        created_at=today,
-                    ),
-                    RetrievedEvidence(
-                        claim_id=foreign_claim_id, publisher="Other Publisher",
-                        snippet="not this owner's record", retriever_name="test",
-                        created_at=today,
-                    ),
-                ])
+                session.add_all(
+                    [
+                        VerificationJob(
+                            id=today_id,
+                            owner_id="default_dev_user",
+                            input_text="today",
+                            created_at=today,
+                            trust_score=0.8,
+                            total_claims=1,
+                            supported_claims=1,
+                        ),
+                        VerificationJob(
+                            id=older_id,
+                            owner_id="default_dev_user",
+                            input_text="older",
+                            created_at=today - timedelta(days=4),
+                            trust_score=0.6,
+                            total_claims=0,
+                        ),
+                        VerificationJob(
+                            id=foreign_id,
+                            owner_id="another_user",
+                            input_text="foreign",
+                            created_at=today,
+                            total_claims=1,
+                            contradicted_claims=1,
+                        ),
+                        ExtractedClaim(
+                            id=today_claim_id,
+                            verification_id=today_id,
+                            claim_index=0,
+                            claim_text="supported",
+                            start_offset=0,
+                            end_offset=9,
+                            created_at=today,
+                        ),
+                        ExtractedClaim(
+                            id=foreign_claim_id,
+                            verification_id=foreign_id,
+                            claim_index=0,
+                            claim_text="foreign",
+                            start_offset=0,
+                            end_offset=7,
+                            created_at=today,
+                        ),
+                        RetrievedEvidence(
+                            claim_id=today_claim_id,
+                            publisher="Evidence Registry",
+                            snippet="measured result",
+                            retriever_name="test",
+                            created_at=today,
+                        ),
+                        RetrievedEvidence(
+                            claim_id=foreign_claim_id,
+                            publisher="Other Publisher",
+                            snippet="not this owner's record",
+                            retriever_name="test",
+                            created_at=today,
+                        ),
+                    ]
+                )
                 session.commit()
 
             statements = []
+
             def record_sql(_conn, _cursor, sql, _params, _context, _many):
                 if sql.lstrip().upper().startswith("SELECT"):
                     statements.append(sql)
+
             event.listen(engine, "before_cursor_execute", record_sql)
             try:
                 with maker() as session:
                     report = await get_reports_analytics(
-                        timeframe="7D", current_user=None,
+                        timeframe="7D",
+                        current_user=None,
                         db=AsyncExecuteAdapter(session),
                         settings=Settings(_env_file=None, ENVIRONMENT="testing"),
                     )

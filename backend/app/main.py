@@ -42,9 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await init_db()
         logger.info("Database schema initialized and verified.")
     except Exception as exc:
-        logger.warning(
-            "Database schema initialization failed: %s", type(exc).__name__
-        )
+        logger.warning("Database schema initialization failed: %s", type(exc).__name__)
         # A production process that cannot verify its schema must not serve
         # requests. Developers may still inspect a misconfigured local instance.
         if settings.ENVIRONMENT in ("production", "staging"):

@@ -1,6 +1,5 @@
 """Schemas for reports and analytics endpoints."""
 
-from typing import Any
 from pydantic import BaseModel, Field
 
 from app.schemas.dashboard import ChartPointSchema

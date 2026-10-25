@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
 from scripts.verifai_cli import (
     CinematicBanner,
     DemoRunner,

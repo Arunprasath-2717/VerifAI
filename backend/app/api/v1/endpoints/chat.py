@@ -200,12 +200,16 @@ async def summarize_message(
     effective_owner = resolve_effective_owner(current_user, None, settings)
     if settings.RATE_LIMIT_ENABLED:
         enforce_rate_limit(
-            http_request, action="chat_summary", limit=12,
-            user_id=effective_owner, settings=settings,
+            http_request,
+            action="chat_summary",
+            limit=12,
+            user_id=effective_owner,
+            settings=settings,
         )
     service = ChatService(db_session=db, settings=settings)
     return await service.summarize_message(
-        conversation_id=conversation_id, message_id=message_id,
+        conversation_id=conversation_id,
+        message_id=message_id,
         owner_id=effective_owner,
     )
 

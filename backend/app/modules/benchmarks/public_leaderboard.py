@@ -4,6 +4,7 @@ VerifAI's own accuracy/grounding leaderboard is intentionally separate. These
 numbers come from an independent public benchmark, *not* VerifAI model tests.
 Snapshot refresh is invoked by a weekly job; HTTP GET never scrapes live sites.
 """
+
 from __future__ import annotations
 
 import csv
@@ -24,7 +25,9 @@ import httpx
 logger = logging.getLogger("verifai.benchmarks.public")
 
 SOURCE_URL = "https://livebench.ai/"
-SNAPSHOT_PATH = Path(__file__).resolve().parents[2] / "data" / "public_model_leaderboard.json"
+SNAPSHOT_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "public_model_leaderboard.json"
+)
 # LiveBench v2 CSV/official suite names. These are not VerifAI claim checks.
 SUITES = {
     "agentic": "long_agentic",
@@ -81,28 +84,40 @@ def construct_snapshot(
         if not isinstance(category_data, dict):
             raise ValueError
     except (ValueError, TypeError) as exc:
-        raise PublicBenchmarkRefreshError("Invalid LiveBench category metadata") from exc
+        raise PublicBenchmarkRefreshError(
+            "Invalid LiveBench category metadata"
+        ) from exc
     weights = category_data.get("_overall_weights", {})
     if not isinstance(weights, dict):
         weights = {}
     cols: dict[str, tuple[str, float]] = {}
     for display, column in SUITES.items():
         matching = category_data.get(
-            {"agentic": "Long Agentic", "browser": "Browser",
-             "data_analysis": "Data Analysis"}.get(display, display.title())
+            {
+                "agentic": "Long Agentic",
+                "browser": "Browser",
+                "data_analysis": "Data Analysis",
+            }.get(display, display.title())
         )
         if not isinstance(matching, list) or matching != [column]:
-            raise PublicBenchmarkRefreshError("LiveBench suite schema changed; manual review required")
+            raise PublicBenchmarkRefreshError(
+                "LiveBench suite schema changed; manual review required"
+            )
         source_category = {
-            "agentic": "Long Agentic", "browser": "Browser",
-            "data_analysis": "Data Analysis"
+            "agentic": "Long Agentic",
+            "browser": "Browser",
+            "data_analysis": "Data Analysis",
         }.get(display, display.title())
         weight = float(weights.get(source_category, 1))
         if not math.isfinite(weight) or weight <= 0:
             raise PublicBenchmarkRefreshError("Invalid LiveBench suite weight")
         cols[display] = (column, weight)
     reader = csv.DictReader(io.StringIO(table_csv))
-    if not reader.fieldnames or set(SUITES.values()) - set(reader.fieldnames) or "model" not in reader.fieldnames:
+    if (
+        not reader.fieldnames
+        or set(SUITES.values()) - set(reader.fieldnames)
+        or "model" not in reader.fieldnames
+    ):
         raise PublicBenchmarkRefreshError("LiveBench table columns changed")
     gathered = []
     seen = set()
@@ -114,21 +129,31 @@ def construct_snapshot(
         # Only use source-declared identity; guessing makers from a slug is unsafe.
         details = model_metadata.get(model_id)
         if not details:
-            logger.warning("Skipped public model without source identity metadata: %s", model_id)
+            logger.warning(
+                "Skipped public model without source identity metadata: %s", model_id
+            )
             continue
-        scores = {key: _parse_score(line.get(column)) for key, (column, _) in cols.items()}
-        scored = [(score, cols[key][1]) for key, score in scores.items() if score is not None]
+        scores = {
+            key: _parse_score(line.get(column)) for key, (column, _) in cols.items()
+        }
+        scored = [
+            (score, cols[key][1]) for key, score in scores.items() if score is not None
+        ]
         if not scored:
             continue
-        overall = sum(score * weight for score, weight in scored) / sum(weight for _, weight in scored)
-        gathered.append({
-            "id": model_id,
-            "name": details[0],
-            "organization": details[1],
-            "overall_score": round(overall, 1),
-            "suite_scores": scores,
-            "suite_coverage": len(scored),
-        })
+        overall = sum(score * weight for score, weight in scored) / sum(
+            weight for _, weight in scored
+        )
+        gathered.append(
+            {
+                "id": model_id,
+                "name": details[0],
+                "organization": details[1],
+                "overall_score": round(overall, 1),
+                "suite_scores": scores,
+                "suite_coverage": len(scored),
+            }
+        )
     if len(gathered) < MIN_MODEL_COUNT:
         raise PublicBenchmarkRefreshError("Too few valid models in official release")
     gathered.sort(key=lambda m: (-m["overall_score"], m["name"].lower()))
@@ -166,13 +191,18 @@ def construct_snapshot(
 
 def fetch_livebench_snapshot(client: httpx.Client | None = None) -> dict[str, Any]:
     """Fetch official CSV and identity metadata. Fail closed if the site changes."""
+
     def fetch(active: httpx.Client) -> dict[str, Any]:
         html = _get_text(active, SOURCE_URL)
-        script_paths = re.findall(r'<script[^>]+src="(\./static/js/main\.[a-zA-Z0-9]+\.js)"', html)
+        script_paths = re.findall(
+            r'<script[^>]+src="(\./static/js/main\.[a-zA-Z0-9]+\.js)"', html
+        )
         if len(script_paths) != 1:
-            raise PublicBenchmarkRefreshError("Cannot locate official LiveBench client manifest")
+            raise PublicBenchmarkRefreshError(
+                "Cannot locate official LiveBench client manifest"
+            )
         js = _get_text(active, urljoin(SOURCE_URL, script_paths[0]), 3_000_000)
-        releases = re.search(r'Yt=\[([^\]]+)\]', js)
+        releases = re.search(r"Yt=\[([^\]]+)\]", js)
         release_ids = re.findall(r'"(20\d{6})"', releases.group(1)) if releases else []
         if not release_ids:
             raise PublicBenchmarkRefreshError("No LiveBench 2.0 release found")
@@ -183,7 +213,8 @@ def fetch_livebench_snapshot(client: httpx.Client | None = None) -> dict[str, An
         # Model names and organizations are maintained by the LiveBench team in
         # their published client manifest; never execute downloaded JavaScript.
         metadata = {
-            slug: (name, maker) for slug, name, maker in re.findall(
+            slug: (name, maker)
+            for slug, name, maker in re.findall(
                 r'"([^"\\]+)":\{displayName:"([^"\\]+)",organization:"([^"\\]+)"',
                 js,
             )
@@ -198,10 +229,16 @@ def fetch_livebench_snapshot(client: httpx.Client | None = None) -> dict[str, An
             release_id=release_id,
             source_last_updated=updated_match.group(1),
         )
+
     if client is not None:
         return fetch(client)
-    with httpx.Client(timeout=httpx.Timeout(20.0), trust_env=False,
-                      headers={"User-Agent": "VerifAI-Leaderboard/1.0 (source-attributed weekly fetch)"}) as active:
+    with httpx.Client(
+        timeout=httpx.Timeout(20.0),
+        trust_env=False,
+        headers={
+            "User-Agent": "VerifAI-Leaderboard/1.0 (source-attributed weekly fetch)"
+        },
+    ) as active:
         return fetch(active)
 
 
@@ -210,9 +247,12 @@ def load_public_snapshot(path: Path = SNAPSHOT_PATH) -> dict[str, Any]:
     try:
         doc = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        raise PublicBenchmarkRefreshError("Public leaderboard snapshot unavailable") from exc
+        raise PublicBenchmarkRefreshError(
+            "Public leaderboard snapshot unavailable"
+        ) from exc
     if (
-        not isinstance(doc, dict) or doc.get("schema_version") != 1
+        not isinstance(doc, dict)
+        or doc.get("schema_version") != 1
         or doc.get("benchmark") != "LiveBench 2.0"
         or len(doc.get("models", [])) < MIN_MODEL_COUNT
         or doc.get("total_models") != len(doc["models"])
@@ -222,8 +262,9 @@ def load_public_snapshot(path: Path = SNAPSHOT_PATH) -> dict[str, Any]:
     return doc
 
 
-def refresh_public_snapshot(path: Path = SNAPSHOT_PATH,
-                            client: httpx.Client | None = None) -> tuple[dict[str, Any], bool]:
+def refresh_public_snapshot(
+    path: Path = SNAPSHOT_PATH, client: httpx.Client | None = None
+) -> tuple[dict[str, Any], bool]:
     """Atomic snapshot swap; retain the previous valid snapshot on failure."""
     snapshot = fetch_livebench_snapshot(client)
     try:
@@ -233,17 +274,24 @@ def refresh_public_snapshot(path: Path = SNAPSHOT_PATH,
     if previous and previous["source_updated_at"] > snapshot["source_updated_at"]:
         raise PublicBenchmarkRefreshError("Source is older than last saved benchmark")
     # Avoid noisy weekly commits if upstream has not published new observations.
-    same_data = bool(previous and previous["benchmark_release"] == snapshot["benchmark_release"]
-                     and previous["source_updated_at"] == snapshot["source_updated_at"]
-                     and previous["models"] == snapshot["models"])
+    same_data = bool(
+        previous
+        and previous["benchmark_release"] == snapshot["benchmark_release"]
+        and previous["source_updated_at"] == snapshot["source_updated_at"]
+        and previous["models"] == snapshot["models"]
+    )
     if same_data:
         return previous, False
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = None
     try:
         with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=path.parent,
-            prefix=".public-model-leaderboard-", suffix=".json", delete=False
+            "w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=".public-model-leaderboard-",
+            suffix=".json",
+            delete=False,
         ) as fp:
             tmp_path = Path(fp.name)
             json.dump(snapshot, fp, ensure_ascii=False, indent=2, allow_nan=False)

@@ -204,9 +204,7 @@ def test_three_native_vendors_and_on_demand_summary(app_client: TestClient):
         history = client.get(f"/api/v1/chat/conversations/{conv}", headers=owner).json()
         assert history["messages"][0]["synthesis"] is None
 
-        summary_url = (
-            f"/api/v1/chat/conversations/{conv}/messages/{body['user_message_id']}/summarize"
-        )
+        summary_url = f"/api/v1/chat/conversations/{conv}/messages/{body['user_message_id']}/summarize"
         combined = client.post(summary_url, headers=owner)
         assert combined.status_code == 200, combined.text
         combined_data = combined.json()

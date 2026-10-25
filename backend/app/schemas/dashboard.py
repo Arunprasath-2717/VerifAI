@@ -1,8 +1,6 @@
 """Pydantic schemas for dashboard statistics and aggregate metrics."""
 
-from datetime import datetime
-from typing import Any
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from app.schemas.verification import VerificationResponse
 

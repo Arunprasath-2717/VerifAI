@@ -161,7 +161,12 @@ def test_user_registration_validation_rules(client: TestClient) -> None:
     # Username too short
     r2 = client.post(
         "/api/v1/auth/register",
-        json={"email": "u@test.com", "username": "ab", "password": "Pass12345678!", "terms_accepted": True},
+        json={
+            "email": "u@test.com",
+            "username": "ab",
+            "password": "Pass12345678!",
+            "terms_accepted": True,
+        },
     )
     assert r2.status_code == 422
 

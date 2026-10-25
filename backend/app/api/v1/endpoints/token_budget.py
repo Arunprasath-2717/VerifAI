@@ -67,7 +67,8 @@ async def get_my_token_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ) -> list[TokenUsageRecordSchema]:
-    """Return paginated token usage records for the authenticated user (most-recent first)."""
+    """Return paginated token usage records for the authenticated user
+    (most-recent first)."""
     repo = TokenUsageRepository(session=db)
     records = await repo.get_by_owner_id(
         owner_id=str(current_user.id),

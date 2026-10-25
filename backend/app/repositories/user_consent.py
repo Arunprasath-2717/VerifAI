@@ -56,7 +56,8 @@ class UserConsentRepository:
         return consent
 
     async def get_by_user_id(self, user_id: uuid.UUID) -> list[UserConsent]:
-        """Retrieve all consent records for a specific user, ordered chronologically descending."""
+        """Retrieve all consent records for a specific user, ordered
+        chronologically descending."""
         stmt = (
             select(UserConsent)
             .where(UserConsent.user_id == user_id)
@@ -79,7 +80,8 @@ class UserConsentRepository:
     async def has_consented_to_current(
         self, user_id: uuid.UUID, current_terms_v: str, current_privacy_v: str
     ) -> bool:
-        """Verify whether user has an existing record agreeing to the specified active versions."""
+        """Verify whether user has an existing record agreeing to the specified
+        active versions."""
         latest = await self.get_latest_by_user_id(user_id)
         if not latest:
             return False
