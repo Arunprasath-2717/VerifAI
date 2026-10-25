@@ -277,7 +277,7 @@ try:
     assert status == 200 and saved["id"] == chat_id
     print("PASS production UI creates a real, persisted chat session", flush=True)
 
-    navigate("/reports", "document.body.innerText.includes('Reports & Benchmarks')")
+    navigate("/reports", "document.querySelector('.reports-redesign h1')?.textContent?.trim() === 'Reports & Insights'")
     assert wait("window.__liveBackendCalls.includes('/api/v1/reports/analytics')"), "Real reports API not called"
     print("PASS production reports page fetches actual test-backend analytics", flush=True)
 
