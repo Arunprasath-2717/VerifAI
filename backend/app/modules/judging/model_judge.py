@@ -14,6 +14,24 @@ from app.modules.judging.prompt import (
 from app.schemas.verification import JudgeDecision
 
 
+_VERDICTS = {
+    "SUPPORTED": JudgeDecision.SUPPORTED,
+    "CONTRADICTED": JudgeDecision.CONTRADICTED,
+    "UNKNOWN": JudgeDecision.UNKNOWN,
+}
+
+
+def parse_model_verdict(raw_text: str) -> JudgeDecision | None:
+    """Parse the model's reply, accepting only the exact single-word format.
+
+    Substring matching is deliberately avoided: "UNSUPPORTED" or "NOT
+    SUPPORTED" must never be read as SUPPORTED. Surrounding quotes, punctuation,
+    and case are tolerated; anything else is reported as unparseable (None).
+    """
+    cleaned = raw_text.strip().strip("\"'`*.!:;, \n\t").upper()
+    return _VERDICTS.get(cleaned)
+
+
 class OpenSourceModelJudge(BaseJudge):
     """Adapter for local open-source LLM judge (e.g. Ollama or vLLM).
 
@@ -34,6 +52,7 @@ class OpenSourceModelJudge(BaseJudge):
         temperature: float = 0.0,
         seed: int = 42,
         supports_seeds: bool = True,
+        timeout_seconds: float = 10.0,
     ) -> None:
         self._endpoint_url = endpoint_url
         self._model_name = model_name
@@ -42,6 +61,7 @@ class OpenSourceModelJudge(BaseJudge):
         self.temperature = temperature
         self.seed = seed
         self.supports_seeds = supports_seeds
+        self.timeout_seconds = timeout_seconds
 
     @property
     def name(self) -> str:
@@ -89,7 +109,7 @@ class OpenSourceModelJudge(BaseJudge):
 
         # Attempt probe of configured local endpoint
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
                 payload = {
                     "model": self._model_name,
                     "prompt": prompt_text,
@@ -102,13 +122,26 @@ class OpenSourceModelJudge(BaseJudge):
                 resp = await client.post(self._endpoint_url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
-                    raw_text = data.get("response", "").strip().upper()
-                    if "SUPPORTED" in raw_text:
-                        judgment = JudgeDecision.SUPPORTED
-                    elif "CONTRADICTED" in raw_text:
-                        judgment = JudgeDecision.CONTRADICTED
-                    else:
-                        judgment = JudgeDecision.UNKNOWN
+                    raw_text = str(data.get("response", "")).strip()
+                    judgment = parse_model_verdict(raw_text)
+                    if judgment is None:
+                        return JudgeEvaluationData(
+                            judge_id=uuid.uuid4(),
+                            judge_name=self.name,
+                            model_version=self._model_name,
+                            judgment=JudgeDecision.UNAVAILABLE,
+                            confidence=None,
+                            rationale=(
+                                "Model output did not match the required "
+                                "single-word verdict format."
+                            ),
+                            evidence_references=[],
+                            metadata={
+                                "status": "UNPARSEABLE_OUTPUT",
+                                "raw_output": raw_text[:200],
+                                **config_metadata,
+                            },
+                        )
 
                     return JudgeEvaluationData(
                         judge_id=uuid.uuid4(),
