@@ -207,7 +207,12 @@ def fetch_livebench_snapshot(client: httpx.Client | None = None) -> dict[str, An
         if not release_ids:
             raise PublicBenchmarkRefreshError("No LiveBench 2.0 release found")
         release_id = max(release_ids)
-        updated_match = re.search(r'Xt="(\d{1,2} [A-Za-z]+ 20\d{2})"', js)
+        # The JS minifier can rename the date variable between deployments.
+        # Anchor it to the official release list rather than a variable name.
+        updated_match = re.search(
+            r'Yt=\[[^\]]+\].{0,300}?\b[A-Za-z_$][\w$]*="(\d{1,2} [A-Za-z]+ 20\d{2})"',
+            js,
+        )
         if not updated_match:
             raise PublicBenchmarkRefreshError("Source update date not published")
         # Model names and organizations are maintained by the LiveBench team in

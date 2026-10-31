@@ -13,7 +13,6 @@ from app.modules.judging.prompt import (
 )
 from app.schemas.verification import JudgeDecision
 
-
 _VERDICTS = {
     "SUPPORTED": JudgeDecision.SUPPORTED,
     "CONTRADICTED": JudgeDecision.CONTRADICTED,

@@ -42,6 +42,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements-dev.txt
 
+      - name: Verify Code Quality & Formatting
+        run: |
+          PYTHONPATH=. ruff check backend scripts benchmark
+          PYTHONPATH=. ruff format --check backend scripts benchmark
+
+      - name: Run Benchmark Verification & Dataset Validation
+        run: |
+          PYTHONPATH=. pytest benchmark/tests -v
+          PYTHONPATH=. python scripts/benchmark_tool.py validate
+
       - name: Run Backend Application Smoke Test
         run: |
           python scripts/smoke_test.py

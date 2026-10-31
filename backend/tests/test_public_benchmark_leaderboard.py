@@ -77,12 +77,13 @@ def test_invalid_source_never_replaces_last_snapshot(monkeypatch, tmp_path: Path
     assert file.read_text(encoding="utf-8") == '{"last_valid":true}'
 
 
+@pytest.mark.parametrize("date_variable", ["Xt", "Zt"])
 def test_official_source_fetching_uses_fixed_host_and_validated_metadata(
-    livebench_fixture,
+    livebench_fixture, date_variable
 ):
     table, categories, names = livebench_fixture
     js = (
-        'const Yt=["20261014"],Xt="23 October 2026";var mn={'
+        f'const Yt=["20261014"],{date_variable}="23 October 2026";var mn={{'
         + ",".join(
             f'"{slug}":{{displayName:"{name}",organization:"{maker}"}}'
             for slug, (name, maker) in names.items()

@@ -54,3 +54,4 @@ Thumbs.db
 
 # Impeccable review artifacts
 .impeccable/
+.backups/
