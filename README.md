@@ -72,7 +72,7 @@ Synthesize answers separately from factual verification. Trace each verification
 | **Safety controls** | JWT/Firebase enrollment boundary, credential redaction, request/rate limits, SSRF and prompt-injection checks | Defense in depth; not a substitute for independent security review |
 
 > [!IMPORTANT]
-> This README describes the **`Final` branch**. `main` may contain an older implementation until the pull request is reviewed and merged. Real provider calls require the user's own valid credentials, permissions, and quota.
+> This README is maintained on **`Final`** and proposed for the reviewed **`main`** branch. Earlier advanced features were already merged into `main` (PR #5); only subsequent, unmerged changes should be treated as branch-specific. Real provider calls require the user's own valid credentials, permissions, and quota.
 
 ### Experience map
 
@@ -521,7 +521,7 @@ npm run test:browser
 
 ### Project status, contributing & license
 
-- **`Final`** is the active advanced workspace and development target described here; merge to `main` only after review and CI approval.
+- **`Final`** carries ongoing changes; **`main`** is the reviewed integration branch. Prior engineering features were merged in PR #5. Review and pass CI before merging new changes.
 - For contributions, create a focused branch, document meaningful architectural decisions, write regression tests, and open a pull request. No real keys, personal data, or invented evaluation scores in commits.
 - **Licensing:** There is currently no repository-root `LICENSE` file. Publicly visible code is **not automatically open-source licensed**. Seek the owner's permission before redistributing or reusing it.
 
