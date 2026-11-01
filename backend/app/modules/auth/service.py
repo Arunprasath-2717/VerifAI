@@ -7,6 +7,7 @@ from typing import Any
 
 from sqlalchemy.exc import IntegrityError
 
+from app.core.account_lockout import get_account_lockout
 from app.core.config import Settings, get_settings
 from app.core.errors import (
     AppError,
@@ -96,7 +97,7 @@ class AuthenticationService:
         new_user.updated_at = now
 
         try:
-            created_user = await self.user_repo.create(new_user)
+            created_user = await self.user_repo.create(new_user, commit=False)
         except IntegrityError as exc:
             # Frontend and pre-checks are advisory; handle concurrent writes
             # under the database unique index as an expected 409 conflict.
@@ -121,17 +122,17 @@ class AuthenticationService:
                 action_source="signup_form",
                 ip_address=ip_address,
                 user_agent=user_agent,
+                commit=False,
             )
+            await self.user_repo.session.commit()
+            await self.user_repo.session.refresh(created_user)
         except Exception as exc:
             logger.error(
                 "Failed to persist user consent for user %s: %s", created_user.id, exc
             )
-            # Remove created user to prevent orphaned account without recorded consent
-            try:
-                await self.user_repo.session.delete(created_user)
-                await self.user_repo.session.commit()
-            except Exception:
-                pass
+            # User and consent are in one transaction; rollback leaves no
+            # account provisioned if legal consent cannot be saved.
+            await self.user_repo.session.rollback()
             raise AppError(
                 message="Failed to persist mandatory legal consent. "
                 "Registration aborted.",
@@ -152,6 +153,10 @@ class AuthenticationService:
     async def authenticate_local(self, request: UserLoginRequest) -> TokenResponse:
         """Authenticate using local credentials and issue a signed session token."""
         identifier = request.email_or_username.strip()
+        lockout = get_account_lockout()
+        # Locked accounts are refused before any password check, so the correct
+        # password cannot be used to probe a locked account.
+        lockout.check_allowed(identifier)
 
         # Check by email first, then by username
         user = await self.user_repo.get_by_email(identifier)
@@ -159,16 +164,20 @@ class AuthenticationService:
             user = await self.user_repo.get_by_username(identifier)
 
         if not user or not user.is_active:
+            lockout.record_failure(identifier)
             raise UnauthorizedError(
                 message="Invalid email/username or password.",
                 details={"reason": "invalid_credentials"},
             )
 
         if not verify_password(request.password, user.hashed_password):
+            lockout.record_failure(identifier)
             raise UnauthorizedError(
                 message="Invalid email/username or password.",
                 details={"reason": "invalid_credentials"},
             )
+
+        lockout.record_success(identifier)
 
         token, expires_in = create_access_token(
             subject=user.id,
@@ -179,7 +188,7 @@ class AuthenticationService:
         logger.info("User %s logged in successfully via local credentials", user.id)
         return TokenResponse(
             access_token=token,
-            token_type="bearer",
+            token_type="bearer",  # nosec B106 - Bearer token type, not a password
             expires_in=expires_in,
             role=UserRole(user.role),
             user_id=user.id,
@@ -241,6 +250,7 @@ class AuthenticationService:
             firebase_uid=firebase_uid,
             email=email,
             display_name=resolved_name,
+            commit=False,
         )
 
         if not user.is_active:
@@ -263,16 +273,15 @@ class AuthenticationService:
                     action_source=action_source,
                     ip_address=ip_address,
                     user_agent=user_agent,
+                    commit=False,
                 )
+                await self.user_repo.session.commit()
+                await self.user_repo.session.refresh(user)
             except Exception as exc:
                 logger.error(
                     "Failed to persist consent for Firebase user %s: %s", user.id, exc
                 )
-                try:
-                    await self.user_repo.session.delete(user)
-                    await self.user_repo.session.commit()
-                except Exception:
-                    pass
+                await self.user_repo.session.rollback()
                 raise AppError(
                     message="Failed to record legal consent for new account.",
                     code="CONSENT_PERSISTENCE_FAILED",
@@ -307,6 +316,11 @@ class AuthenticationService:
                         details={"reason": "consent_persistence_failed"},
                     ) from exc
 
+        # Commit pending last-login update for a previously provisioned user.
+        # New registrations commit user and consent together above.
+        if not is_new:
+            await self.user_repo.session.commit()
+
         # 4. Mint internal session token
         token, expires_in = create_access_token(
             subject=user.id,
@@ -323,7 +337,7 @@ class AuthenticationService:
 
         response = TokenResponse(
             access_token=token,
-            token_type="bearer",
+            token_type="bearer",  # nosec B106 - Bearer token type, not a password
             expires_in=expires_in,
             role=UserRole(user.role),
             user_id=user.id,

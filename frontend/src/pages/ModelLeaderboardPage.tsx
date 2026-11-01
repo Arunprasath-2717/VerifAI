@@ -11,6 +11,7 @@ import {
   type PublicLeaderboardSnapshot,
 } from '../api/models';
 import type { ModelLeaderboardEntry } from '../types';
+import { safeExternalUrl } from '../utils/safeExternalUrl';
 
 interface ModelLeaderboardPageProps {
   theme?: 'light' | 'dark';
@@ -177,11 +178,11 @@ export const ModelLeaderboardPage: React.FC<ModelLeaderboardPageProps> = ({ them
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs font-bold">
-                <a href={snapshot?.source_url || 'https://livebench.ai/'} target="_blank" rel="noopener noreferrer"
+                <a href={safeExternalUrl(snapshot?.source_url) || 'https://livebench.ai/'} target="_blank" rel="noopener noreferrer"
                   className={'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 ' + pale}>
                   Original leaderboard <ExternalLink size={13}/>
                 </a>
-                {snapshot && <a href={snapshot.methodology_url} target="_blank" rel="noopener noreferrer"
+                {safeExternalUrl(snapshot?.methodology_url) && <a href={safeExternalUrl(snapshot?.methodology_url)} target="_blank" rel="noopener noreferrer"
                   className={'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 ' + surface}>
                   Methodology <ArrowUpRight size={13}/>
                 </a>}
@@ -408,10 +409,10 @@ export const ModelLeaderboardPage: React.FC<ModelLeaderboardPageProps> = ({ them
                 <p className="font-bold">Evidence and interpretation</p>
                 <p>Published source updated {dateLabel(snapshot.source_updated_at)} · benchmark release {dateLabel(snapshot.benchmark_release)}.</p>
                 <p>These task scores cannot establish citation accuracy, factual reliability in your domain, or provider availability.</p>
-                <a href={snapshot.data_url} target="_blank" rel="noopener noreferrer"
+                {safeExternalUrl(snapshot.data_url) && <a href={safeExternalUrl(snapshot.data_url)} target="_blank" rel="noopener noreferrer"
                   className={'inline-flex gap-1 font-bold items-center underline underline-offset-2 ' + heading}>
                   View source CSV <ExternalLink size={12}/>
-                </a>
+                </a>}
               </div>
               <div className="flex justify-end gap-2 flex-wrap">
                 <Link to="/chat" onClick={() => setInspected(null)}

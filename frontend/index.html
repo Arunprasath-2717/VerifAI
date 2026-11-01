@@ -1,9 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Black first paint on the marketing homepage; other app routes retain their themes. -->
+    <style>html[data-landing-prepaint],html[data-landing-prepaint] body { background:#000!important; color:#fff; }</style>
+    <script>if(location.pathname === '/')document.documentElement.setAttribute('data-landing-prepaint','');</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VerifAI — Evidence-first AI verification</title>
+    <link rel="icon" type="image/svg+xml" href="/vesper-style/favicon.svg" />
     <meta name="description" content="Evidence-first AI verification. Inspect claims, compare LLMs, and trace transparent supporting evidence." />
     <meta property="og:title" content="VerifAI — Evidence-first AI verification" />
     <meta property="og:description" content="Evidence-first AI verification. Inspect claims, compare LLMs, and trace transparent supporting evidence." />

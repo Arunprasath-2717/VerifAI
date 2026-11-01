@@ -25,6 +25,21 @@
 
     <!-- Main Ingestion & Input Card -->
     <section class="card input-card">
+      <!-- Sign-in panel: shown until the extension holds a valid Bearer token -->
+      <form id="signin-form" class="signin-form hidden" autocomplete="on">
+        <p class="signin-hint">Sign in with your VerifAI account to capture and verify content.</p>
+        <label for="signin-identifier" class="field-label">Email or username</label>
+        <input id="signin-identifier" class="select-input" type="text" autocomplete="username" required maxlength="255">
+        <label for="signin-password" class="field-label">Password</label>
+        <input id="signin-password" class="select-input" type="password" autocomplete="current-password" required maxlength="128">
+        <button id="btn-signin" type="submit" class="btn btn-primary btn-block">Sign in</button>
+      </form>
+
+      <div id="signed-in-bar" class="signed-in-bar hidden">
+        <span>Signed in</span>
+        <button id="btn-signout" type="button" class="btn btn-secondary btn-sm">Sign out</button>
+      </div>
+
       <div class="card-header">
         <label for="input-text" class="card-title">Content to Verify</label>
         <button id="btn-detect" class="btn btn-secondary btn-sm" title="Capture text from current tab">
@@ -122,7 +137,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <span>VerifAI v0.1.0 • Endpoint: <code>/api/v1/ingest</code></span>
+      <span>VerifAI v1.0.0 • Endpoint: <code>/api/v1/ingest</code></span>
     </footer>
   </div>
 

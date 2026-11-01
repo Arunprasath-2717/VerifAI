@@ -1,0 +1,14 @@
+# Component inventory
+- SiteHeader — React navigation, responsive disclosure menu, active section indication; KRAFT minimalist nav and Sparkdesign spacing.
+- EditorialHero — kinetic heading, layered matte gradient, subtle scroll cue; KRAFT composition.
+- PromptComposer — text, mode chips, keyboard submission, input validation, draft preview and auth/workspace links; KRAFT input grammar customized for VerifAI.
+- StatementTransition — dark-to-light scroll narrative and offset text; Sparkdesign negative space.
+- EvidenceWorkspace — tabbed product-frame UI with comparison/verify/summarize concepts; original VerifAI interface.
+- StickyMethod — four synchronized states (Ask / Compare / Check / Understand); editorial story.
+- ExplorationGallery — MotionSites-inspired category filters and detail dialog; original SVG/DOM graphics.
+- FeatureChapters — alternating editorial layouts and diagrams; Sparkdesign influence.
+- EvidenceComparison — accessible slider and clear example disclosure; original.
+- UseCases — authentic scenario descriptions without fictional testimonials or stats.
+- Faq — accessible native disclosure list.
+- ClosingCTA / Footer — original composed closing stage.
+- TextReveal / ScrollProgress — shared animation primitives respecting reduced motion.

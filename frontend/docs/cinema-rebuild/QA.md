@@ -1,0 +1,11 @@
+# Cinematic landing QA
+- Four-section contract: exactly Hero + Vision + Perspectives + Resolution, followed by Footer.
+- Frontend: React/Vite, scoped components and styles; no changes to authenticated application routes.
+- Media: original HD Pexels stock, four Unsplash stock photographs, matching video poster fallback.
+- Motion: scroll-linked hero camera/typography, vision parallax and perspective, 3D viewpoint transformation, animated cursor (fine pointer only), video autoplay loop muted/inline.
+- Reduced motion: no custom cursor, static video poster, static parallax, no pinned scroll story.
+- Cross-browser checks: Chromium at 1440×900, 390×844 and 360×800, zero JavaScript errors and zero horizontal overflow in test output.
+- Navigation: desktop anchors, keyboard-close mobile menu, existing /login or /dashboard, /privacy and /terms, GitHub link.
+- Video playback loaded readyState=4 at 1440 and 390 viewports in Chromium.
+- Build: `npm run lint && npm run build`.
+- Not independently measured: Lighthouse scores, INP, LCP or 60fps under low-power hardware.

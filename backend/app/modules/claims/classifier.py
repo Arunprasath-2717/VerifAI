@@ -26,7 +26,7 @@ class ContentClassifier:
     OPINION_MARKERS = re.compile(
         r"\b(?:i\s+(?:personally\s+)?(?:think|feel|believe|prefer|consider)|"
         r"in\s+my\s+view|in\s+my\s+opinion|in\s+our\s+opinion|in\s+my\s+viewpoint|"
-        r"best|worst|greatest|terrible|wonderful|superior|inferior|should|ought|"
+        r"best|worst|greatest|terrible|wonderful|superior|inferior|"
         r"tastiest|underrated|overrated|beautiful|ugly|breathtaking|uninspiring|"
         r"unjustified|pretentious|calming|rejuvenating|enjoyable|mediocre|unnatural|"
         r"the\s+most\s+(?:pleasant|relaxing|sophisticated|expressive|impressive)|"
@@ -46,9 +46,14 @@ class ContentClassifier:
     )
 
     # Lexical markers for hypothetical and scenario conditional statements
+    # A mid-sentence "if" is only hypothetical alongside a conditional modal
+    # ("Prices would fall if demand dropped"); "The event happened if you count
+    # 1950" is an empirical claim with a hedge, so it must stay verifiable.
     HYPOTHETICAL_MARKERS = re.compile(
-        r"\b(?:if|imagine|suppose|supposing|assuming\s+that|were\s+to|what\s+if|"
-        r"hypothetically|in\s+the\s+event\s+that|would\s+have\s+been)\b",
+        r"(?:^\s*if\b)|"
+        r"\b(?:imagine|suppose|supposing|assuming\s+that|were\s+to|what\s+if|"
+        r"hypothetically|in\s+the\s+event\s+that|would\s+have\s+been)\b|"
+        r"\b(?:would|could|might)\b.*\bif\b",
         re.IGNORECASE,
     )
 
@@ -86,7 +91,9 @@ class ContentClassifier:
         r"format|implement|review|set\s+up|"
         # System directives / instruction overrides
         r"ignore|disregard|classify|override|forget|bypass"
-        r")\b",
+        # A hyphen continues a word ("Run-time", "Open-source"), so it must not
+        # count as the end of the imperative verb.
+        r")(?![-\w])",
         re.IGNORECASE,
     )
 
@@ -159,6 +166,23 @@ class ContentClassifier:
                     "Claim classified as future-looking prediction; empirical "
                     "truth cannot be verified at present."
                 ),
+            )
+
+        # Superlatives describing an objective geographic measurement still
+        # require factual verification. Do not route them away as opinions.
+        if re.search(
+            r"\b(?:greatest|largest|tallest|highest)\s+(?:mountain|peak|volcano)\b",
+            text,
+            re.IGNORECASE,
+        ):
+            return ClassificationResult(
+                content_type=ContentType.FACTUAL,
+                verdict=None,
+                is_verifiable=True,
+                confidence=None,
+                is_calibrated=False,
+                calibration_status="NOT_CALIBRATED",
+                explanation="Objective geographic superlative requires verification.",
             )
 
         # 5. Check for subjective opinion

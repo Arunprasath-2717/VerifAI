@@ -101,9 +101,8 @@ async def dispose_async_engine(engine: AsyncEngine | None = None) -> None:
     if target_engine is not None:
         try:
             await target_engine.dispose()
-        except Exception:
-            # Catch synchronous/mocked disposal exceptions gracefully
-            pass
+        except Exception as exc:
+            logger.warning("Unable to dispose database engine: %s", type(exc).__name__)
         if target_engine == _engine:
             _engine = None
             _session_maker = None

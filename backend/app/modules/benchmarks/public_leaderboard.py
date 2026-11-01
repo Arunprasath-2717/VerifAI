@@ -119,8 +119,8 @@ def construct_snapshot(
         or "model" not in reader.fieldnames
     ):
         raise PublicBenchmarkRefreshError("LiveBench table columns changed")
-    gathered = []
-    seen = set()
+    gathered: list[dict[str, Any]] = []
+    seen: set[str] = set()
     for line in reader:
         model_id = (line.get("model") or "").strip()
         if model_id in seen:
@@ -285,7 +285,7 @@ def refresh_public_snapshot(
         and previous["source_updated_at"] == snapshot["source_updated_at"]
         and previous["models"] == snapshot["models"]
     )
-    if same_data:
+    if same_data and previous is not None:
         return previous, False
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = None

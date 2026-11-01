@@ -1,23 +1,59 @@
 """Unit and integration tests for Phase 4 ingestion API and extension."""
 
 import uuid
+from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_async_session
+from app.core.config import Settings, get_settings
+from app.core.dependencies import get_async_session, get_current_user
 from app.main import create_app
 from app.models.ingestion import IngestedPayload
 from app.models.verification import VerificationJob
 
+PASSWORD = "Password123!"
+
+
+def _test_settings() -> Settings:
+    return Settings(ENVIRONMENT="testing", DEBUG=True)
+
+
+def _register_and_login(client: TestClient) -> str:
+    """Register a unique account through the real endpoints and return its Bearer JWT."""
+    suffix = uuid.uuid4().hex[:10]
+    reg = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": f"ingest_{suffix}@test.com",
+            "username": f"ingest_{suffix}",
+            "password": PASSWORD,
+            "terms_accepted": True,
+        },
+    )
+    assert reg.status_code == 201, reg.text
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email_or_username": f"ingest_{suffix}", "password": PASSWORD},
+    )
+    assert login.status_code == 200, login.text
+    return login.json()["access_token"]
+
 
 @pytest.fixture
-def client() -> TestClient:
-    """Provide a test client for FastAPI application."""
-    application = create_app()
-    return TestClient(application)
+def client() -> Iterator[TestClient]:
+    """Authenticated client with startup, schema initialization, and teardown."""
+    settings = _test_settings()
+    application = create_app(settings=settings)
+    application.dependency_overrides[get_settings] = lambda: settings
+    with TestClient(application) as test_client:
+        test_client.headers["Authorization"] = (
+            f"Bearer {_register_and_login(test_client)}"
+        )
+        yield test_client
+    application.dependency_overrides.clear()
 
 
 class TestIngestionEndpoint:
@@ -142,9 +178,17 @@ class TestIngestionEndpoint:
 
     def test_ingest_with_mock_db_session(self) -> None:
         """Test database persistence and commit in DB-enabled environment."""
-        app = create_app()
+        settings = _test_settings()
+        app = create_app(settings=settings)
+        app.dependency_overrides[get_settings] = lambda: settings
 
         mock_session = AsyncMock(spec=AsyncSession)
+        # SQLAlchemy execute() is async, but the returned Result.all() and
+        # scalar helpers are synchronous. Mirror that contract, not AsyncMock.
+        mock_result = MagicMock()
+        mock_result.all.return_value = []
+        mock_result.scalars.return_value.all.return_value = []
+        mock_session.execute.return_value = mock_result
         mock_session.add = MagicMock()
         mock_session.commit = AsyncMock()
         mock_session.rollback = AsyncMock()
@@ -152,7 +196,17 @@ class TestIngestionEndpoint:
         async def override_db():
             yield mock_session
 
+        # Authentication is covered elsewhere; this test isolates persistence.
+        fake_user = MagicMock()
+        fake_user.id = uuid.uuid4()
+        fake_user.role = "USER"
+        fake_user.is_active = True
+
+        async def override_user():
+            return fake_user
+
         app.dependency_overrides[get_async_session] = override_db
+        app.dependency_overrides[get_current_user] = override_user
         test_client = TestClient(app)
 
         payload = {
@@ -175,4 +229,5 @@ class TestIngestionEndpoint:
         assert record.captured_text == "The Eiffel Tower is in Paris, France."
         assert record.status == "VERIFIED"
         assert record.verification_id is not None
+        assert record.owner_id == str(fake_user.id)
         mock_session.commit.assert_awaited()

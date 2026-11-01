@@ -135,6 +135,11 @@ def _job_to_response(job: VerificationJob) -> VerificationResponse:
     )
 
 
+def _is_anonymous_dev(settings: Settings) -> bool:
+    """True only where anonymous callers are allowed (development/test)."""
+    return settings.is_development
+
+
 def resolve_verification_owner(
     current_user: User | None,
     client_owner_id: str | None,
@@ -162,10 +167,7 @@ def resolve_verification_owner(
             )
         return user_id_str
 
-    is_dev = (
-        settings.ENVIRONMENT in ("development", "test", "testing") or settings.DEBUG
-    )
-    if not is_dev:
+    if not _is_anonymous_dev(settings):
         raise UnauthorizedError(
             message="Authentication required to run verifications in production.",
             details={"environment": settings.ENVIRONMENT},
@@ -237,8 +239,17 @@ async def get_verification(
     verification_id: uuid.UUID,
     current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_async_session),
+    settings: Settings = Depends(get_settings),
 ) -> VerificationResponse:
     """Retrieve an existing verification job by UUID from the database."""
+    # Anonymous reads are allowed only where anonymous writes are (development/test).
+    # In production every read must carry a Bearer token and pass the owner check.
+    if current_user is None and not _is_anonymous_dev(settings):
+        raise UnauthorizedError(
+            message="Authentication required to read verification results.",
+            details={"scheme": "Bearer"},
+        )
+
     stmt = (
         select(VerificationJob)
         .options(
@@ -262,8 +273,15 @@ async def get_verification(
             details={"verification_id": str(verification_id)},
         )
 
-    # Enforce ownership authorization
-    if current_user is not None and current_user.role != "ADMIN":
+    # Enforce ownership authorization. Anonymous dev callers may read any job
+    # in the dev namespace; authenticated non-admins may read only their own.
+    if current_user is None:
+        if job.owner_id != settings.DEFAULT_OWNER_ID:
+            raise ForbiddenError(
+                message="Access denied: You do not own this verification job.",
+                details={"verification_id": str(verification_id)},
+            )
+    elif current_user.role != "ADMIN":
         if job.owner_id != str(current_user.id):
             raise ForbiddenError(
                 message="Access denied: You do not own this verification job.",

@@ -74,6 +74,14 @@ class IngestedPayload(Base, TimestampMixin):
         Text,
         nullable=True,
     )
+    # Authenticated owner (User.id as string). NULL marks a legacy, ownerless row
+    # that is quarantined: only ADMIN accounts may read it until ownership is
+    # established. Ownership is never inferred or auto-assigned.
+    owner_id: Mapped[str | None] = mapped_column(
+        String(128),
+        nullable=True,
+        index=True,
+    )
 
     # Relationships
     verification: Mapped["VerificationJob | None"] = relationship(

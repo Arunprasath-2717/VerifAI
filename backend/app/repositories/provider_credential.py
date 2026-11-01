@@ -89,5 +89,6 @@ class ProviderCredentialRepository:
         )
         result = await self.session.execute(stmt)
         await self.session.commit()
-        assert isinstance(result, CursorResult)
+        if not isinstance(result, CursorResult):
+            raise RuntimeError("Credential deletion returned an unexpected result")
         return (result.rowcount or 0) > 0

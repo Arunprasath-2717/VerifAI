@@ -246,5 +246,5 @@ def clear_ephemeral_users() -> None:
                 pool.submit(asyncio.run, _clean()).result()
         else:
             asyncio.run(_clean())
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Best-effort test user cleanup failed: %s", type(exc).__name__)

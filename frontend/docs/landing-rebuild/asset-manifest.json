@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id":"original-product-diagrams", "type":"HTML/SVG", "source":"Authored for VerifAI in this rebuild", "license":"Project-owned original", "uses":["storyboard","gallery","comparison"]},
+    {"id":"display-typeface", "type":"font", "source":"Existing Google Fonts load in frontend/index.html: JetBrains Mono", "license":"SIL Open Font License", "uses":["headings","labels"], "fallback":"monospace"},
+    {"id":"body-typeface", "type":"font", "source":"System font stack: Instrument Sans or Inter", "license":"Inter Open Font License", "uses":["body","buttons"], "fallback":"system-ui"},
+    {"id":"third-party-reference-media", "type":"media", "source":"MotionSites, Sparkdesign, KRAFT reference sites", "license":"Not reused", "uses":[]},
+    {"id":"demo-data", "type":"text", "source":"Author-created illustrative prompts and explanations", "license":"Project-owned original", "disclosure":"Non-generated preview examples; not verified results"}
+  ]
+}

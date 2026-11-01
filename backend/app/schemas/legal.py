@@ -1,9 +1,9 @@
 """Pydantic schemas for Legal policy versions and User Consent records."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class LegalVersionsResponse(BaseModel):
@@ -62,3 +62,11 @@ class UserConsentResponse(BaseModel):
     privacy_version: str
     consented_at: datetime
     action_source: str
+
+    @field_validator("consented_at")
+    @classmethod
+    def ensure_utc(cls, value: datetime) -> datetime:
+        # SQLite round-trips UTC timestamps without tzinfo; PostgreSQL retains it.
+        return (
+            value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+        )

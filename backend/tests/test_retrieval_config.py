@@ -6,7 +6,7 @@ import random
 import pytest
 
 from app.core.config import clear_settings_cache
-from app.core.errors import AppError
+from app.core.errors import AppError, ServiceUnavailableError
 from app.modules.evidence.interface import BaseEvidenceRetriever
 from app.modules.evidence.local_retriever import LocalPassageRetriever
 from app.modules.evidence.models import RetrievedEvidenceItem
@@ -77,11 +77,20 @@ def test_search_keywords_keep_words_with_punctuation() -> None:
 @pytest.fixture
 def env(monkeypatch: pytest.MonkeyPatch):
     def _set(**values: str) -> None:
+        # Production-mode settings require a non-default JWT secret; supply a
+        # test-only value so these tests exercise retrieval config, not JWT guards.
+        if values.get("ENVIRONMENT") == "production":
+            values.setdefault(
+                "JWT_SECRET", "test-only-jwt-secret-0123456789abcdef0123456789abcdef"
+            )
         for key, value in values.items():
             monkeypatch.setenv(key, value)
         clear_settings_cache()
 
     yield _set
+    # Undo environment changes *before* clearing the settings cache, or a later
+    # test may accidentally reuse ENABLE_LIVE_SEARCH=True from this fixture.
+    monkeypatch.undo()
     clear_settings_cache()
 
 
@@ -98,7 +107,7 @@ class _SlowRetriever(BaseEvidenceRetriever):
 
 
 def test_demo_index_disabled_outside_development(env) -> None:
-    env(ENVIRONMENT="production", API_KEYS='{"ops": "ops-key-0123456789abcdef"}')
+    env(ENVIRONMENT="production")
     assert not isinstance(VerificationOrchestrator().retriever, LocalPassageRetriever)
 
 
@@ -109,11 +118,12 @@ def test_demo_index_enabled_in_development(env) -> None:
 
 @pytest.mark.anyio
 async def test_production_without_evidence_source_returns_unknown(env) -> None:
-    env(ENVIRONMENT="production", API_KEYS='{"ops": "ops-key-0123456789abcdef"}')
-    response = await VerificationOrchestrator().verify(
-        VerificationCreateRequest(text="Water freezes at 0 degrees Celsius.")
-    )
-    assert response.claims[0].verdict == VerdictType.UNKNOWN
+    env(ENVIRONMENT="production")
+    # Production must fail closed without durable persistence.
+    with pytest.raises(ServiceUnavailableError):
+        await VerificationOrchestrator().verify(
+            VerificationCreateRequest(text="Water freezes at 0 degrees Celsius.")
+        )
 
 
 @pytest.mark.anyio

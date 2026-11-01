@@ -14,6 +14,7 @@ from pydantic import SecretStr
 from starlette.testclient import TestClient
 
 from app.core.config import Settings, get_settings
+from app.core.dependencies import get_current_user
 from app.main import create_app
 
 
@@ -37,8 +38,10 @@ def db_client() -> Generator[tuple[TestClient, AsyncMock], None, None]:
 
     app = create_app(settings=settings)
     app.dependency_overrides[get_settings] = lambda: settings
+    # The session factory is resolved inside app.core.database, so that is the
+    # module whose symbol must be patched.
     with (
-        patch("app.core.dependencies.get_async_session_maker", return_value=maker),
+        patch("app.core.database.get_async_session_maker", return_value=maker),
         TestClient(app) as client,
     ):
         yield client, session
@@ -52,8 +55,18 @@ def test_missing_verification_returns_404_with_db(db_client) -> None:
 
 
 def test_missing_ingestion_returns_404_with_db(db_client) -> None:
+    # GET /ingest/{id} requires authentication. Override only the identity
+    # resolver so this test still exercises the database not-found path.
     client, _ = db_client
-    response = client.get(f"/api/v1/ingest/{uuid.uuid4()}")
+    fake_user = MagicMock()
+    fake_user.id = uuid.uuid4()
+    fake_user.role = "USER"
+    fake_user.is_active = True
+    client.app.dependency_overrides[get_current_user] = lambda: fake_user
+    try:
+        response = client.get(f"/api/v1/ingest/{uuid.uuid4()}")
+    finally:
+        client.app.dependency_overrides.pop(get_current_user, None)
     assert response.status_code == 404
 
 

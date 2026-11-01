@@ -299,6 +299,7 @@ class ChatService:
                 )
             key = decrypt_credential(self.settings, credential.encrypted_api_key)
             protocol = provider_protocol(provider_id)
+            adapter: OwnerNativeChatProvider | OwnerOpenAICompatibleProvider
             if protocol in ("anthropic", "gemini"):
                 adapter = OwnerNativeChatProvider(provider, key)
             else:
@@ -687,5 +688,5 @@ def clear_ephemeral_chat() -> None:
                 pool.submit(asyncio.run, _clean()).result()
         else:
             asyncio.run(_clean())
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Best-effort test chat cleanup failed: %s", type(exc).__name__)

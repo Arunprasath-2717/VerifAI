@@ -43,20 +43,9 @@ class DeterministicClaimExtractor(BaseClaimExtractor):
 
         # Split text into candidate spans using sentence and clause boundaries
         candidates: list[tuple[int, int]] = []
-        pattern = re.compile(r"([^.!?;\n]+[.!?;\n]*)", re.UNICODE)
-
-        for match in pattern.finditer(text):
-            raw_span = match.group(0)
-            start, end = match.span()
-
-            # Handle common abbreviation false-splits by checking trailing word
-            if candidates and self._is_continuation(text, candidates[-1], start):
-                prev_start, _ = candidates.pop()
-                candidates.append((prev_start, end))
-                continue
-
+        for start, end in self._sentence_spans(text):
             # Check if this span contains compound clauses separated by conjunctions
-            sub_spans = self._split_compound_clause(text, start, end, raw_span)
+            sub_spans = self._split_compound_clause(text, start, end, text[start:end])
             candidates.extend(sub_spans)
 
         # Refine candidates: strip whitespace, adjust offsets, enforce invariants
@@ -85,9 +74,8 @@ class DeterministicClaimExtractor(BaseClaimExtractor):
                 continue
 
             # Strict Invariant: slice must match text exactly
-            assert text[clean_start:clean_end] == clean_text, (
-                f"Offset mismatch: '{text[clean_start:clean_end]}' != '{clean_text}'"
-            )
+            if text[clean_start:clean_end] != clean_text:
+                raise RuntimeError("Claim extraction offset invariant violated")
 
             extracted.append(
                 ExtractedClaimItem(
@@ -123,6 +111,50 @@ class DeterministicClaimExtractor(BaseClaimExtractor):
         """Check if current span is an accidental split due to an abbreviation."""
         prev_text = full_text[prev_span[0] : prev_span[1]].rstrip()
         return bool(re.search(self.ABBREVIATIONS, prev_text, re.IGNORECASE))
+
+    # Sentence terminator (. ! ?) followed by whitespace and a sentence starter, or a
+    # hard line break / semicolon. Decimals (3.14), URLs (example.com/a.b) and
+    # mid-token dots are never followed by whitespace, so they cannot split.
+    _SENTENCE_END = re.compile(r"[.!?](?=\s+[\"'(\[]?[A-Z0-9])|[;\n]")
+    _ABBREVIATION_WORDS = frozenset(
+        {
+            "e.g",
+            "i.e",
+            "dr",
+            "mr",
+            "mrs",
+            "ms",
+            "prof",
+            "inc",
+            "ltd",
+            "co",
+            "jr",
+            "sr",
+            "u.s",
+            "u.k",
+            "vs",
+        }
+    )
+
+    def _sentence_spans(self, text: str) -> list[tuple[int, int]]:
+        """Return non-blank [start, end) sentence spans covering the whole text."""
+        spans: list[tuple[int, int]] = []
+        start = 0
+        for m in self._SENTENCE_END.finditer(text):
+            if m.group(0) == "." and self._is_abbreviation_end(text, start, m.start()):
+                continue
+            spans.append((start, m.end()))
+            start = m.end()
+        if start < len(text):
+            spans.append((start, len(text)))
+        return [(s, e) for s, e in spans if text[s:e].strip()]
+
+    def _is_abbreviation_end(self, text: str, span_start: int, dot_pos: int) -> bool:
+        """True when the dot at ``dot_pos`` closes a known abbreviation like "Dr."."""
+        match = re.search(r"[A-Za-z][A-Za-z.]*$", text[span_start:dot_pos])
+        if not match:
+            return False
+        return match.group(0).lower() in self._ABBREVIATION_WORDS
 
     def _split_compound_clause(
         self, full_text: str, start: int, end: int, span_text: str

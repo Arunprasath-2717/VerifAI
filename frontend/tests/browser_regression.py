@@ -48,7 +48,7 @@ def find_browser():
         found = shutil.which(env_bin) or (env_bin if os.path.isfile(env_bin) and os.access(env_bin, os.X_OK) else None)
         if found:
             return found
-    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"):
+    for name in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome"):
         found = shutil.which(name)
         if found:
             return found
@@ -474,7 +474,7 @@ try:
 
     print("Phase 4: production-build browser regression with isolated API fixtures", flush=True)
     # First visit always opens the public landing, even with a valid session.
-    root_loaded = nav("/", "document.querySelector('.verifai-landing h1')!==null")
+    root_loaded = nav("/", "document.querySelector('.rv-site h1')!==null")
     if not root_loaded:
         print("LANDING DEBUG", js("""return ({
             url: location.href,
@@ -489,8 +489,8 @@ try:
         });"""), flush=True)
     assert root_loaded, "Root did not render landing"
     assert_ok("authenticated launch starts on landing, not dashboard",
-              "location.pathname==='/' && document.querySelector('.verifai-landing h1')!==null")
-    assert wait("document.querySelector('.vc-nav-login')?.getAttribute('href')==='/dashboard'",13), "Authenticated landing account link did not initialize"
+              "location.pathname==='/' && document.querySelector('.rv-site h1')!==null")
+    assert wait("document.querySelector('.rv-header-signin')?.getAttribute('href')==='/dashboard'",13), "Authenticated landing account link did not initialize"
     print("PASS landing account navigation leads to dashboard when signed in",flush=True)
     print("PASS landing shown before authenticated dashboard",flush=True)
     assert_ok("legacy full-screen loading interface is absent",
@@ -1112,11 +1112,11 @@ try:
     print('PASS editorial full-page Terms and Privacy documents',flush=True)
 
     print('PASS editorial login/signup fields and email validation',flush=True)
-    assert nav('/', "document.querySelector('.verifai-landing h1')!=null"), 'Marketing landing page failed'
+    assert nav('/', "document.querySelector('.rv-site h1')!=null"), 'Marketing landing page failed'
     assert_ok('guest landing contains a real login action',
-              "document.querySelector('.vc-nav-login')?.getAttribute('href')==='/login'")
+              "document.querySelector('.rv-header-signin')?.getAttribute('href')==='/login'")
     assert_ok('guest launch goes to login',
-              "[...document.querySelectorAll('a.vc-action-light')].some(a=>a.getAttribute('href')==='/login')")
+              "[...document.querySelectorAll('a.rv-enter')].some(a=>a.getAttribute('href')==='/login')")
     print('PASS public landing routes to login',flush=True)
 
     # The route guard must preserve the original path for post-Google-login

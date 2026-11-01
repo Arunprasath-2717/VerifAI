@@ -26,6 +26,8 @@ class UserConsentRepository:
         action_source: str = "signup_form",
         ip_address: str | None = None,
         user_agent: str | None = None,
+        *,
+        commit: bool = True,
     ) -> UserConsent:
         """Create and persist an authoritative, UTC-timestamped user consent record."""
         now = datetime.now(UTC)
@@ -43,8 +45,10 @@ class UserConsentRepository:
         consent.updated_at = now
 
         self.session.add(consent)
-        await self.session.commit()
-        await self.session.refresh(consent)
+        await self.session.flush()
+        if commit:
+            await self.session.commit()
+            await self.session.refresh(consent)
 
         logger.info(
             "Recorded legal consent: user_id=%s, terms_v=%s, privacy_v=%s, source=%s",

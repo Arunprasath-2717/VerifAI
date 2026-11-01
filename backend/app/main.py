@@ -77,6 +77,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_middleware(
         RequestIDMiddleware,
         header_name=app_settings.REQUEST_ID_HEADER,
+        max_body_bytes=app_settings.MAX_REQUEST_BODY_BYTES,
+        # HSTS pins a host to HTTPS for a year, so it is sent only where HTTPS is
+        # enforced (production/staging), never on local development hosts.
+        enable_hsts=app_settings.is_production,
     )
 
     # Configure CORS middleware

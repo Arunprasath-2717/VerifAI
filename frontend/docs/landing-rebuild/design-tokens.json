@@ -1,0 +1,13 @@
+{
+  "name": "VerifAI / EDITION 02",
+  "color": {
+    "ink": "#0b0d12", "inkRaised": "#171a21", "paper": "#f2f1ed", "white": "#fbfaf7",
+    "mist": "#c9cddc", "lavenderGray": "#a9adc9", "line": "#d5d5d1",
+    "secondary": "#6e737b", "acidOlive": "#b9ca92", "deepForest": "#24392f",
+    "surface": "#e6e7e4"
+  },
+  "type": {"display": "JetBrains Mono, monospace", "editorial": "Instrument Sans, Inter, sans-serif", "micro": "JetBrains Mono, monospace"},
+  "layout": {"maxWidth": "1440px", "gutter": "clamp(20px,4.5vw,88px)", "radiusLarge": "20px", "radiusSmall": "10px"},
+  "motion": {"easeOut": [0.22,1,0.36,1], "hoverMs": 210, "revealMs": 720, "sequence": "scroll-proportional"},
+  "tone": "Dark matte editorial to quiet off-white; nonluminous depth"
+}

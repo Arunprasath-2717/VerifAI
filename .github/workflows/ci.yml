@@ -21,7 +21,9 @@ jobs:
 
     env:
       PYTHONPATH: backend
-      VERIFAI_TEST_DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      VERIFAI_TEST_DATABASE_URL: "sqlite+aiosqlite:////tmp/verifai_ci_test.sqlite"
+      ENVIRONMENT: "testing"
+      ENABLE_LIVE_SEARCH: "false"
       PYTHONDONTWRITEBYTECODE: "1"
 
     steps:
@@ -46,6 +48,12 @@ jobs:
         run: |
           PYTHONPATH=. ruff check backend scripts benchmark
           PYTHONPATH=. ruff format --check backend scripts benchmark
+          mypy backend/app --follow-imports=silent --ignore-missing-imports
+
+      - name: Audit installed Python dependencies
+        run: |
+          python -m pip check
+          pip-audit --local
 
       - name: Run Benchmark Verification & Dataset Validation
         run: |
@@ -59,6 +67,11 @@ jobs:
       - name: Run Database Guard & Core Health Tests
         run: |
           pytest backend/tests/test_test_database_guard.py backend/tests/test_health.py -v
+
+      - name: Run isolated full backend regression suite
+        run: |
+          python -m pip check
+          pytest backend/tests -q
 
   frontend-smoke:
     name: Frontend Smoke Tests (Node 22)
@@ -87,8 +100,14 @@ jobs:
       - name: Install locked frontend dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Enforce frontend dependency security audit
+        run: npm audit --audit-level=high
+
       - name: Run TypeScript typecheck
         run: npm run lint
+
+      - name: Run frontend and extension security regressions
+        run: npm run test:security
 
       - name: Build production bundle
         run: npm run build
