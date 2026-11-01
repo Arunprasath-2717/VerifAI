@@ -50,7 +50,6 @@ _HTML_ENTITY_MAP = {
     "&#39;": "'",
 }
 
-
 _KEYWORD_RE = re.compile(r"[A-Za-z0-9]+(?:['’][A-Za-z]+)?")
 _MAX_KEYWORDS = 8
 

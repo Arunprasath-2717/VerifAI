@@ -63,14 +63,3 @@ def test_cors_wildcard_disallows_credentials_security() -> None:
         )
         assert response.status_code == 200
         assert response.headers.get("access-control-allow-credentials") is None
-
-
-def test_create_app_honours_api_prefix_from_settings() -> None:
-    """The API prefix comes from the settings passed to create_app, not import time."""
-    from app.core.config import Settings
-    from app.main import create_app
-
-    app = create_app(settings=Settings(ENVIRONMENT="testing", API_V1_STR="/api/v9"))
-    paths = app.openapi()["paths"]
-    assert "/api/v9/health" in paths
-    assert "/api/v1/health" not in paths

@@ -9,12 +9,14 @@ from app.modules.evidence.models import RetrievedEvidenceItem
 from app.modules.evidence.nightcrawler_retriever import NightcrawlerRetriever
 from app.modules.evidence.security import compute_domain_authority, is_safe_url
 from app.modules.evidence.tavily_retriever import TavilySearchRetriever
+from app.modules.evidence.web_retriever import SafeWebRetriever
 
 __all__ = [
     "BaseEvidenceRetriever",
     "RetrievedEvidenceItem",
     "LocalPassageRetriever",
     "TestFixtureRetriever",
+    "SafeWebRetriever",
     "TavilySearchRetriever",
     "DuckDuckGoRetriever",
     "NightcrawlerRetriever",

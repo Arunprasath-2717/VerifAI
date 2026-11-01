@@ -1,0 +1,26 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+docs
+benchmark
+extension
+mcp
+frontend/node_modules
+*.md
+!README.md
+
+# Never embed runtime secrets in image layers or build contexts.
+.env
+.env.*
+**/.env
+**/.env.*
+**/.env/**
+**/.env.*/**

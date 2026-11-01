@@ -49,6 +49,7 @@ from app.schemas.verification import (  # noqa: E402
     VerificationOptions,
     VerificationResponse,
 )
+
 from scripts.demo_prompts import (  # noqa: E402
     DEMO_PROMPTS,
     get_demo_case,

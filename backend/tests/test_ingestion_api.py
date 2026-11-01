@@ -7,9 +7,10 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.endpoints.ingestion import get_optional_db_session
+from app.core.dependencies import get_async_session
 from app.main import create_app
 from app.models.ingestion import IngestedPayload
+from app.models.verification import VerificationJob
 
 
 @pytest.fixture
@@ -147,15 +148,11 @@ class TestIngestionEndpoint:
         mock_session.add = MagicMock()
         mock_session.commit = AsyncMock()
         mock_session.rollback = AsyncMock()
-        # Private-KB lookup runs a real query; return an empty result set.
-        empty_result = MagicMock()
-        empty_result.all.return_value = []
-        mock_session.execute = AsyncMock(return_value=empty_result)
 
         async def override_db():
             yield mock_session
 
-        app.dependency_overrides[get_optional_db_session] = override_db
+        app.dependency_overrides[get_async_session] = override_db
         test_client = TestClient(app)
 
         payload = {
@@ -169,8 +166,9 @@ class TestIngestionEndpoint:
 
         # Assert both verification job and ingested payload entity were added
         # and committed cleanly
-        assert mock_session.add.call_count == 2
+        # Token-usage rows are also added per judge call; check required entities.
         added_entities = [call[0][0] for call in mock_session.add.call_args_list]
+        assert any(isinstance(e, VerificationJob) for e in added_entities)
         payload_entities = [e for e in added_entities if isinstance(e, IngestedPayload)]
         assert len(payload_entities) == 1
         record = payload_entities[0]

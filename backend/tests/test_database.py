@@ -15,9 +15,12 @@ from app.core.database import (
 from app.core.dependencies import get_async_session
 
 
-def test_default_database_settings_unconfigured() -> None:
+def test_default_database_settings_unconfigured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Verify that default settings have DATABASE_URL as None (unconfigured)."""
-    settings = Settings()
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    settings = Settings(_env_file=None)
     assert settings.DATABASE_URL is None
     assert settings.DATABASE_POOL_SIZE == 5
     assert settings.DATABASE_MAX_OVERFLOW == 10
@@ -131,3 +134,71 @@ async def test_connectivity_check_unavailable_mocked() -> None:
     # Ensure no exception text or credentials leaked in result dictionary
     assert "secret_user" not in str(result)
     assert "FATAL" not in str(result)
+
+
+@pytest.mark.anyio
+async def test_production_database_persistence_failure_raises_503() -> None:
+    """Regression test: Production MUST NOT silently fall back to ephemeral mode on DB commit failure."""
+    from app.core.errors import ServiceUnavailableError
+    from app.modules.verification.orchestrator import VerificationOrchestrator
+    from app.schemas.verification import VerificationCreateRequest
+
+    prod_settings = Settings(
+        ENVIRONMENT="production",
+        JWT_SECRET=SecretStr("super-secure-production-jwt-secret-key-32chars"),
+        DATABASE_URL=SecretStr("postgresql+asyncpg://prod:pass@localhost:5432/verifai"),
+    )
+    orchestrator = VerificationOrchestrator(settings=prod_settings)
+
+    mock_session = AsyncMock(spec=AsyncSession)
+    mock_session.commit.side_effect = RuntimeError(
+        "PostgreSQL connection terminated abruptly"
+    )
+
+    req = VerificationCreateRequest(text="Water boils at 100 degrees Celsius.")
+
+    with pytest.raises(ServiceUnavailableError) as exc_info:
+        await orchestrator.verify(request=req, db_session=mock_session)
+
+    assert exc_info.value.status_code == 503
+    assert "Database persistence failed" in exc_info.value.message
+    mock_session.rollback.assert_awaited_once()
+
+
+@pytest.mark.anyio
+async def test_production_missing_db_session_raises_503() -> None:
+    """Regression test: Production MUST NOT execute without a database session."""
+    from app.core.errors import ServiceUnavailableError
+    from app.modules.verification.orchestrator import VerificationOrchestrator
+    from app.schemas.verification import VerificationCreateRequest
+
+    prod_settings = Settings(
+        ENVIRONMENT="production",
+        JWT_SECRET=SecretStr("super-secure-production-jwt-secret-key-32chars"),
+        DATABASE_URL=SecretStr("postgresql+asyncpg://prod:pass@localhost:5432/verifai"),
+    )
+    orchestrator = VerificationOrchestrator(settings=prod_settings)
+    req = VerificationCreateRequest(text="Water boils at 100 degrees Celsius.")
+
+    with pytest.raises(ServiceUnavailableError) as exc_info:
+        await orchestrator.verify(request=req, db_session=None)
+
+    assert exc_info.value.status_code == 503
+    assert "ephemeral execution is prohibited" in exc_info.value.message
+
+
+@pytest.mark.anyio
+async def test_dev_missing_db_session_allows_in_memory_unit_tests() -> None:
+    """Development and test environments permit hermetic execution without DB session."""
+    from app.modules.verification.orchestrator import VerificationOrchestrator
+    from app.schemas.verification import VerificationCreateRequest
+
+    dev_settings = Settings(
+        ENVIRONMENT="test",
+        JWT_SECRET=SecretStr("dev-jwt-secret-for-testing-only-32chars"),
+    )
+    orchestrator = VerificationOrchestrator(settings=dev_settings)
+    req = VerificationCreateRequest(text="Water boils at 100 degrees Celsius.")
+
+    response = await orchestrator.verify(request=req, db_session=None)
+    assert response.status == "COMPLETED"

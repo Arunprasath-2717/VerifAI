@@ -1,0 +1,43 @@
+name: Refresh public AI benchmark snapshot
+
+on:
+  schedule:
+    # Monday, 09:00 Asia/Kolkata (03:30 UTC), every week.
+    - cron: '30 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verifai-public-leaderboard
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out VerifAI
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated refresh dependencies
+        run: python -m pip install 'httpx>=0.27,<1'
+      - name: Fetch and validate official LiveBench snapshot
+        run: python scripts/refresh_public_leaderboard.py
+      - name: Publish snapshot changes to repository
+        run: |
+          git add backend/app/data/public_model_leaderboard.json
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'data: refresh attributed LiveBench leaderboard'
+            git push
+          else
+            echo 'Source unchanged; keeping verified snapshot.'
+          fi

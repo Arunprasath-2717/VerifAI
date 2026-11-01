@@ -3,25 +3,7 @@
  * Connects browser capture to the VerifAI Ingestion & Verification API.
  */
 
-const DEFAULT_BACKEND_URL = "http://localhost:8000";
-let API_BASE_URL = `${DEFAULT_BACKEND_URL}/api/v1`;
-
-// Non-factual content types map onto the existing neutral badge styles.
-const NON_FACTUAL_BADGE_CLASS = {
-  OPINION: "VIEWPOINT",
-  CREATIVE: "CREATIVE",
-  HYPOTHETICAL: "SCENARIO",
-  PREDICTION: "FUTURE_LOOKING",
-  INSTRUCTION: "VIEWPOINT",
-};
-
-function normalizeBackendUrl(raw) {
-  const url = new URL(raw.trim());
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error("Backend URL must start with http:// or https://");
-  }
-  return url.origin;
-}
+const API_BASE_URL = "http://localhost:8000/api/v1";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const backendStatus = document.getElementById("backend-status");
@@ -29,8 +11,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const inputText = document.getElementById("input-text");
   const selectModel = document.getElementById("select-model");
   const optLiveSearch = document.getElementById("opt-live-search");
-  const inputApiKey = document.getElementById("input-api-key");
-  const inputBackendUrl = document.getElementById("input-backend-url");
   const btnDetect = document.getElementById("btn-detect");
   const btnVerify = document.getElementById("btn-verify");
   const btnVerifyText = document.getElementById("btn-verify-text");
@@ -56,47 +36,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (err) {
       backendStatus.className = "status-pill status-offline";
       backendStatusText.textContent = "Engine Offline";
-      backendStatus.title = `Ensure VerifAI backend is running on ${API_BASE_URL.replace(/\/api\/v1$/, "")}`;
+      backendStatus.title = "Ensure VerifAI backend is running on http://localhost:8000";
     }
   }
 
-  // Backend URL is configurable; non-default origins need a runtime grant.
-  async function applyBackendUrl(origin) {
-    API_BASE_URL = `${origin}/api/v1`;
-    inputBackendUrl.value = origin;
-    await checkBackendHealth();
-  }
-
-  const stored = await new Promise((resolve) =>
-    chrome.storage.local.get(["verifaiBackendUrl"], resolve)
-  );
-  await applyBackendUrl(stored.verifaiBackendUrl || DEFAULT_BACKEND_URL);
-
-  inputBackendUrl.addEventListener("change", async () => {
-    try {
-      const origin = normalizeBackendUrl(inputBackendUrl.value || DEFAULT_BACKEND_URL);
-      const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
-      if (!granted) {
-        showError(`Permission to reach ${origin} was not granted.`);
-        return;
-      }
-      chrome.storage.local.set({ verifaiBackendUrl: origin });
-      hideError();
-      await applyBackendUrl(origin);
-    } catch (err) {
-      showError(err.message || "Invalid backend URL.");
-    }
-  });
-
-  // API key is kept in extension-local storage and sent as X-API-Key.
-  if (chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(["verifaiApiKey"], (data) => {
-      inputApiKey.value = data.verifaiApiKey || "";
-    });
-    inputApiKey.addEventListener("change", () => {
-      chrome.storage.local.set({ verifaiApiKey: inputApiKey.value.trim() });
-    });
-  }
+  await checkBackendHealth();
 
   // 2. Check for pending selection passed via context menu
   if (chrome.storage && chrome.storage.local) {
@@ -116,34 +60,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!tab || !tab.id) return;
 
       currentSourceUrl = tab.url || "";
-      let response;
-      try {
-        // Injected only on demand; activeTab grants access to this tab only.
-        const [injection] = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ["content.js"],
-        });
-        response = injection && injection.result;
-      } catch (injectErr) {
-        showError("Cannot capture from this page. Make sure you are on an active webpage.");
-        return;
-      }
+      chrome.tabs.sendMessage(tab.id, { action: "GET_PAGE_TEXT" }, (response) => {
+        if (chrome.runtime.lastError) {
+          showError("Cannot capture from this page. Make sure you are on an active webpage.");
+          return;
+        }
 
-      if (response && response.text) {
-        inputText.value = response.text;
-        if (response.model && response.model !== "web-capture") {
-          // Set model selector heuristic if detected
-          for (let i = 0; i < selectModel.options.length; i++) {
-            if (selectModel.options[i].value.includes(response.model.replace("-auto", ""))) {
-              selectModel.selectedIndex = i;
-              break;
+        if (response && response.text) {
+          inputText.value = response.text;
+          if (response.model && response.model !== "web-capture") {
+            // Set model selector heuristic if detected
+            for (let i = 0; i < selectModel.options.length; i++) {
+              if (selectModel.options[i].value.includes(response.model.replace("-auto", ""))) {
+                selectModel.selectedIndex = i;
+                break;
+              }
             }
           }
+          hideError();
+        } else {
+          showError("No text selection or AI response found on page. Please select text first or paste directly.");
         }
-        hideError();
-      } else {
-        showError("No text selection or AI response found on page. Please select text first or paste directly.");
-      }
+      });
     } catch (err) {
       showError("Auto-capture failed: " + err.message);
     }
@@ -199,14 +137,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      const headers = { "Content-Type": "application/json" };
-      const apiKey = inputApiKey.value.trim();
-      if (apiKey) {
-        headers["X-API-Key"] = apiKey;
-      }
       const res = await fetch(`${API_BASE_URL}/ingest`, {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
@@ -282,16 +215,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         claimText.textContent = claim.claim_text;
 
         const verdictBadge = document.createElement("span");
-        if (claim.verdict) {
-          verdictBadge.className = `verdict-tag verdict-${claim.verdict}`;
-          verdictBadge.textContent = claim.verdict;
-        } else {
-          // Non-factual claims carry no verdict; show their content type instead.
-          const contentType = claim.content_type || "NON_FACTUAL";
-          const badgeClass = NON_FACTUAL_BADGE_CLASS[contentType] || "VIEWPOINT";
-          verdictBadge.className = `verdict-tag verdict-${badgeClass}`;
-          verdictBadge.textContent = contentType.replace("_", " ");
-        }
+        verdictBadge.className = `verdict-tag verdict-${claim.verdict}`;
+        verdictBadge.textContent = claim.verdict;
 
         topRow.appendChild(claimText);
         topRow.appendChild(verdictBadge);

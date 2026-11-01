@@ -1,6 +1,5 @@
 """Deterministic namespace-isolated Knowledge Base evidence retriever."""
 
-import asyncio
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -85,30 +84,10 @@ class PrivateKBRetriever(BaseEvidenceRetriever):
         service: KnowledgeBaseService,
         owner_id: str | None = None,
         settings: Settings | None = None,
-        cache_chunks: bool = False,
     ) -> None:
         self.service = service
         self.settings = settings or get_settings()
         self.default_owner_id = owner_id
-        # With cache_chunks, an owner's chunks are loaded and tokenized once for
-        # this retriever's lifetime (e.g. one verification job) instead of once
-        # per claim. Leave it off for long-lived retrievers that must observe
-        # documents added later.
-        self._cache_chunks = cache_chunks
-        self._chunk_cache: dict[str, list[tuple[Any, Any, set[str]]]] = {}
-        # A database session cannot run concurrent queries; serialize loads.
-        self._load_lock = asyncio.Lock()
-
-    async def _load_chunks(self, owner_id: str) -> list[tuple[Any, Any, set[str]]]:
-        async with self._load_lock:
-            cached = self._chunk_cache.get(owner_id)
-            if cached is not None:
-                return cached
-            pairs = await self.service.get_all_chunks_for_owner(owner_id)
-            loaded = [(chunk, doc, self._tokenize(chunk.text)) for chunk, doc in pairs]
-            if self._cache_chunks:
-                self._chunk_cache[owner_id] = loaded
-            return loaded
 
     @property
     def name(self) -> str:
@@ -145,7 +124,7 @@ class PrivateKBRetriever(BaseEvidenceRetriever):
         eff_max_passages = max_passages or self.settings.KB_MAX_PASSAGES
 
         # 1. Fetch chunks belonging strictly to this namespace
-        chunk_pairs = await self._load_chunks(effective_owner)
+        chunk_pairs = await self.service.get_all_chunks_for_owner(effective_owner)
 
         if not chunk_pairs:
             return KBSearchResult(
@@ -171,7 +150,8 @@ class PrivateKBRetriever(BaseEvidenceRetriever):
 
         # 3. Score candidate chunks
         scored_candidates: list[tuple[float, int, Any, Any]] = []
-        for chunk, doc, chunk_tokens in chunk_pairs:
+        for chunk, doc in chunk_pairs:
+            chunk_tokens = self._tokenize(chunk.text)
             overlap_tokens = len(claim_tokens & chunk_tokens)
             if overlap_tokens == 0:
                 continue

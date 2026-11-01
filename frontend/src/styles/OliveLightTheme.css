@@ -1,0 +1,203 @@
+/*
+ * VerifAI — Olive / Mint LIGHT UI (v2)
+ * All readable text is literal black; green is reserved for decoration, borders,
+ * selected surfaces, icons, and chart strokes. Never applies to dark mode.
+ * Layout classes remain component-owned; no auth or landing styles are touched.
+ */
+.verifai-olive-shell {
+  --olive-ink: #000000;
+  --olive-primary: #40916C;
+  --olive-deep: #1B4332;
+  --olive-mint: #74C69D;
+  --olive-pale: #D8F3DC;
+  --olive-white: #FFFFFF;
+  --background: #D8F3DC;
+  --foreground: #000000;
+  --card: #FFFFFF;
+  --card-foreground: #000000;
+  --popover: #FFFFFF;
+  --popover-foreground: #000000;
+  --primary: #74C69D;
+  --primary-foreground: #000000;
+  --secondary: #FFFFFF;
+  --secondary-foreground: #000000;
+  --muted: #D8F3DC;
+  --muted-foreground: #000000;
+  --accent: #74C69D;
+  --accent-foreground: #000000;
+  --border: #74C69D;
+  --input: #FFFFFF;
+  --ring: #40916C;
+  --theme-bg-canvas: #D8F3DC;
+  --theme-bg-card: #FFFFFF;
+  --theme-bg-card-alt: #FFFFFF;
+  --theme-bg-surface: #D8F3DC;
+  --theme-bg-surface-light: #FFFFFF;
+  --theme-bg-input: #FFFFFF;
+  --theme-bg-hover: #D8F3DC;
+  --theme-border-card: #74C69D;
+  --theme-border-subtle: #D8F3DC;
+  --theme-border-strong: #40916C;
+  --theme-primary: #40916C;
+  --theme-primary-hover: #1B4332;
+  --theme-accent: #74C69D;
+  --theme-accent-hover: #40916C;
+  --theme-text-primary: #000000;
+  --theme-text-secondary: #000000;
+  --theme-text-muted: #000000;
+  --theme-text-placeholder: #000000;
+  background: #D8F3DC;
+  color: #000000;
+}
+
+/* Exact black for text everywhere inside authenticated LIGHT routes.
+   This even overrides Tailwind text-white utility classes in light mode.
+   SVG icons remain allowed to carry the meaningful brand green. */
+html[data-theme="light"] .verifai-olive-shell,
+html[data-theme="light"] .verifai-olive-shell :is(
+  div,section,article,aside,header,footer,nav,h1,h2,h3,h4,h5,h6,p,span,label,small,strong,b,em,i,a,button,input,
+  textarea,select,option,th,td,li,dt,dd,blockquote,figcaption,summary,
+  legend,time,output,code,pre,[role="button"],[role="link"],[role="status"],
+  [role="alert"],[role="tab"],[role="menuitem"],[role="columnheader"],
+  [role="rowheader"]
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+html[data-theme="light"] .verifai-olive-shell :is(input,textarea)::placeholder {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: .7;
+}
+html[data-theme="light"] .verifai-olive-shell svg :is(text,tspan) {
+  fill: #000000 !important;
+  stroke: none;
+}
+html[data-theme="light"] .verifai-olive-shell :is(button,a,input,textarea,select,[role="link"],[role="button"]):focus-visible {
+  outline: 3px solid #40916C;
+  outline-offset: 3px;
+}
+html[data-theme="light"] .verifai-olive-shell ::selection {
+  background: #74C69D;
+  color: #000000;
+  -webkit-text-fill-color: #000000;
+}
+
+/* Calm white work area and readable navigation surfaces. */
+.verifai-olive-shell > .flex-1 { background: transparent; }
+.verifai-olive-shell .verifai-workspace-header {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.verifai-olive-shell header.sticky input {
+  background: #FFFFFF !important;
+  border: 1px solid #74C69D !important;
+}
+.verifai-olive-shell header.sticky button,
+.verifai-olive-shell header.sticky [class*="rounded-xl"][class*="border"] {
+  border-color: #D8F3DC;
+}
+.verifai-olive-shell header.sticky :is(button,[class*="cursor-pointer"]):hover {
+  background-color: #D8F3DC;
+}
+
+/* White dock replaces hard-to-read deep-green navigation; mint marks active tabs. */
+.verifai-olive-shell aside[aria-label="Main Navigation"] {
+  background: #FFFFFF !important;
+  border: 1px solid #74C69D !important;
+  box-shadow: 0 16px 34px -26px rgba(27,67,50,.30) !important;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] > div:first-child > div:first-child {
+  background: #FFFFFF !important;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] > div:first-child > div:last-child {
+  opacity: .06 !important;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] :is(nav button,button):hover {
+  background-color: #D8F3DC;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] nav button > div.absolute.inset-0,
+.verifai-olive-shell aside[aria-label="Main Navigation"] button > div.absolute.inset-0 {
+  background: #74C69D !important;
+  border: 1px solid #40916C !important;
+  box-shadow: none !important;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] svg {
+  color: #1B4332;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] :is(button,a,[role="button"]):focus-visible {
+  outline-color: #40916C !important;
+}
+.verifai-olive-shell aside[aria-label="Main Navigation"] .bg-\[\#D8F3DC\] {
+  background: #D8F3DC;
+}
+
+/* Make legacy deep-green pills, chat bubbles and selected tabs readable
+   with black text; preserve the explicit deep-green palette swatch. */
+.verifai-olive-shell [class~="bg-[#1B4332]"]:not([title="Deep Green (#1B4332)"]) {
+  background-color: #74C69D !important;
+}
+.verifai-olive-shell .group:hover [class~="group-hover:bg-[#1B4332]"] {
+  background-color: #74C69D !important;
+}
+/* Background and control primitives, usable on all authenticated light routes. */
+.verifai-olive-shell .lt-btn-primary,
+.verifai-olive-shell button[class~="bg-[#1B4332]"],
+.verifai-olive-shell a[class~="bg-[#1B4332]"] {
+  background: #74C69D !important;
+  border-color: #40916C !important;
+  box-shadow: 0 8px 19px -14px rgba(27,67,50,.25);
+}
+.verifai-olive-shell .lt-btn-primary:hover,
+.verifai-olive-shell button[class~="bg-[#1B4332]"]:hover,
+.verifai-olive-shell a[class~="bg-[#1B4332]"]:hover {
+  background: #D8F3DC !important;
+}
+.verifai-olive-shell .lt-btn-secondary {
+  background: #FFFFFF;
+  border-color: #74C69D;
+}
+.verifai-olive-shell .lt-btn-secondary:hover { background: #D8F3DC; }
+.verifai-olive-shell .lt-input,
+.verifai-olive-shell input,
+.verifai-olive-shell textarea,
+.verifai-olive-shell select {
+  border-color: #74C69D;
+}
+.verifai-olive-shell .lt-input { background: #FFFFFF; }
+.verifai-olive-shell .lt-input:focus {
+  border-color: #40916C;
+  box-shadow: 0 0 0 3px rgba(116,198,157,.20);
+}
+.verifai-olive-shell .lt-table-row:hover { background: #D8F3DC; }
+.verifai-olive-shell .lt-progress-track { background: #D8F3DC; }
+.verifai-olive-shell .lt-progress-fill-primary {
+  background: linear-gradient(90deg,#74C69D,#40916C);
+}
+.verifai-olive-shell .lt-badge-primary {
+  background: #D8F3DC;
+  border-color: #74C69D;
+}
+.verifai-olive-shell .lt-badge-muted {
+  background: #FFFFFF;
+  border-color: #D8F3DC;
+}
+.verifai-olive-shell .lt-action-card,
+.verifai-olive-shell .lt-section-card:not(.mocha-dashboard-hero) {
+  background: #FFFFFF;
+  border-color: #D8F3DC;
+}
+.verifai-olive-shell .lt-alert-info {
+  background: #D8F3DC;
+  border-left-color: #40916C;
+}
+.verifai-olive-shell .lt-empty-state {
+  background: #FFFFFF;
+  border-color: #74C69D;
+}
+.verifai-olive-shell .lt-skeleton {
+  background: linear-gradient(90deg,#D8F3DC,#FFFFFF,#D8F3DC);
+}
+/* Dark theme and unauthenticated routes never use the .verifai-olive-shell scope. */

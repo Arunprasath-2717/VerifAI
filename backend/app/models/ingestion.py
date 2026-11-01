@@ -22,11 +22,6 @@ class IngestedPayload(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
-    owner_id: Mapped[str | None] = mapped_column(
-        String(128),
-        nullable=True,
-        index=True,
-    )
     source: Mapped[str] = mapped_column(
         String(32),
         nullable=False,
