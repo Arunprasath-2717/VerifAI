@@ -1,168 +1,388 @@
 <div align="center">
 
+<img src="docs/assets/verifai-readme-hero.svg" alt="VerifAI — evidence before confidence; animated verification flow from claims through evidence to auditable results" width="100%" />
+
+<br />
+
 # VerifAI
 
-### Evidence-first verification for AI-generated answers
+**The evidence-first workspace for AI answers.**
 
-**Don't just compare what AI models say. Examine what the evidence supports.**
+Run models side by side. Break answers into verifiable claims. Inspect sources, contradictions, uncertainty, and an audit trail—without mistaking model agreement for truth.
 
-[![Backend CI](https://github.com/Arunprasath-2717/VerifAI/actions/workflows/backend-ci.yml/badge.svg?branch=Final)](https://github.com/Arunprasath-2717/VerifAI/actions/workflows/backend-ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev/)
+[![Fullstack CI](https://github.com/Arunprasath-2717/VerifAI/actions/workflows/ci.yml/badge.svg?branch=Final)](https://github.com/Arunprasath-2717/VerifAI/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.12%20CI-3670A0?logo=python&logoColor=white)](backend/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Chrome Extension](https://img.shields.io/badge/Chrome-Manifest%20V3-478D5C?logo=googlechrome&logoColor=white)](extension/)
 
-[Explore the product](#the-product) · [How it works](#how-verification-works) · [Get started](#get-started) · [Documentation](#documentation)
+**[Explore capabilities](#product-capabilities)** · **[Architecture](#system-architecture)** · **[Verification engine](#verification-engine)** · **[Quick start](#quick-start)** · **[Security](#security--trust-model)** · **[Tests](#quality-gates--test-rehearsal)**
+
+<sub>Development branch: <code>Final</code> · Product and benchmark outputs are not a guarantee of factual accuracy.</sub>
 
 </div>
 
 ---
 
-## The problem
+## Why VerifAI exists
 
-Large language models can produce fluent answers that are inaccurate, outdated, unsupported, or inconsistent with other generations. Comparing model outputs can expose disagreement, but **agreement is not proof**.
+A plausible LLM response can be wrong. Three models agreeing can still be wrong. A retrieved page may be irrelevant, poisoned, or outdated.
 
-**VerifAI** turns an AI-generated response into a reviewable verification workflow: extract checkable claims, retrieve relevant evidence, evaluate support or contradiction, and preserve a trace of the decision. Its newer workspace also lets users run a single prompt across independently tested models, inspect each answer, and request synthesis or verification.
+**VerifAI separates three things that are often conflated:** what a model *said*, what an evidence source *supports*, and what the system *cannot establish*. It combines a multi-model workspace with independent claim-level verification, source inspection, and persisted results.
 
-> **Product principle:** A confident answer is not a verified answer. VerifAI distinguishes observed evidence, model-generated interpretation, and information that remains unresolved.
+<table>
+<tr>
+<td width="33%" valign="top">
 
-## The product
+### 01 · Compare
 
-| Experience | What you can do |
-| --- | --- |
-| **Verify** | Submit text, split it into atomic claims, and inspect evidence-backed verification outcomes. |
-| **Evidence workspace** | Retrieve supporting context from an owner-scoped private knowledge base and configured external evidence sources. |
-| **Multi-model chat** | Send one prompt to up to three working, independently selected models; see their answers side by side. |
-| **Summarize & refine** | Turn multiple model responses into a structured synthesis; optionally use bounded critique/revision cycles. |
-| **Dashboard & history** | Review completed verifications, claim activity, evidence sources, and saved conversations. |
-| **Benchmarks & reports** | Inspect model comparison views and evaluation information while keeping externally published scores distinct from VerifAI's own measurements. |
-| **Browser companion** | Verify AI-generated content from supported web chat interfaces using the Chrome extension. |
+One prompt, up to three **selected, tested** models. Separate response lanes with real provider errors, timeouts, and rate-limit outcomes.
 
-### What is available on each branch?
+</td>
+<td width="33%" valign="top">
 
-This repository has two distinct product baselines. The advanced product experience is under active development on **`Final`**; **`main`** contains the earlier verification-first implementation. Features are not silently presented as available on both branches.
+### 02 · Verify
 
-| Capability | `main` | `Final` |
-| --- | :---: | :---: |
-| Claim extraction, evidence retrieval, and verification API | ✓ | ✓ |
-| Private knowledge base and owner-scoped evidence | ✓ | ✓ |
-| Initial React verification dashboard | ✓ | ✓ |
-| Chrome browser extension | ✓ | ✓ |
-| Multi-provider bring-your-own-key (BYOK) connections | — | ✓ |
-| Concurrent multi-model chat and per-model answer lanes | — | ✓ |
-| Answer synthesis, critique/revision flows, and expanded reports | — | ✓ |
-| Redesigned authenticated workspace and enhanced model leaderboard | — | ✓ |
+Extract checkable statements, query configured evidence, evaluate agreement and contradiction, and preserve an explicit **unknown** state.
 
-**For the complete current workspace described below, check out `Final`.** A documentation-only merge into `main` does not by itself ship the advanced features.
+</td>
+<td width="33%" valign="top">
 
-## How verification works
+### 03 · Explain
+
+Synthesize answers separately from factual verification. Trace each verification to evidence and structured audit records.
+
+</td>
+</tr>
+</table>
+
+## Product capabilities
+
+| Capability | What is implemented on `Final` | Boundary |
+| :-- | :-- | :-- |
+| **Claim verification** | Atomic claim extraction, content classification, evidence retrieval, multiple judge evaluations, decision aggregation | A verdict measures available evidence, **not absolute truth** |
+| **Multi-model chat** | Concurrent provider runs, independently visible model lanes, conversation persistence | Provider outages and quota limits stay visible |
+| **BYOK model connections** | Per-owner encrypted credentials, provider validation, model discovery, real model-probe selection | A listed or saved model is **not** automatically working |
+| **Synthesis & review** | Multi-response summaries and bounded critique/revision workflows | A synthesized answer is **not** evidence validation |
+| **Private knowledge base** | Document ingestion, owner-scoped search, persisted chunks, owner storage limits | Private uploads are not shared as global evidence |
+| **History & analytics** | Verification and conversation histories, user reports, dashboard metrics | Data is scoped to the authorized account |
+| **Leaderboard & benchmarks** | Model views and source-attributed public benchmark snapshots | External benchmark scores are not VerifAI-measured reliability scores |
+| **Browser extension** | Chrome Manifest V3 content capture and ingestion workflow | Capture only from supported interfaces and permitted contexts |
+| **Safety controls** | JWT/Firebase enrollment boundary, credential redaction, request/rate limits, SSRF and prompt-injection checks | Defense in depth; not a substitute for independent security review |
+
+> [!IMPORTANT]
+> This README describes the **`Final` branch**. `main` may contain an older implementation until the pull request is reviewed and merged. Real provider calls require the user's own valid credentials, permissions, and quota.
+
+### Experience map
+
+| Page / route | What happens there |
+| :-- | :-- |
+| `/` | Cinematic product landing experience |
+| `/verify` | Submit text and inspect claim-level evidence and outcomes |
+| `/chat` | Connect, test, compare, and synthesize model responses |
+| `/knowledge-base` | Manage private source documents |
+| `/leaderboard` | Explore model comparisons and source-backed benchmark views |
+| `/dashboard`, `/reports`, `/history` | Review activity, summaries, and previous work |
+| `/settings` | Provider configuration and account/workspace settings |
+
+---
+
+## System architecture
+
+VerifAI is a **modular monolith**: the backend owns authentication, policy, inference orchestration, evidence evaluation, and database writes; the web app and Chrome extension are clients, not sources of authority.
+
+```mermaid
+flowchart TB
+    subgraph clients["Experience layer"]
+        WEB["React 19 + TypeScript<br/>Vite workspace"]
+        EXT["Chrome extension<br/>Manifest V3"]
+    end
+    subgraph edge["API & trust boundary"]
+        API["FastAPI /api/v1<br/>request validation + auth + rate limits"]
+        AUTH["Local JWT / Firebase exchange<br/>consent + owner resolution"]
+    end
+    subgraph services["Application modules"]
+        CHAT["Multi-model chat<br/>provider routing + synthesis"]
+        VERIFY["Verification orchestration<br/>claims + evidence + judges"]
+        KNOW["Knowledge service<br/>ingestion + search + quotas"]
+        VIEWS["Reports + history<br/>dashboard + leaderboard"]
+    end
+    subgraph outside["Controlled external dependencies"]
+        LLM["User-authorized LLM providers"]
+        RET["Configured evidence providers"]
+    end
+    subgraph persistence["Durable storage"]
+        PG[("PostgreSQL 16<br/>SQLAlchemy async + Alembic")]
+    end
+
+    WEB --> API
+    EXT --> API
+    API --> AUTH
+    AUTH --> CHAT
+    AUTH --> VERIFY
+    AUTH --> KNOW
+    AUTH --> VIEWS
+    CHAT --> LLM
+    VERIFY --> RET
+    VERIFY --> KNOW
+    CHAT --> PG
+    VERIFY --> PG
+    KNOW --> PG
+    VIEWS --> PG
+
+    classDef client fill:#103C42,stroke:#68CDB7,color:#F0FFF8
+    classDef core fill:#143D36,stroke:#72C9A9,color:#F4FFF5
+    classDef store fill:#23456B,stroke:#A0C7F4,color:#FFFFFF
+    class WEB,EXT client
+    class API,AUTH,CHAT,VERIFY,KNOW,VIEWS core
+    class PG store
+```
+
+**Architecture decisions:** modular backend services, repository/data-access boundaries, provider adapters, bounded concurrency, and explicit failure states. The database is authoritative for stored users, messages, evidence, audit records, and private content.
+
+<details>
+<summary><strong>Runtime components and responsibilities</strong></summary>
+
+| Component | Primary responsibility | Source |
+| :-- | :-- | :-- |
+| Frontend | Authentication UI, model lanes, verification views, reports | [`frontend/src/`](frontend/src/) |
+| HTTP/API | Typed request/response schemas, endpoints, middleware | [`backend/app/api/`](backend/app/api/) |
+| Authentication | Local credentials, Firebase token exchange, consent handling | [`backend/app/modules/auth/`](backend/app/modules/auth/) |
+| Verification | Claim pipeline, judges, verdict aggregation, audit ordering | [`backend/app/modules/verification/`](backend/app/modules/verification/) |
+| Evidence | Configured retrieval adapters and evidence representation | [`backend/app/modules/evidence/`](backend/app/modules/evidence/) |
+| LLM/Chat | Provider adapters, multi-model orchestration, synthesis | [`backend/app/modules/chat/`](backend/app/modules/chat/) |
+| Knowledge | Private ingestion, search, owner quota enforcement | [`backend/app/modules/knowledge/`](backend/app/modules/knowledge/) |
+| Persistence | ORM models, repositories and migration history | [`backend/app/repositories/`](backend/app/repositories/), [`backend/alembic/`](backend/alembic/) |
+
+</details>
+
+## Verification engine
+
+The engine operates on **claims**, not a single opaque confidence score. Evidence and model judgments are recorded separately; uncertainty is preserved when reliable support is missing or conflicting.
 
 ```mermaid
 flowchart TD
-    A["AI response or user-supplied text"] --> B["Decompose into checkable claims"]
-    B --> C["Classify and normalize"]
-    C --> D{"Find relevant evidence"}
-    D --> E["Owner-scoped private knowledge"]
-    D --> F["Configured external retrieval"]
-    E --> G["Assess support and contradictions"]
-    F --> G
-    G --> H["Supported / contradicted / unresolved"]
-    H --> I["Evidence links, reasoning, and audit history"]
+    IN["Text / extension capture / model answer"]
+    EX["Extract checkable claims"]
+    CLASS{"Classify each claim"}
+    NON["Non-verifiable content<br/>handled without fabricated proof"]
+    SEARCH["Retrieve controlled evidence"]
+    PRIVATE["Private owner knowledge"]
+    EXTERNAL["Configured external retrieval"]
+    INJECT["Screen evidence for instruction injection"]
+    JUDGE["Rule + semantic judge evaluations"]
+    DECIDE{"Sufficient consistent evidence?"}
+    SUPPORT["SUPPORTED"]
+    CONTRA["CONTRADICTED"]
+    UNKNOWN["UNKNOWN / UNAVAILABLE"]
+    TRACE["Claim-level result + sources + audit trail"]
+
+    IN --> EX --> CLASS
+    CLASS -->|Non-factual or unsupported type| NON --> TRACE
+    CLASS -->|Factual claim| SEARCH
+    SEARCH --> PRIVATE --> INJECT
+    SEARCH --> EXTERNAL --> INJECT
+    INJECT --> JUDGE --> DECIDE
+    DECIDE -->|Support| SUPPORT --> TRACE
+    DECIDE -->|Contradiction| CONTRA --> TRACE
+    DECIDE -->|Insufficient / disagreement / failure| UNKNOWN --> TRACE
+
+    classDef good fill:#166247,stroke:#97EDBF,color:#fff
+    classDef warn fill:#83522B,stroke:#F0C791,color:#fff
+    classDef neutral fill:#42516B,stroke:#C4DAF7,color:#fff
+    class SUPPORT good
+    class CONTRA warn
+    class UNKNOWN neutral
 ```
 
-VerifAI aims to make each step inspectable. If retrieval fails, the available evidence is inconclusive, or a provider is unavailable, the application should surface an **unknown, unavailable, or review-required state** instead of inventing certainty.
+**Important distinctions:** a model's *answer*, a judge's *assessment*, a citation's *existence*, and the *reliability of the underlying source* are not equivalent. Missing or unsafe evidence must not be converted into a “verified” answer. Concurrency is bounded, and claim/audit ordering is retained. Claims sharing a database session are processed safely rather than sharing a session across concurrent tasks.
 
-### Multi-model workflow (`Final`)
+## Multi-model orchestration
 
-1. **Connect:** Add a provider using a user-owned API key; the backend stores supported credentials encrypted per authenticated owner.
-2. **Test:** Discover models and run an actual bounded completion before marking a model as working. A catalog listing alone does not mean a model is usable.
-3. **Compare:** Choose up to three tested models, submit a prompt once, and inspect the independent responses, including failures or rate limits.
-4. **Synthesize:** Request a combined answer or a structured deliverable such as a project idea, PRD, or architecture proposal. Optional review cycles can refine it.
-5. **Verify:** Run separate evidence assessment when factual confidence matters; never equate multi-model agreement with verified truth.
-6. **Revisit:** View saved conversation results, synthesis, and verification history.
-
-Provider access, quotas, costs, and model availability depend on each provider and account. A suggested architecture or PRD is a proposal—not a factual certification.
-
-## Technology & architecture
-
-VerifAI follows a modular-monolith architecture: the user interface displays results, while authentication, orchestration, retrieval, scoring, and persistence are handled by the backend.
+The comparison experience deliberately separates **execution**, **synthesis**, and **verification**. Users choose up to three models *after* testing real completions; an unavailable model remains unavailable instead of being replaced by a fake answer.
 
 ```mermaid
 flowchart LR
-    W["React + Vite workspace"] --> API["FastAPI /api/v1"]
-    X["Chrome extension"] --> API
-    API --> V["Claim verification engine"]
-    API --> M["Multi-model orchestration (Final)"]
-    API --> K["Private knowledge service"]
-    V --> E["Evidence retrievers & judges"]
-    M --> P["Configured model providers"]
-    API --> DB[("PostgreSQL 16")]
-    K --> DB
-    V --> DB
-    M --> DB
+    PROMPT["One user prompt"] --> SELECT["Select tested models<br/>(up to 3)"]
+    SELECT --> FAN["Bounded parallel dispatch"]
+    FAN --> A["Provider A<br/>response / explicit error"]
+    FAN --> B["Provider B<br/>response / explicit error"]
+    FAN --> C["Provider C<br/>response / explicit error"]
+    A --> LANES["Separate result lanes"]
+    B --> LANES
+    C --> LANES
+    LANES --> CHOICE{"User action"}
+    CHOICE -->|Summarize| SYN["Synthesis + optional<br/>review/revision"]
+    CHOICE -->|Verify factual claims| VERIFY["Independent evidence<br/>verification engine"]
+    SYN --> HISTORY[("Owner-scoped conversations")]
+    VERIFY --> HISTORY
+    LANES --> HISTORY
+
+    classDef provider fill:#17433D,stroke:#70D6B5,color:#fff
+    class A,B,C provider
 ```
 
-| Layer | Stack |
-| --- | --- |
-| Web client | React, TypeScript, Vite, Tailwind CSS |
-| Backend | Python 3.11+, FastAPI, Pydantic |
-| Database | PostgreSQL 16, asynchronous SQLAlchemy, asyncpg, Alembic |
-| Verification | Claim extraction, private-knowledge retrieval, external evidence adapters, rule/semantic evaluation |
-| Multi-model workspace (`Final`) | Provider adapters, BYOK credential management, concurrent inference, synthesis and review loops |
-| Extension | Chrome Manifest V3 |
-| Development & delivery | Docker Compose, pytest, frontend build checks, GitHub Actions |
+<details>
+<summary><strong>BYOK model lifecycle: saved is not tested</strong></summary>
 
-## Get started
+```mermaid
+stateDiagram-v2
+    [*] --> Saved: Save owner API key
+    Saved --> ProviderChecked: Validate provider access
+    ProviderChecked --> Catalogued: Discover advertised models
+    Catalogued --> TestedWorking: Run real bounded completion
+    Catalogued --> Unavailable: Probe fails / rate limited
+    TestedWorking --> Selected: User chooses model
+    Unavailable --> Catalogued: Retry
+    Selected --> [*]
+```
 
-The steps below use the **`Final` branch**, which contains the modern web workspace, Docker Compose stack, and full multi-model features.
+The backend encrypts supported saved provider credentials and enforces owner-level access. External service availability, model names, cost, supported formats, and limits can change at any time. **Never commit API keys or put them into README examples.**
+
+</details>
+
+## Security & trust model
+
+```mermaid
+flowchart LR
+    USER["Authenticated user"] --> JWT["Local JWT or<br/>consent-aware Firebase exchange"]
+    JWT --> OWNER["Resolve owner / role"]
+    OWNER --> API["Protected API"]
+    API --> DATA[("Owner-scoped records")]
+    API --> KEYS["Encrypted BYOK credentials"]
+    API --> EVID["Untrusted evidence filter"]
+    EVID --> JUDGES["Verification judges"]
+    KEYS -.->|Only server-side authorized calls| PROVIDER["External model provider"]
+    classDef boundary fill:#153F3A,stroke:#78C6B8,color:#ffffff
+    class JWT,OWNER,API boundary
+```
+
+| Boundary | Engineering behavior |
+| :-- | :-- |
+| **Identity & consent** | Local JWT authentication and a consent-aware Firebase enrollment/exchange; direct Firebase bearer access cannot silently provision accounts |
+| **Account isolation** | Opaque Firebase subjects are scoped to provider-derived identifiers; email collisions do not automatically link accounts |
+| **Atomic registration** | User and required legal consent persist in one transaction or roll back together |
+| **Secrets** | Provider keys are encrypted per owner; server handles external requests, not the public frontend bundle |
+| **Request safety** | Typed validation, request size and rate limits, authorization, SSRF defenses, untrusted-content and prompt-injection checks |
+| **Resource limits** | Bounded claims, judge/token budgets, timeouts and per-owner persistent private-knowledge quotas |
+| **Data integrity** | PostgreSQL transactions, Alembic migrations, ordered audits, source attribution and explicit failure states |
+
+> [!WARNING]
+> VerifAI is a research/developer project, **not** a certified fact-checking service, a substitute for professional advice, or a production security certification. Retrieved content can be unreliable; judge decisions can be wrong. Review high-stakes conclusions with original, authoritative sources.
+
+---
+
+## Technology stack
+
+| Area | Technologies |
+| :-- | :-- |
+| **Frontend & motion** | React 19, TypeScript, Vite 8, Tailwind CSS, Motion, Anime.js, Lenis |
+| **API** | Python, FastAPI, Pydantic, asynchronous request handling |
+| **Identity** | Argon2id password hashing, signed application JWTs, optional Firebase integration |
+| **Persistence** | PostgreSQL 16, SQLAlchemy 2 async, asyncpg, Alembic |
+| **LLM layer** | Provider adapters and user-configured OpenAI-compatible / native provider pathways |
+| **Evidence** | Local/private retrieval, configured search adapters, deterministic and semantic judge layers |
+| **Companion** | Chrome Manifest V3 extension |
+| **Quality** | pytest, Ruff, mypy, Bandit, pip-audit, npm audit, browser smoke tests, GitHub Actions |
+
+### Repository structure
+
+```text
+VerifAI/
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/endpoints/    # Versioned HTTP resources
+│   │   ├── core/                # Config, auth dependencies, security, DB
+│   │   ├── modules/             # Verification, chat, knowledge, judges
+│   │   ├── models/              # ORM entities
+│   │   ├── repositories/        # Data access
+│   │   └── schemas/             # Typed API contracts
+│   ├── alembic/                 # Schema migrations
+│   └── tests/                   # Backend regressions
+├── frontend/
+│   ├── src/                     # React app, routes, UI and API clients
+│   ├── public/                  # Cinematic landing assets
+│   └── tests/                   # UI, browser and security regressions
+├── extension/                   # Chrome MV3 companion
+├── benchmark/                   # Evaluation cases and validation
+├── database/                    # PostgreSQL initialization
+├── docs/                        # Architecture, security and module guides
+├── scripts/                     # Smoke, benchmarks and operations
+├── .github/workflows/           # CI and benchmark refresh
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Quick start
+
+The instructions below target a **local development workspace on `Final`**, not a hosted production deployment.
 
 ### Requirements
 
-- Git and Docker with the Compose plugin
-- Node.js compatible with Vite 8 (Node 20.19+ or 22.12+) and npm
-- Python 3.11+ for running backend tooling or a non-Docker backend
-- Your own provider credentials **only** for external model calls or retrieval services you choose to enable
+- Git, Docker Engine / Docker Desktop and the Docker Compose plugin
+- Node.js **22.12+** and npm for the Vite 8 frontend (Node 20.19+ also supported by Vite)
+- Python **3.12** recommended for backend tooling and CI parity
+- Optional: user-owned model/retrieval credentials to enable external calls
 
-### 1. Clone and select the development product
+### 1. Clone and configure
 
 ```bash
 git clone https://github.com/Arunprasath-2717/VerifAI.git
 cd VerifAI
 git switch Final
+
 cp .env.example .env
+cp frontend/.env.example frontend/.env
 ```
 
-### 2. Configure your local environment
+Edit the root `.env`. The Compose stack requires three private values. Note: Compose forwards only the backend environment variables explicitly listed in `docker-compose.yml`:
 
-Edit the repository-root `.env` and set these required Docker Compose values:
+| Variable | What to provide |
+| :-- | :-- |
+| `POSTGRES_PASSWORD` | A strong database password for the local PostgreSQL container |
+| `JWT_SECRET` | A high-entropy application token-signing secret |
+| `PROVIDER_CREDENTIAL_ENCRYPTION_KEY` | A cryptography **Fernet** key for stored BYOK credentials |
 
-| Variable | Purpose |
-| --- | --- |
-| `POSTGRES_PASSWORD` | Password for the local PostgreSQL container. |
-| `JWT_SECRET` | Strong application signing secret. |
-| `PROVIDER_CREDENTIAL_ENCRYPTION_KEY` | Fernet key used to encrypt saved BYOK credentials. |
-
-For example, generate the signing secret with `openssl rand -hex 32`. To create a Fernet key, install Python's `cryptography` package in your environment and run:
+Generate values locally:
 
 ```bash
+# Signer and database password — generate separate values
+openssl rand -hex 32
+openssl rand -hex 32
+
+# Fernet key — requires python package 'cryptography'
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-Keep these values private. **Never commit `.env`, production keys, provider tokens, or personal data.** Use distinct secrets in production.
+Paste the generated values into your **local** `.env`. Never commit, publish, screenshot, or paste real secrets into issues. Firebase fields in `frontend/.env` are optional for local-provider-independent development; configure a real Firebase project only when using that sign-in flow.
 
-### 3. Start the API and database
+### 2. Start PostgreSQL and the API
+
+For local development **without Firebase**, the backend needs `FIREBASE_AUTH_ENABLED=false`. The current Compose file does not forward that variable from `.env`, so use a temporary override:
 
 ```bash
-docker compose up --build -d
+cat > /tmp/verifai-compose-local.yml <<'YAML'
+services:
+  backend:
+    environment:
+      FIREBASE_AUTH_ENABLED: "false"
+YAML
+
+docker compose -f docker-compose.yml -f /tmp/verifai-compose-local.yml up --build -d
 docker compose ps
-curl http://127.0.0.1:8000/api/v1/health
+curl -fsS http://127.0.0.1:8000/api/v1/health
+curl -i http://127.0.0.1:8000/api/v1/ready
 ```
 
-The backend and PostgreSQL bind to loopback interfaces by default. API health indicates the process is live; check the readiness endpoint and service logs before relying on external dependencies.
+The Compose setup binds the API to **127.0.0.1:8000** and PostgreSQL to **127.0.0.1:5432** by default. Liveness and readiness are different: `health` reports the running process; `ready` checks critical dependencies. A **503 readiness** response is intentional if Firebase authentication is enabled without a configured Firebase project. To use Firebase, pass `FIREBASE_AUTH_ENABLED=true` and the valid `FIREBASE_PROJECT_ID` into the backend environment and configure matching web identifiers in `frontend/.env`.
 
-### 4. Start the web interface
+> [!NOTE]
+> Run database migrations appropriate to your environment before relying on a migrated schema: `backend/alembic.ini` is the canonical migration configuration. The Compose backend may initialize missing schema in development; that is **not** a substitute for reviewing and applying Alembic migrations during deployment.
 
-In another terminal:
+### 3. Start the web app
 
 ```bash
 cd frontend
@@ -170,128 +390,151 @@ npm ci --legacy-peer-deps
 npm run dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)**. The backend API runs on **[http://localhost:8000](http://localhost:8000)** and exposes interactive API documentation at **[http://localhost:8000/docs](http://localhost:8000/docs)**.
+| Local URL | Service |
+| :-- | :-- |
+| [localhost:3000](http://localhost:3000) | React workspace |
+| [localhost:8000/api/v1/health](http://localhost:8000/api/v1/health) | API liveness |
+| [localhost:8000/api/v1/ready](http://localhost:8000/api/v1/ready) | API readiness |
+| [localhost:8000/docs](http://localhost:8000/docs) | Interactive FastAPI OpenAPI reference |
 
-To stop the containers, run `docker compose down` from the repository root. The named PostgreSQL volume is retained unless you explicitly remove volumes.
+If the browser cannot reach your backend, confirm `VITE_API_BASE_URL` and your development proxy/CORS setup. The frontend defaults to same-origin `/api/v1`; frontend environment configuration and backend CORS settings must match the way you serve them.
 
-### Local backend development (without the API container)
+### 4. Use the workspace
 
-With a reachable PostgreSQL 16 instance and an appropriate `DATABASE_URL` in `backend/.env`:
+1. Register or sign in and complete required consent.
+2. **Verify** a factual passage and examine its claim-level outcomes.
+3. Add private documents to the **Knowledge Base** if you want owner-scoped context.
+4. In **Chat**, configure a supported BYOK provider, save/test its key, probe a real model, and select up to three working models.
+5. Compare the output lanes. Ask for **Summarize** or run **Verify** when factual support matters.
+
+<details>
+<summary><strong>Alternative: local Python API without Docker's backend container</strong></summary>
+
+Use an accessible PostgreSQL instance and configure `backend/.env` with a suitable `DATABASE_URL`, token secret and other required settings:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements-dev.txt
 cp backend/.env.example backend/.env
-# Edit backend/.env: DATABASE_URL, auth, and other required settings
-cd backend && ../.venv/bin/alembic upgrade head && cd ..
+
+# After editing backend/.env with valid local configuration:
+cd backend
+../.venv/bin/alembic -c alembic.ini upgrade head
+cd ..
 PYTHONPATH=backend .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Use either the standalone backend or the Compose backend on port 8000—not both simultaneously.
+Don't run two backend processes simultaneously on port 8000. Stop Compose's backend service when using the local Uvicorn process.
 
-## Configuration
+</details>
 
-The checked-in `[.env.example](https://github.com/Arunprasath-2717/VerifAI/blob/Final/.env.example)` is the source of truth for current configuration. Other optional settings include:
-
-- **Model providers:** OpenAI, Anthropic, Gemini, Groq, OpenRouter, NVIDIA NIM, Ollama, and other supported/custom HTTPS provider routes (availability varies).
-- **Retrieval:** Tavily and configured external retrieval integrations; unset keys should result in explicit unavailability or fallback behavior.
-- **Authentication:** Local account flows and optional Firebase configuration, according to deployment settings.
-- **Safety and resource limits:** Request sizes, rate limits, provider timeouts, allowed origins, and model concurrency.
-
-In the `Final` workspace, configure user-owned provider keys through the authenticated app where supported—not by pasting secrets into frontend source files. Connected, catalogued, and *tested working* models are distinct states.
-
-## API reference
-
-The versioned API is served beneath `/api/v1`. Representative endpoints include:
-
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/v1/health` | Application liveness |
-| `GET` | `/api/v1/ready` | Dependency readiness |
-| `POST` | `/api/v1/verification` | Verify claims in submitted content |
-| `GET` | `/api/v1/verification/{id}` | Retrieve verification and audit results |
-| `POST` | `/api/v1/ingest` | Ingest supported content |
-| `GET` | `/api/v1/ingest/{id}` | Retrieve an ingestion record |
-| `POST` | `/api/v1/knowledge/documents` | Add a private knowledge document |
-| `POST` | `/api/v1/knowledge/search` | Search owner-scoped evidence |
-
-Authentication and request schemas vary by endpoint and branch. Use `/docs` for the live contract rather than assuming all examples work anonymously. Provider-management, conversations, reporting, and streaming endpoints are expanded on `Final`.
-
-## Security & verification boundaries
-
-- **Backend authority:** Claims, evidence, verification states, and persisted histories are controlled server-side. UI display alone is not a trust guarantee.
-- **Account isolation:** Verification history, knowledge content, and saved provider connections are scoped to authenticated owners.
-- **Credential handling:** Supported BYOK secrets are encrypted at rest; the client receives status and masked hints rather than decrypted values.
-- **Untrusted content:** Input claims, retrieved pages, and model outputs must be treated as untrusted data. URLs are checked against SSRF-sensitive destinations.
-- **Truthful failure states:** Missing evidence or unavailable providers must not produce fabricated citations, successful tests, scores, or model completions.
-- **Human judgment:** Source quality varies, and automated verification can make mistakes. Independently review important legal, medical, financial, scientific, or safety-related conclusions.
-
-VerifAI is **decision support, not a guarantee of factual correctness**.
-
-## Testing & quality
-
-Run checks from the `Final` checkout:
+<details>
+<summary><strong>Operational commands & troubleshooting</strong></summary>
 
 ```bash
-# Backend
-python3 -m venv .venv
-.venv/bin/pip install -r backend/requirements-dev.txt
-.venv/bin/pytest backend/tests
-.venv/bin/ruff check backend scripts
+docker compose ps
+docker compose logs --tail=100 backend
+docker compose logs --tail=100 db
+docker compose -f docker-compose.yml -f /tmp/verifai-compose-local.yml down
+```
 
-# Frontend
-cd frontend
+- **503 readiness:** Inspect DB connectivity and authentication configuration; do not suppress a legitimate readiness failure.
+- **401 protected API response:** Sign in and supply a valid authenticated session.
+- **Provider test fails:** Check the user's key, model ID, quota, provider access, network, and configured endpoint; do not substitute a fabricated response.
+- **Frontend loads but API requests fail:** Check port 8000, proxy settings, `VITE_API_BASE_URL` and CORS.
+- **Data safety:** `docker compose down` (or the equivalent multi-file command) preserves the named PostgreSQL volume; **`down -v` deletes volumes**. Back up important data before schema updates or destructive operations.
+
+</details>
+
+---
+
+## API surface
+
+All application routes are versioned beneath `/api/v1`. Authorization and request schemas are endpoint-specific; use [`/docs`](http://localhost:8000/docs) for the live contract.
+
+| Method | Route | Purpose |
+| :-- | :-- | :-- |
+| `GET` | `/health`, `/ready` | Liveness and dependency readiness |
+| `POST` | `/auth/register`, `/auth/login`, `/auth/firebase` | Local registration, session login and consent-aware Firebase exchange |
+| `POST` | `/verification` | Verify submitted content |
+| `GET` | `/verification/{verification_id}` | Retrieve the persisted verification |
+| `POST` | `/ingest` | Ingest supported browser or user content |
+| `POST` | `/knowledge/upload`, `/knowledge/search` | Private document upload and search |
+| `GET` | `/providers/chat-models` | Discover eligible BYOK chat models |
+| `POST` | `/providers/chat-models/probe` | Run a real, bounded model completion test |
+| `POST` | `/chat/conversations` | Create a conversation |
+| `POST` | `/chat/conversations/{id}/messages` | Dispatch conversation message to selected models |
+| `POST` | `/chat/conversations/{id}/messages/{message_id}/summarize` | Synthesize a message |
+| `GET` | `/models/public-benchmarks` | Externally sourced benchmark snapshot |
+| `GET` | `/reports/analytics` | Owner-scoped reports and analytics |
+
+*Paths in the table are relative to `/api/v1`. Authorization may be required.*
+
+## Quality gates & test rehearsal
+
+The [fullstack CI workflow](.github/workflows/ci.yml) checks backend quality, isolated regression tests, dependency audit, frontend TypeScript, security checks, build, and smoke tests. The [benchmark workflow](.github/workflows/refresh-public-leaderboard.yml) is a separate data refresh concern.
+
+```bash
+# From repository root, after Python development dependencies are installed
+.venv/bin/ruff check backend scripts benchmark
+.venv/bin/ruff format --check backend scripts benchmark
+.venv/bin/mypy backend/app --follow-imports=silent --ignore-missing-imports
+.venv/bin/pytest benchmark/tests -q
+
+# Backend integration tests require an isolated test database:
+VERIFAI_TEST_DATABASE_URL=sqlite+aiosqlite:////tmp/verifai_readme_test.sqlite \
+  .venv/bin/pytest backend/tests -q
+
+# From frontend/
 npm ci --legacy-peer-deps
 npm run lint
+npm run test:security
 npm run build
+npm run test:smoke
+npm run test:browser
 ```
 
-Additional browser and full-stack regression runners live under `frontend/tests/`; some require Chromium, ChromeDriver, and/or running services. CI configuration is under `.github/workflows/`. This README intentionally does **not** claim a fixed test count or permanent live model availability.
+**Most recent documented rehearsal (2 November 2026):** GitHub Actions on `Final` passed its frontend, Python 3.12 backend, and fullstack status jobs; the backend run reported **1,412 passed, 1 PostgreSQL-specific skipped**. A separate isolated PostgreSQL regression reported **1,413 passed**. Results are a dated snapshot, not a future CI guarantee.
 
-## Repository map
+[![Fullstack CI](https://github.com/Arunprasath-2717/VerifAI/actions/workflows/ci.yml/badge.svg?branch=Final)](https://github.com/Arunprasath-2717/VerifAI/actions/workflows/ci.yml) · [Engineering audit evidence](docs/security/PRODUCTION_AUDIT_2026-11-02.md)
 
-```text
-VerifAI/
-├── frontend/         React + Vite interface
-├── backend/          FastAPI services, providers, schemas, tests
-├── database/         PostgreSQL initialization
-├── extension/        Chrome browser companion
-├── benchmark/        Evaluation datasets and tooling
-├── docs/             Architecture, security and feature guides
-├── scripts/          Operational and verification helpers
-├── docker-compose.yml
-└── README.md
-```
+> [!CAUTION]
+> **Passing CI does not certify production deployment.** Production-equivalent migrations with real historical data, backup/restore, load/performance, external model-provider integration, telemetry, and media licensing still require independent validation.
 
-Some directories above are present in the advanced `Final` checkout but not yet in `main`.
+---
 
-## Documentation
+## Documentation index
 
-The most detailed current implementation references are on the `Final` branch:
+| Read next | Focus |
+| :-- | :-- |
+| [Complete technical guide](docs/VERIFAI_COMPLETE_TECHNICAL_GUIDE.md) | Broad product and engineering reference |
+| [Multi-model orchestration](docs/MULTI_MODEL_CHAT_ORCHESTRATION_MODULE.md) | Concurrent model execution, synthesis and review |
+| [BYOK workflow](docs/BYOK_CHAT.md) | Credential lifecycle and model probes |
+| [Backend deep dive](docs/BACKEND_DEEP_DIVE.md) | Implementation architecture and services |
+| [Frontend/backend contract](docs/FRONTEND_BACKEND_CONTRACT.md) | API/UI coordination |
+| [Threat model](docs/SECURITY_THREAT_MODEL.md) | Trust boundaries and attack classes |
+| [API security matrix](docs/API_SECURITY_MATRIX.md) | Endpoint protection expectations |
+| [Production engineering audit](docs/security/PRODUCTION_AUDIT_2026-11-02.md) | Rehearsal evidence, limitations and release gates |
+| [Security policy](SECURITY.md) | Disclosure and security guidance |
+| [Product overview](PRODUCT.md) | Product positioning |
 
-- [Multi-model orchestration](https://github.com/Arunprasath-2717/VerifAI/blob/Final/docs/MULTI_MODEL_CHAT_ORCHESTRATION_MODULE.md) — model routing, response lanes, summarization and verification.
-- [BYOK model connections](https://github.com/Arunprasath-2717/VerifAI/blob/Final/docs/BYOK_CHAT.md) — provider testing, credential scope, failure handling and synthesis.
-- [Architecture truth](https://github.com/Arunprasath-2717/VerifAI/blob/Final/docs/ARCHITECTURE_TRUTH.md) — recorded engineering state and its limitations.
-- [API security matrix](https://github.com/Arunprasath-2717/VerifAI/blob/Final/docs/API_SECURITY_MATRIX.md) — API governance and protections.
-- [Frontend/backend contract](https://github.com/Arunprasath-2717/VerifAI/blob/Final/docs/FRONTEND_BACKEND_CONTRACT.md) — product interface boundaries.
-- [Security guidance](https://github.com/Arunprasath-2717/VerifAI/blob/Final/SECURITY.md) — responsible reporting and safeguards.
+### Project status, contributing & license
 
-## Contributing and project status
-
-VerifAI is an evolving product and engineering project. Open a focused feature branch, make changes with tests, and submit a pull request for review. Avoid committing real credentials, personal datasets, generated benchmark rankings, or unstated claims of verification accuracy.
-
-- **`main`:** earlier stable verification platform.
-- **`Final`:** newer, more comprehensive product workspace under development.
-
-**Licensing:** There is currently no repository-root `LICENSE` file. Do not assume an open-source license or permission to redistribute the software; contact the repository owner for usage or contribution terms.
+- **`Final`** is the active advanced workspace and development target described here; merge to `main` only after review and CI approval.
+- For contributions, create a focused branch, document meaningful architectural decisions, write regression tests, and open a pull request. No real keys, personal data, or invented evaluation scores in commits.
+- **Licensing:** There is currently no repository-root `LICENSE` file. Publicly visible code is **not automatically open-source licensed**. Seek the owner's permission before redistributing or reusing it.
 
 ---
 
 <div align="center">
 
-**VerifAI — make evidence part of every AI answer.**
+### Better answers begin with better evidence.
 
-[Back to top](#verifai)
+**VERIFAI** · Compare perspectives · Verify claims · Keep uncertainty visible
+
+[Back to top ↑](#verifai) · [Repository](https://github.com/Arunprasath-2717/VerifAI) · [Review changes](https://github.com/Arunprasath-2717/VerifAI/compare/main...Final?expand=1)
+
+<sub>Animated hero respects reduced-motion preferences. In clients that do not animate SVG, the illustration remains readable as a static banner.</sub>
 
 </div>

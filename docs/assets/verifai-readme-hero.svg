@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="410" viewBox="0 0 1200 410" role="img" aria-labelledby="title desc">
+  <title id="title">VerifAI — Evidence before confidence</title>
+  <desc id="desc">Animated midnight-blue to emerald architecture banner. Input is classified into claims, checked against evidence, reviewed by judges, and returned with an audit trail.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071A23"/><stop offset=".5" stop-color="#0B2330"/><stop offset="1" stop-color="#102D2C"/></linearGradient>
+    <linearGradient id="track" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#49D9C0" stop-opacity=".08"/><stop offset=".5" stop-color="#6EE7CF"/><stop offset="1" stop-color="#D9F6B4" stop-opacity=".15"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#54DAC6"/><stop offset="1" stop-color="#B9E9BA"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#48C6AE" stop-opacity=".16"/><stop offset="1" stop-color="#48C6AE" stop-opacity="0"/></radialGradient>
+    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#90D0C6" opacity=".15"/></pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="6"/></filter>
+    <clipPath id="rounded"><rect width="1200" height="410" rx="25"/></clipPath>
+    <style>
+      .travel{stroke-dasharray:7 15;animation:stream 13s linear infinite}
+      .beacon{animation:breathe 3.4s ease-in-out infinite}
+      .beacon:nth-of-type(2){animation-delay:1s}
+      .rise{animation:float 5s ease-in-out infinite}
+      .rise2{animation:float 5s ease-in-out infinite;animation-delay:1.6s}
+      @keyframes stream{to{stroke-dashoffset:-220}}
+      @keyframes breathe{0%,100%{opacity:.32}50%{opacity:1}}
+      @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+      @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+    </style>
+  </defs>
+  <g clip-path="url(#rounded)">
+    <rect width="1200" height="410" fill="url(#background)"/>
+    <rect width="1200" height="410" fill="url(#dots)"/>
+    <ellipse cx="1025" cy="162" rx="310" ry="270" fill="url(#halo)"/>
+    <ellipse cx="300" cy="35" rx="330" ry="210" fill="url(#halo)" opacity=".6"/>
+    <path d="M0 344 Q240 285 445 346 T940 348 T1200 315" fill="none" stroke="#6ECFBF" stroke-opacity=".12" stroke-width="2"/>
+    <rect x="54" y="42" width="124" height="28" rx="14" fill="#144239" stroke="#3C816E" stroke-opacity=".9"/>
+    <circle cx="69" cy="56" r="4" fill="#B8EAB8" class="beacon"/>
+    <text x="82" y="61" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="1.8" font-weight="700" fill="#D0F5E6">VERIFICATION</text>
+    <text x="54" y="142" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="76" letter-spacing="-4" fill="#F4FFFD">Verif<tspan fill="url(#accent)">AI</tspan></text>
+    <text x="56" y="180" font-family="Arial, Helvetica, sans-serif" font-size="21" fill="#C2D9D8" letter-spacing=".2">Evidence before confidence.</text>
+    <text x="56" y="212" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#8CB6B5">Inspect claims  ·  Compare models  ·  Preserve uncertainty</text>
+    <g transform="translate(54 264)">
+      <rect width="158" height="34" rx="17" fill="#123A3A" stroke="#347F72"/>
+      <circle cx="17" cy="17" r="4.5" fill="#77E6CE"/>
+      <text x="29" y="22" font-size="12" font-weight="700" font-family="Arial, sans-serif" fill="#C8F2E9">TRACEABLE OUTPUT</text>
+      <rect x="171" width="144" height="34" rx="17" fill="#123A3A" stroke="#347F72"/>
+      <circle cx="188" cy="17" r="4.5" fill="#C0EDAD"/>
+      <text x="200" y="22" font-size="12" font-weight="700" font-family="Arial, sans-serif" fill="#C8F2E9">OWNER-SCOPED</text>
+    </g>
+    <path d="M555 179 C625 179 617 179 661 179 S740 179 786 179 S882 179 939 179" fill="none" stroke="url(#track)" stroke-width="14" filter="url(#glow)" opacity=".75"/>
+    <path d="M555 179 C625 179 617 179 661 179 S740 179 786 179 S882 179 939 179" fill="none" stroke="#4DB8A8" stroke-opacity=".36" stroke-width="2"/>
+    <path d="M555 179 C625 179 617 179 661 179 S740 179 786 179 S882 179 939 179" fill="none" stroke="url(#accent)" stroke-width="2.5" class="travel"/>
+    <g class="rise">
+      <rect x="547" y="123" width="137" height="112" rx="17" fill="#102E32" stroke="#4F9386"/>
+      <rect x="563" y="141" width="34" height="34" rx="10" fill="#20574D"/>
+      <path d="M573 151 h14 m-14 6 h14 m-14 6 h8" fill="none" stroke="#9EF5DA" stroke-width="2" stroke-linecap="round"/>
+      <text x="564" y="198" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#E2F7EE">Claims</text>
+      <text x="564" y="216" font-family="Arial,sans-serif" font-size="10" fill="#8DBBB2">Extract + route</text>
+    </g>
+    <g class="rise2">
+      <rect x="720" y="123" width="137" height="112" rx="17" fill="#102E32" stroke="#4F9386"/>
+      <rect x="736" y="141" width="34" height="34" rx="10" fill="#20574D"/>
+      <path d="M747 160 l7 7 12-16" fill="none" stroke="#9EF5DA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="737" y="198" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#E2F7EE">Evidence</text>
+      <text x="737" y="216" font-family="Arial,sans-serif" font-size="10" fill="#8DBBB2">Retrieve + judge</text>
+    </g>
+    <g class="rise">
+      <rect x="893" y="123" width="237" height="112" rx="17" fill="#133D38" stroke="#72CDB4"/>
+      <rect x="911" y="141" width="34" height="34" rx="10" fill="#246A59"/>
+      <path d="M920 157 l6 6 10-12" fill="none" stroke="#B9F5CB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="912" y="199" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#F2FFF6">Verified trace</text>
+      <text x="912" y="216" font-family="Arial,sans-serif" font-size="11" fill="#A6D7C8">Supported / contradicted / unknown</text>
+    </g>
+    <path d="M576 278 H1114" stroke="#5BB8A8" stroke-opacity=".15"/>
+    <circle cx="599" cy="278" r="3" fill="#65D3BC" class="beacon"/>
+    <circle cx="788" cy="278" r="3" fill="#65D3BC" class="beacon"/>
+    <circle cx="1060" cy="278" r="3" fill="#B8EDB3" class="beacon"/>
+    <text x="1108" y="376" text-anchor="end" font-family="Arial,sans-serif" font-size="11" fill="#739E9B" letter-spacing="1.2">CLAIMS  /  EVIDENCE  /  AUDIT</text>
+    <text x="55" y="376" font-family="Arial,sans-serif" font-size="12" fill="#86AAA6">VERIFAI  •  MODULAR MONOLITH  •  OPEN ENGINEERING</text>
+  </g>
+</svg>
