@@ -68,3 +68,7 @@ Review included backend application and tests, authorization and owner scoping, 
 ## Release gate
 
 Do not claim production certification or merge solely on these local runs. Push reviewed changes as a pull request and require clean remote CI and a production-like staged rollout, with verified auth, migrations, backups, provider integration, and alerts. The report should be updated with final rerun totals and PR/CI links when available.
+
+## GitHub Actions follow-up — CI environment isolation
+
+The first pushed audit commit (`c0b95db`) triggered GitHub Actions run 41342582002. The Node 22 frontend job passed, but the Python 3.12 backend job failed in the isolated readiness success test (`test_readiness_probe_database_available_mocked`), preventing the full suite from starting. The GitHub runner had Firebase enabled by default but did not provide `FIREBASE_PROJECT_ID`; the readiness endpoint correctly and safely returned HTTP 503. The test had incorrectly assumed a fully configured identity provider. The test now supplies its own explicit, test-only auth configuration and requires no real Firebase project for its successful-readiness case, while separate negative tests retain the 503 configuration guard. The exact CI environment failure was reproduced locally and the targeted 21-test database/health group passed after correction. Remote CI on the updated commit remains the final acceptance gate.

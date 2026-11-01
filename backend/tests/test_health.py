@@ -73,8 +73,21 @@ def test_readiness_probe_database_unavailable_mocked(client: TestClient) -> None
         }
 
 
-def test_readiness_probe_database_available_mocked(client: TestClient) -> None:
-    """A configured JWT service and responsive DB can actually become ready."""
+def test_readiness_probe_database_available_mocked(
+    app: FastAPI, client: TestClient
+) -> None:
+    """A fully configured service and responsive DB can become ready.
+
+    Explicitly disable optional Firebase in this isolated success case: the
+    host's Firebase environment must never decide a readiness test outcome.
+    """
+    ready_settings = Settings(
+        _env_file=None,
+        ENVIRONMENT="testing",
+        FIREBASE_AUTH_ENABLED=False,
+        JWT_SECRET="test-only-ready-signing-secret-32-chars-long",
+    )
+    app.dependency_overrides[get_settings] = lambda: ready_settings
     mock_db_result = {"configured": True, "status": "available"}
     with patch(
         "app.api.v1.endpoints.health.check_database_connectivity",
