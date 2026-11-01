@@ -4,13 +4,20 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_async_session
-from app.core.errors import BadRequestError, NotFoundError
+from app.core.config import Settings, get_settings
+from app.core.dependencies import (
+    get_async_session,
+    get_current_user,
+    resolve_effective_owner,
+)
+from app.core.errors import BadRequestError, ForbiddenError, NotFoundError
+from app.core.rate_limit import enforce_rate_limit
 from app.models.ingestion import IngestedPayload
+from app.models.user import User
 from app.modules.evidence.security import is_safe_url
 from app.modules.verification.orchestrator import VerificationOrchestrator
 from app.schemas.ingestion import (
@@ -35,18 +42,40 @@ router = APIRouter()
     summary="Ingest AI-Generated Response Payload",
     description=(
         "Receives captured AI-generated text from the Chrome extension or other "
-        "clients, validates provenance and source URL, optionally executes "
-        "synchronous verification, and returns structured ingestion status. "
-        "All records are persisted to PostgreSQL."
+        "clients. Requires a Bearer JWT. The record and any verification are owned "
+        "by the authenticated user, validates provenance and source URL, optionally "
+        "executes synchronous verification, and returns structured ingestion status."
     ),
 )
 async def ingest_payload(
     request: IngestionPayloadRequest,
+    http_request: Request,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
+    settings: Settings = Depends(get_settings),
 ) -> IngestionResponse:
     """Ingest AI response text and optionally execute verification."""
     ingestion_id = uuid.uuid4()
     now_utc = datetime.now(UTC)
+    owner_id = str(current_user.id)
+
+    # A caller may only verify inside its own namespace. Admin may target another
+    # namespace; non-admin mismatches are rejected (IDOR protection).
+    verification_owner = resolve_effective_owner(
+        current_user=current_user,
+        client_owner_id=request.options.owner_id,
+        settings=settings,
+    )
+    request.options.owner_id = verification_owner
+
+    if request.verify_immediately and settings.RATE_LIMIT_ENABLED:
+        enforce_rate_limit(
+            http_request,
+            action="verification",
+            limit=settings.RATE_LIMIT_VERIFY_PER_MINUTE,
+            user_id=owner_id,
+            settings=settings,
+        )
 
     # Validate source URL against SSRF / malicious destination if provided
     if request.source_url:
@@ -88,6 +117,7 @@ async def ingest_payload(
     try:
         payload_record = IngestedPayload(
             id=ingestion_id,
+            owner_id=owner_id,
             source=request.source.value,
             source_url=request.source_url,
             model_name=request.model_name,
@@ -127,10 +157,15 @@ async def ingest_payload(
     response_model=IngestionResponse,
     status_code=status.HTTP_200_OK,
     summary="Retrieve Ingestion Record",
-    description="Fetches an ingested payload record and status by UUID.",
+    description=(
+        "Fetches an ingested payload record by UUID. Requires a Bearer JWT. "
+        "Callers may read only records they own; legacy ownerless records are "
+        "visible to ADMIN accounts only."
+    ),
 )
 async def get_ingested_payload(
     ingestion_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ) -> IngestionResponse:
     """Retrieve an ingested payload record by UUID."""
@@ -141,6 +176,14 @@ async def get_ingested_payload(
     if record is None:
         raise NotFoundError(
             message=f"Ingested payload {ingestion_id} not found.",
+            details={"ingestion_id": str(ingestion_id)},
+        )
+
+    is_admin = current_user.role == "ADMIN"
+    if not is_admin and record.owner_id != str(current_user.id):
+        # Quarantined (NULL owner) and other users' records are both denied.
+        raise ForbiddenError(
+            message="Access denied: You do not own this ingested payload.",
             details={"ingestion_id": str(ingestion_id)},
         )
 

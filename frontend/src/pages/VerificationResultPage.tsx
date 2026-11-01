@@ -13,6 +13,7 @@ import {
 import { motion } from 'motion/react';
 import { VerificationRecord } from '../types';
 import { verificationApi } from '../api';
+import { safeExternalUrl } from '../utils/safeExternalUrl';
 
 type ResultTab = 'overview' | 'claims' | 'evidence' | 'judgments' | 'audit';
 
@@ -23,16 +24,6 @@ const tabs: { id: ResultTab; label: string }[] = [
   { id: 'judgments', label: 'Model Judgments' },
   { id: 'audit', label: 'Audit' },
 ];
-
-const safeExternalUrl = (url?: string): string | undefined => {
-  if (!url) return undefined;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : undefined;
-  } catch {
-    return undefined;
-  }
-};
 
 interface VerificationResultPageProps {
   verifications: VerificationRecord[];
@@ -388,8 +379,8 @@ export const VerificationResultPage: React.FC<VerificationResultPageProps> = ({ 
                           <span className="text-xs font-bold uppercase block mb-1 text-[#356B52] dark:text-slate-400">
                             Primary Source
                           </span>
-                          {claim.sourceUrl ? (
-                            <a href={claim.sourceUrl} target="_blank" rel="noopener noreferrer"
+                          {safeExternalUrl(claim.sourceUrl) ? (
+                            <a href={safeExternalUrl(claim.sourceUrl)} target="_blank" rel="noopener noreferrer"
                                className="text-sm font-bold hover:underline flex items-center gap-1.5 text-[#1B4332] dark:text-[#B6FF2E]">
                               <span>{claim.sourceTitle || 'Source link'}</span>
                               <ExternalLink size={13} />

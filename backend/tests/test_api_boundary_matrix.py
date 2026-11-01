@@ -9,7 +9,9 @@ from typing import Any, cast
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.dependencies import get_current_user
 from app.main import create_app
+from app.models.user import User
 from app.schemas.ingestion import IngestionSource
 
 
@@ -17,6 +19,18 @@ from app.schemas.ingestion import IngestionSource
 def client() -> TestClient:
     """Create a reusable FastAPI test client for boundary matrix testing."""
     app = create_app()
+    # This matrix exercises schema validation and HTTP semantics for an
+    # authenticated caller. Ingestion now rejects anonymous requests by design.
+    # Authorization itself is covered separately by ingestion ownership tests.
+    caller = User(
+        id=uuid.uuid4(),
+        email="boundary-matrix@test.invalid",
+        username="boundary_matrix",
+        hashed_password="",
+        role="USER",
+        is_active=True,
+    )
+    app.dependency_overrides[get_current_user] = lambda: caller
     return TestClient(app)
 
 

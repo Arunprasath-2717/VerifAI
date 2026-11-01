@@ -82,8 +82,9 @@ def parse_chat_models(provider_id: str, payload: object) -> list[ConnectedChatMo
             if model_id.startswith("models/"):
                 model_id = model_id[len("models/") :]
         else:
-            model_id = item.get("id")
-        if not isinstance(model_id, str) or not model_id or len(model_id) > 128:
+            raw_id = item.get("id")
+            model_id = raw_id if isinstance(raw_id, str) else ""
+        if not model_id or len(model_id) > 128:
             continue
         # Exclude obviously non-conversational models. A successful smoke
         # test, not the model name, is still authoritative for chat support.

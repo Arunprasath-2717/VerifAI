@@ -297,13 +297,13 @@
 }
 @media (max-width:1180px) {
   .mocha-dashboard .mocha-dashboard-hero { min-height:0; }
-  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-8 { grid-column:span 7/span 7; }
-  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-4 { grid-column:span 5/span 5; }
+  .mocha-dashboard .mocha-dashboard-hero [class~="lg:col-span-8"] { grid-column:span 7/span 7; }
+  .mocha-dashboard .mocha-dashboard-hero [class~="lg:col-span-4"] { grid-column:span 5/span 5; }
   .mocha-dashboard .lt-kpi-card { min-height:151px; }
 }
 @media (max-width:1023px) {
-  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-8,
-  .mocha-dashboard .mocha-dashboard-hero .lg\\:col-span-4 { grid-column:auto; }
+  .mocha-dashboard .mocha-dashboard-hero [class~="lg:col-span-8"],
+  .mocha-dashboard .mocha-dashboard-hero [class~="lg:col-span-4"] { grid-column:auto; }
   .mocha-dashboard .mocha-dashboard-hero {
     background-position:62% center !important;
   }

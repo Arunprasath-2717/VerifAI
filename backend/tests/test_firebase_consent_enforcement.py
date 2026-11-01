@@ -23,8 +23,8 @@ def _payload(uid: str) -> dict:
         "email": f"{uid}@example.com",
         "name": "Consent Tester",
         "email_verified": True,
-        "iss": "https://securetoken.google.com/verifai-22c4b",
-        "aud": "verifai-22c4b",
+        "iss": "https://securetoken.google.com/verifai-test-project",
+        "aud": "verifai-test-project",
         "firebase": {"sign_in_provider": "password"},
     }
 

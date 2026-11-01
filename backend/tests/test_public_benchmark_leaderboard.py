@@ -40,9 +40,30 @@ def test_checked_in_public_snapshot_has_correct_provenance_and_scores():
         used = [v for v in model["suite_scores"].values() if v is not None]
         assert len(used) == model["suite_coverage"]
         assert all(0 <= value <= 100 for value in used)
-        assert abs(sum(used) / len(used) - model["overall_score"]) < 0.06
+        # LiveBench can specify category weights; a plain mean of rounded
+        # suites is not equivalent to its authoritative overall score.
+        assert min(used) <= model["overall_score"] <= max(used)
         assert "factualSupport" not in model
         assert "citationPrecision" not in model
+
+
+def test_source_declared_suite_weights_determine_overall(livebench_fixture):
+    csv_text, categories, names = livebench_fixture
+    import json
+
+    category_data = json.loads(categories)
+    category_data["_overall_weights"] = {"Long Agentic": 3}
+    snapshot = board.construct_snapshot(
+        table_csv=csv_text,
+        categories_json=json.dumps(category_data),
+        model_metadata=names,
+        release_id="20261014",
+        source_last_updated="23 October 2026",
+        retrieved_at=datetime(2026, 10, 24, tzinfo=UTC),
+    )
+    # eval-0: (20*3 + 50 + 70 + 80 + 90 + 60 + 40) / 9 == 50.0
+    first = next(m for m in snapshot["models"] if m["id"] == "eval-0")
+    assert first["overall_score"] == 50.0
 
 
 def test_missing_benchmark_is_null_not_zero_or_invented(livebench_fixture):

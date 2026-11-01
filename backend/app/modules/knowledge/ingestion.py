@@ -160,81 +160,39 @@ def chunk_document_text(
     if c_overlap >= c_size:
         c_overlap = max(0, c_size // 4)
 
-    paragraphs = re.split(r"(\n\n+)", text)
+    # Sliding windows over the ORIGINAL text. Each window is [start, end) with
+    # end - start <= c_size and starts strictly increasing, so stored text is
+    # always exactly text[start_offset:end_offset] after whitespace trimming.
     chunks: list[DocumentChunkData] = []
-    current_chunk: list[str] = []
-    current_len = 0
-    current_start = 0
-    global_offset = 0
-
-    # Build paragraph-aware chunks
-    for part in paragraphs:
-        part_len = len(part)
-        if current_len + part_len <= c_size:
-            current_chunk.append(part)
-            current_len += part_len
-        else:
-            if current_chunk:
-                chunk_str = "".join(current_chunk).strip()
-                if chunk_str:
-                    chunks.append(
-                        DocumentChunkData(
-                            chunk_index=len(chunks),
-                            text=chunk_str,
-                            start_offset=current_start,
-                            end_offset=current_start + current_len,
-                            metadata_json={"paragraph_aligned": True},
-                        )
-                    )
-                # Next chunk start with overlap
-                current_start = max(0, global_offset - c_overlap)
-                current_chunk = [part]
-                current_len = part_len
-            else:
-                # Single part exceeds chunk_size; slice deterministically
-                step = c_size - c_overlap
-                for i in range(0, part_len, step):
-                    sub = part[i : i + c_size].strip()
-                    if sub:
-                        chunks.append(
-                            DocumentChunkData(
-                                chunk_index=len(chunks),
-                                text=sub,
-                                start_offset=global_offset + i,
-                                end_offset=min(len(text), global_offset + i + len(sub)),
-                                metadata_json={"sliced": True},
-                            )
-                        )
-                current_chunk = []
-                current_len = 0
-                current_start = global_offset + part_len
-
-        global_offset += part_len
-
-    if current_chunk:
-        chunk_str = "".join(current_chunk).strip()
-        if chunk_str:
+    n = len(text)
+    step = max(1, c_size - c_overlap)
+    start = 0
+    while start < n:
+        end = min(n, start + c_size)
+        if end < n:
+            # Prefer to cut at the last paragraph or sentence break in the window.
+            window = text[start:end]
+            cut = max(window.rfind("\n\n"), window.rfind(". "), window.rfind(" "))
+            if cut > len(window) // 2:
+                end = start + cut + 1
+        span = text[start:end]
+        body = span.strip()
+        if body:
+            lead = len(span) - len(span.lstrip())
+            real_start = start + lead
             chunks.append(
                 DocumentChunkData(
                     chunk_index=len(chunks),
-                    text=chunk_str,
-                    start_offset=current_start,
-                    end_offset=len(text),
-                    metadata_json={"paragraph_aligned": True},
+                    text=body,
+                    start_offset=real_start,
+                    end_offset=real_start + len(body),
+                    metadata_json={"window": True},
                 )
             )
-
-    # Fallback guarantee: if no chunks generated, create one covering entire text
-    if not chunks and text.strip():
-        chunks.append(
-            DocumentChunkData(
-                chunk_index=0,
-                text=text.strip(),
-                start_offset=0,
-                end_offset=len(text),
-                metadata_json={"single_chunk": True},
-            )
-        )
+        if end >= n:
+            break
+        # Advance by the window step, always moving forward by at least one char.
+        start = max(start + 1, min(end, start + step))
 
     return chunks
 

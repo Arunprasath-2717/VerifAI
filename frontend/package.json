@@ -10,6 +10,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:smoke": "python3 tests/smoke_test_frontend.py",
+    "test:security": "node --experimental-strip-types --test tests/extensionPermissions.test.cjs tests/safeExternalUrl.test.ts",
     "test:browser": "python3 tests/browser_regression.py",
     "test:fullstack": "python3 tests/full_stack_smoke.py"
   },
@@ -44,5 +45,8 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "1.14.7"
   }
 }

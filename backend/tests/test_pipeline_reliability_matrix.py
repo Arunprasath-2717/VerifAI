@@ -172,11 +172,17 @@ NUMERIC_CASES = [
     (
         "The event occurred in 1969.",
         "In July 1969 the mission launched.",
-        JudgeDecision.SUPPORTED,
+        # Not established that the unnamed event is the same mission.
+        JudgeDecision.INSUFFICIENT_EVIDENCE,
     ),
     (
         "The bridge measures 2000 meters.",
         "The bridge spans 2000 meters in length.",
+        JudgeDecision.SUPPORTED,
+    ),
+    (
+        "The event occurred in 1969.",
+        "The event occurred in 1969.",
         JudgeDecision.SUPPORTED,
     ),
     # Numeric conflicts -> CONTRADICTED
@@ -197,8 +203,14 @@ NUMERIC_CASES = [
     ),
     (
         "The event occurred in 1969.",
-        "The event took place in 1985.",
+        "The event occurred in 1985.",
         JudgeDecision.CONTRADICTED,
+    ),
+    (
+        "The event occurred in 1969.",
+        "The event took place in 1985.",
+        # Without reliable proposition alignment, abstain rather than guess.
+        JudgeDecision.INSUFFICIENT_EVIDENCE,
     ),
     (
         "The price was 50 dollars.",

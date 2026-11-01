@@ -9,7 +9,6 @@ For tests, use pytest fixtures with SQLite (aiosqlite) or a real test Postgres i
 import logging
 import uuid
 from collections.abc import AsyncGenerator, Callable
-from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Depends
@@ -22,6 +21,7 @@ from app.core.database import get_async_session as _get_async_session
 from app.core.errors import ForbiddenError, UnauthorizedError
 from app.core.security import decode_access_token
 from app.models.user import User
+from app.models.user_consent import UserConsent
 from app.schemas.auth import UserRole
 
 logger = logging.getLogger("verifai.dependencies")
@@ -76,38 +76,48 @@ async def get_current_user(
         "https://securetoken.google.com"
     )
 
-    try:
-        user_uuid = uuid.UUID(str(sub))
-    except (ValueError, TypeError) as exc:
-        if is_firebase_token:
-            user_uuid = uuid.uuid5(uuid.NAMESPACE_URL, f"firebase:{sub}")
-        else:
+    # A Firebase subject is a provider-owned opaque string, even when it
+    # happens to be UUID-shaped. Never interpret it as an internal user ID.
+    if is_firebase_token:
+        user_uuid = uuid.uuid5(uuid.NAMESPACE_URL, f"firebase:{sub}")
+    else:
+        try:
+            user_uuid = uuid.UUID(str(sub))
+        except (ValueError, TypeError) as exc:
             raise UnauthorizedError(
                 message="Token subject is not a valid user identifier.",
-                details={"sub": str(sub)},
+                details={"reason": "invalid_subject"},
             ) from exc
 
     stmt = select(User).where(User.id == user_uuid)
     result = await db.execute(stmt)
     user: User | None = result.scalar_one_or_none()
 
+    # A raw Firebase token must never create an account or bypass mandatory
+    # legal acceptance: enrollment goes through POST /auth/firebase.
     if user is None and is_firebase_token:
-        # Auto-provision user account from validated Firebase ID token
-        email = str(payload.get("email") or f"{sub}@firebase.user")
-        username = str(payload.get("name") or email.split("@")[0]).replace(" ", "_")
-        user = User(
-            id=user_uuid,
-            email=email,
-            username=username,
-            hashed_password="",  # Firebase users have no local password
-            role="USER",
-            is_active=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+        raise UnauthorizedError(
+            message="Complete Firebase account setup before accessing this API.",
+            details={"reason": "firebase_enrollment_required"},
         )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
+
+    if user is not None and is_firebase_token:
+        consent_result = await db.execute(
+            select(UserConsent)
+            .where(UserConsent.user_id == user_uuid)
+            .order_by(UserConsent.consented_at.desc())
+            .limit(1)
+        )
+        consent = consent_result.scalar_one_or_none()
+        if (
+            consent is None
+            or consent.terms_version != settings.TERMS_VERSION
+            or consent.privacy_version != settings.PRIVACY_POLICY_VERSION
+        ):
+            raise ForbiddenError(
+                message="Accept current Terms and Privacy Policy to continue.",
+                details={"reason": "TERMS_REACCEPTANCE_REQUIRED"},
+            )
 
     if user is None:
         raise UnauthorizedError(
@@ -211,11 +221,8 @@ def resolve_effective_owner(
             )
         return user_id_str
 
-    # Unauthenticated path: strictly development/testing only
-    is_dev = (
-        settings.ENVIRONMENT in ("development", "test", "testing") or settings.DEBUG
-    )
-    if not is_dev:
+    # Anonymous path: development/testing only. DEBUG must not widen it.
+    if not settings.is_development:
         raise UnauthorizedError(
             message="Authentication required in production environment.",
             details={"environment": settings.ENVIRONMENT},

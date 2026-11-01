@@ -4,6 +4,34 @@
  */
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
+const TOKEN_KEY = "verifaiAccessToken";
+
+// Access token lives in chrome.storage.session: memory-only for the browser
+// session, never written to disk, and not readable by web page scripts.
+async function getStoredToken() {
+  const data = await chrome.storage.session.get(TOKEN_KEY);
+  return data[TOKEN_KEY] || null;
+}
+
+async function setStoredToken(token) {
+  if (token) {
+    await chrome.storage.session.set({ [TOKEN_KEY]: token });
+  } else {
+    await chrome.storage.session.remove(TOKEN_KEY);
+  }
+}
+
+async function authorizedFetch(url, options = {}) {
+  const token = await getStoredToken();
+  const headers = new Headers(options.headers || {});
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) {
+    // Expired or revoked token: drop it so the user signs in again.
+    await setStoredToken(null);
+  }
+  return res;
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const backendStatus = document.getElementById("backend-status");
@@ -20,8 +48,59 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resultsCard = document.getElementById("results-card");
   const errorBanner = document.getElementById("error-banner");
   const errorMessage = document.getElementById("error-message");
+  const signinForm = document.getElementById("signin-form");
+  const signinIdentifier = document.getElementById("signin-identifier");
+  const signinPassword = document.getElementById("signin-password");
+  const btnSignin = document.getElementById("btn-signin");
+  const signedInBar = document.getElementById("signed-in-bar");
+  const btnSignout = document.getElementById("btn-signout");
 
   let currentSourceUrl = "";
+
+  // Sign-in state
+  async function renderAuthState() {
+    const signedIn = Boolean(await getStoredToken());
+    signinForm.classList.toggle("hidden", signedIn);
+    signedInBar.classList.toggle("hidden", !signedIn);
+    btnVerify.disabled = !signedIn;
+    return signedIn;
+  }
+
+  signinForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    hideError();
+    btnSignin.disabled = true;
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email_or_username: signinIdentifier.value.trim(),
+          password: signinPassword.value,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || `Sign-in failed (HTTP ${res.status})`);
+      }
+      const data = await res.json();
+      await setStoredToken(data.access_token);
+      signinPassword.value = "";
+      await renderAuthState();
+    } catch (err) {
+      showError(err.message || "Sign-in failed.");
+    } finally {
+      btnSignin.disabled = false;
+    }
+  });
+
+  btnSignout.addEventListener("click", async () => {
+    await setStoredToken(null);
+    resultsCard.classList.add("hidden");
+    await renderAuthState();
+  });
+
+  await renderAuthState();
 
   // 1. Health Check
   async function checkBackendHealth() {
@@ -60,6 +139,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!tab || !tab.id) return;
 
       currentSourceUrl = tab.url || "";
+      // Only inject after explicit user action, under activeTab permission.
+      // Never run a standing content script on every website.
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["content.js"],
+      });
       chrome.tabs.sendMessage(tab.id, { action: "GET_PAGE_TEXT" }, (response) => {
         if (chrome.runtime.lastError) {
           showError("Cannot capture from this page. Make sure you are on an active webpage.");
@@ -137,7 +222,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/ingest`, {
+      const res = await authorizedFetch(`${API_BASE_URL}/ingest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -147,7 +232,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        const msg = errData?.error?.message || `Ingestion failed (HTTP ${res.status})`;
+        if (res.status === 401) {
+          await renderAuthState();
+        }
+        const msg =
+          res.status === 401
+            ? "Your session has expired. Please sign in again."
+            : errData?.error?.message || `Ingestion failed (HTTP ${res.status})`;
         throw new Error(msg);
       }
 

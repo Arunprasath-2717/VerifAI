@@ -13,3 +13,4 @@ argon2-cffi==25.1.0
 pyjwt[crypto]==2.15.1
 python-multipart==0.0.32
 cryptography==50.0.2
+certifi==2026.10.18  # protect HTTPS trust store against revoked CA keys

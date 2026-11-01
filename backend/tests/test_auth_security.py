@@ -382,8 +382,8 @@ def test_firebase_auth_endpoint_and_token_exchange(
         "email": "firebase_user@example.com",
         "name": "Firebase User",
         "email_verified": True,
-        "iss": "https://securetoken.google.com/verifai-22c4b",
-        "aud": "verifai-22c4b",
+        "iss": "https://securetoken.google.com/verifai-test-project",
+        "aud": "verifai-test-project",
     }
     monkeypatch.setattr(
         auth_endpoint, "verify_firebase_id_token", lambda token, settings: mock_payload
@@ -427,13 +427,19 @@ def test_firebase_direct_bearer_token_authentication(
         "email": "direct_firebase@example.com",
         "name": "Direct User",
         "email_verified": True,
-        "iss": "https://securetoken.google.com/verifai-22c4b",
-        "aud": "verifai-22c4b",
+        "iss": "https://securetoken.google.com/verifai-test-project",
+        "aud": "verifai-test-project",
     }
     monkeypatch.setattr(
         core_security,
         "verify_firebase_id_token",
         lambda token, settings: mock_payload,
+    )
+    # Both bearer validation and enrollment must verify the same token.
+    import app.api.v1.endpoints.auth as auth_endpoint
+
+    monkeypatch.setattr(
+        auth_endpoint, "verify_firebase_id_token", lambda token, settings: mock_payload
     )
     # Mock jwt.get_unverified_header to report RS256 for this test token
     orig_unverified_header = jwt.get_unverified_header
@@ -451,7 +457,19 @@ def test_firebase_direct_bearer_token_authentication(
         "/api/v1/auth/me",
         headers={"Authorization": "Bearer firebase.raw.id.token"},
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 401
+    assert resp.json()["error"]["details"]["reason"] == "firebase_enrollment_required"
+
+    enrollment = client.post(
+        "/api/v1/auth/firebase",
+        json={"id_token": "firebase.raw.id.token", "terms_accepted": True},
+    )
+    assert enrollment.status_code == 200, enrollment.text
+    resp = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer firebase.raw.id.token"},
+    )
+    assert resp.status_code == 200, resp.text
     data = resp.json()
     expected_uuid = uuid.uuid5(uuid.NAMESPACE_URL, "firebase:firebase_direct_user_456")
     assert data["id"] == str(expected_uuid)

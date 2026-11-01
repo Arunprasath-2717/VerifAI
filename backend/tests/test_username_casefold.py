@@ -5,6 +5,7 @@ All tests use the isolated VERIFAI_TEST_DATABASE_URL test database.
 
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.database import get_async_engine
@@ -73,6 +74,8 @@ def test_database_has_atomic_case_insensitive_unique_index() -> None:
         from sqlalchemy import text
 
         engine = get_async_engine()
+        if engine.dialect.name != "postgresql":
+            pytest.skip("PostgreSQL functional-index DDL is database-specific")
         async with engine.connect() as conn:
             result = await conn.execute(
                 text(

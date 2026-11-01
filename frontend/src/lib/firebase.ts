@@ -16,15 +16,17 @@ import {
 import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
 import { authApi, TokenResponse } from "../api/auth";
 
+// Firebase web identifiers are supplied by deployment configuration, not source defaults.
+// Missing values must be set through frontend/.env (development) or deployment env vars.
 // VerifAI Web Firebase Configuration
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDag7_lFm6ayphrJUDYWK2EQmZmFdaU_5s",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "verifai-22c4b.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "verifai-22c4b",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "verifai-22c4b.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "501647364420",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:501647364420:web:9848f5dc7ba7d236704711",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-4LPP8CZGG3",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Singleton Firebase Application instance

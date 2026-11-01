@@ -53,4 +53,10 @@ The **VerifAI Chrome Extension** integrates directly with popular AI web interfa
 - **Manifest Version:** 3
 - **Network Boundary:** Connects only to `http://localhost:8000/*` and `http://127.0.0.1:8000/*`.
 - **SSRF Hardening:** Source URLs submitted by the extension are validated against private, link-local, and cloud metadata network ranges by the backend.
-- **Zero Token Tracking:** No user credentials or API keys are stored in the extension.
+- **Authentication:** The extension signs in with the same VerifAI account (`POST /api/v1/auth/login`) and sends `Authorization: Bearer <token>` on every ingestion request. Ingestion and record reads require authentication; anonymous requests are rejected.
+- **Token Storage:** The access token is kept in `chrome.storage.session`. It is memory-only for the browser session, never written to disk, and cleared on sign-out or on any HTTP 401. Passwords are never stored.
+- **Ownership:** Captured records belong to the signed-in account. Other users cannot read them.
+
+### Capture permission model
+
+The extension does not inject content scripts on every website. Click **Detect** in the popup to grant temporary access to the active tab and inject the capture script. Chrome-restricted pages cannot be captured. The script never receives the Bearer token; only the popup accesses `chrome.storage.session`.

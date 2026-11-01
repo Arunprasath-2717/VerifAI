@@ -1,14 +1,16 @@
 """Pipeline orchestrator coordinating the verification lifecycle."""
 
+import asyncio
 import logging
 import uuid
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.errors import ServiceUnavailableError
+from app.core.errors import AppError, ServiceUnavailableError
 from app.models.verification import (
     AuditRecord,
     ExtractedClaim,
@@ -16,6 +18,7 @@ from app.models.verification import (
     RetrievedEvidence,
     VerificationJob,
 )
+from app.modules.chat.safety import assert_safe_outbound_prompt
 from app.modules.claims.classifier import ContentClassifier
 from app.modules.claims.extractor import (
     BaseClaimExtractor,
@@ -28,7 +31,9 @@ from app.modules.evidence.models import RetrievedEvidenceItem
 from app.modules.judging.decision import DecisionEngine
 from app.modules.judging.deterministic_judge import DeterministicRuleJudge
 from app.modules.judging.disagreement import DisagreementEngine
+from app.modules.judging.injection_detector import detect_injection_markers
 from app.modules.judging.interface import BaseJudge
+from app.modules.judging.model_judge import OpenSourceModelJudge
 from app.modules.judging.models import JudgeEvaluationData
 from app.modules.judging.semantic_judge import SecondarySemanticJudge
 from app.modules.knowledge.retriever import KBSearchResult, PrivateKBRetriever
@@ -36,6 +41,7 @@ from app.modules.knowledge.service import KnowledgeBaseService
 from app.modules.token_budget import (
     AnalysisBudgetManager,
     AnalysisCacheService,
+    BudgetExhaustedError,
     UserDailyBudgetTracker,
 )
 from app.repositories.token_usage import TokenUsageRepository
@@ -54,6 +60,22 @@ from app.schemas.verification import (
 )
 
 logger = logging.getLogger("verifai.orchestrator")
+
+
+class _NoEvidenceRetriever(BaseEvidenceRetriever):
+    """Null object used when no evidence source is configured (e.g. production).
+
+    Returns no passages, so claims that need external evidence resolve to UNKNOWN.
+    """
+
+    @property
+    def name(self) -> str:
+        return "NO_EVIDENCE_SOURCE"
+
+    async def retrieve(
+        self, claim_text: str, max_passages: int = 3
+    ) -> list[RetrievedEvidenceItem]:
+        return []
 
 
 class VerificationOrchestrator:
@@ -75,7 +97,16 @@ class VerificationOrchestrator:
         self.settings = settings or get_settings()
         self.extractor = extractor or DeterministicClaimExtractor()
         self.classifier = classifier or ContentClassifier()
-        self.retriever = retriever or LocalPassageRetriever()
+        # The bundled demo passage index is for development/testing only. In
+        # production it must not be presented as evidence; with no retriever,
+        # claims resolve to UNKNOWN instead of citing demo text.
+        if retriever is None:
+            retriever = (
+                LocalPassageRetriever()
+                if self.settings.is_development
+                else _NoEvidenceRetriever()
+            )
+        self.retriever = retriever
         self.kb_retriever = kb_retriever
         self.kb_service = kb_service
         self.judges = judges or [
@@ -83,6 +114,11 @@ class VerificationOrchestrator:
             SecondarySemanticJudge(name="Judge-Secondary-Semantic"),
         ]
         self.tie_breaker_judge = tie_breaker_judge
+        if self.tie_breaker_judge is None and self.settings.JUDGE_MODEL_ENDPOINT:
+            self.tie_breaker_judge = OpenSourceModelJudge(
+                endpoint_url=self.settings.JUDGE_MODEL_ENDPOINT,
+                model_name=self.settings.JUDGE_MODEL_NAME,
+            )
         self.disagreement_engine = disagreement_engine or DisagreementEngine()
         self.decision_engine = decision_engine or DecisionEngine()
 
@@ -92,6 +128,20 @@ class VerificationOrchestrator:
         db_session: AsyncSession | None = None,
     ) -> VerificationResponse:
         """Execute full verification pipeline for the given input text."""
+        # Operator input cap (VERIFICATION_MAX_INPUT_CHARS) is enforced before any
+        # cache lookup, extraction, or retrieval work starts.
+        if len(request.text) > self.settings.VERIFICATION_MAX_INPUT_CHARS:
+            raise AppError(
+                message=(
+                    "Input exceeds the configured maximum of "
+                    f"{self.settings.VERIFICATION_MAX_INPUT_CHARS} characters."
+                ),
+                code="VALIDATION_ERROR",
+                status_code=422,
+            )
+        # Credentials must never reach a model judge, retrieval query, the cache,
+        # or the persisted input_text. Block before any of those run.
+        assert_safe_outbound_prompt(request.text)
         # ── Cache lookup ────────────────────────────────────────────────────────
         effective_owner_early = request.options.owner_id or "anonymous"
         _cache = AnalysisCacheService.get_instance()
@@ -128,6 +178,10 @@ class VerificationOrchestrator:
         verification_id = uuid.uuid4()
         now_utc = datetime.now(UTC)
         audit_records: list[AuditRecord] = []
+        # Isolate audit records per task; consolidate in claim order after gather.
+        audit_sink: ContextVar[list[AuditRecord] | None] = ContextVar(
+            "verification_claim_audit", default=None
+        )
 
         def log_audit(
             stage: str,
@@ -136,7 +190,8 @@ class VerificationOrchestrator:
             message: str,
             details: dict[str, Any] | None = None,
         ) -> None:
-            audit_records.append(
+            sink = audit_sink.get()
+            (sink if sink is not None else audit_records).append(
                 AuditRecord(
                     id=uuid.uuid4(),
                     verification_id=verification_id,
@@ -168,7 +223,11 @@ class VerificationOrchestrator:
             message="Extracting atomic claims from input text.",
         )
 
-        max_claims = request.options.max_claims
+        # Operator cap (VERIFICATION_MAX_CLAIMS) bounds whatever the client asks for.
+        max_claims = min(
+            request.options.max_claims,
+            self.settings.VERIFICATION_MAX_CLAIMS,
+        )
         extracted_items = self.extractor.extract(request.text, max_claims=max_claims)
 
         log_audit(
@@ -181,7 +240,10 @@ class VerificationOrchestrator:
 
         # Configure external evidence retriever (live web or local index)
         active_retriever = self.retriever
-        if request.options.enable_live_search:
+        live_search_enabled = (
+            request.options.enable_live_search or self.settings.ENABLE_LIVE_SEARCH
+        )
+        if live_search_enabled:
             active_retriever = LiveWebRetriever.from_settings()
             log_audit(
                 stage="RETRIEVAL",
@@ -207,7 +269,11 @@ class VerificationOrchestrator:
         claims_processed: list[dict[str, Any]] = []
         db_claims: list[ExtractedClaim] = []
 
-        for item in extracted_items:
+        async def process_claim(
+            item: Any,
+        ) -> tuple[dict[str, Any], ExtractedClaim, list[AuditRecord]]:
+            claim_audit: list[AuditRecord] = []
+            audit_token = audit_sink.set(claim_audit)
             # Step 2: Content Classification
             classification = self.classifier.classify(item.text)
 
@@ -301,9 +367,12 @@ class VerificationOrchestrator:
                         },
                     )
                     try:
-                        ext_items = await active_retriever.retrieve(
-                            claim_text=item.text,
-                            max_passages=3,
+                        ext_items = await asyncio.wait_for(
+                            active_retriever.retrieve(
+                                claim_text=item.text,
+                                max_passages=3,
+                            ),
+                            timeout=self.settings.RETRIEVAL_TIMEOUT_SECONDS,
                         )
                         external_evidence = ext_items
                     except Exception as exc:
@@ -334,6 +403,34 @@ class VerificationOrchestrator:
                 if evidence_items:
                     ev_srcs = {ev.evidence_source for ev in evidence_items}
                     srcs = ", ".join(sorted(ev_srcs))
+                    # Advisory only: flag instruction-like text in untrusted inputs for
+                    # review. Containment is prompt isolation, not this scan.
+                    injection_hits = {
+                        ev.id: detect_injection_markers(ev.snippet or "")
+                        for ev in evidence_items
+                    }
+                    injection_hits = {k: v for k, v in injection_hits.items() if v}
+                    if injection_hits:
+                        log_audit(
+                            stage="RETRIEVAL",
+                            event_type="INJECTION_MARKERS_DETECTED",
+                            status="WARNING",
+                            message=(
+                                f"Instruction-like text found in {len(injection_hits)} "
+                                f"evidence passage(s) for claim {item.index}; "
+                                "treated as data. Categories: "
+                                + "; ".join(
+                                    f"{k}={','.join(v)}"
+                                    for k, v in injection_hits.items()
+                                )
+                            ),
+                            details={
+                                "claim_index": item.index,
+                                "passages": {
+                                    str(k): v for k, v in injection_hits.items()
+                                },
+                            },
+                        )
                     log_audit(
                         stage="RETRIEVAL",
                         event_type="EVIDENCE_SELECTED",
@@ -354,14 +451,17 @@ class VerificationOrchestrator:
                 if evidence_items:
                     # Evaluate primary 2 judges
                     for judge in self.judges[:2]:
-                        # Estimate cost and check budget before invoking judge
+                        # Reserve budget atomically: checking available tokens
+                        # separately from reserve() races under concurrency.
                         combined_text = item.text + " ".join(
                             ev.snippet or "" for ev in evidence_items
                         )
                         from app.modules.token_budget.estimator import TokenEstimator
 
                         est_tokens = TokenEstimator.estimate_tokens(combined_text)
-                        if not await budget.can_spend(est_tokens):
+                        try:
+                            reservation_id = await budget.reserve(est_tokens)
+                        except BudgetExhaustedError:
                             logger.warning(
                                 (
                                     "Budget exhausted before judge %s on claim %d; "
@@ -379,7 +479,6 @@ class VerificationOrchestrator:
                                 )
                             )
                             continue
-                        reservation_id = await budget.reserve(est_tokens)
                         try:
                             eval_data = await judge.evaluate(item.text, evidence_items)
                             judge_evaluations.append(eval_data)
@@ -469,7 +568,7 @@ class VerificationOrchestrator:
                     claim_verdict = VerdictType.UNKNOWN
                     degraded_evaluation = False
                     arbitration_reason = None
-                    if request.options.enable_live_search:
+                    if live_search_enabled:
                         unknown_reason = UnknownReason.SEARCH_UNKNOWN
                         explanation = (
                             "External search protocol was attempted but "
@@ -509,7 +608,6 @@ class VerificationOrchestrator:
                 "evidence": evidence_items,
                 "judges": judge_evaluations,
             }
-            claims_processed.append(claim_data)
 
             # Build database entity
             db_claim = ExtractedClaim(
@@ -571,7 +669,36 @@ class VerificationOrchestrator:
                 )
                 db_claim.judge_evaluations.append(db_je)
 
+            audit_sink.reset(audit_token)
+            return claim_data, db_claim, claim_audit
+
+        # A shared SQLAlchemy AsyncSession is not safe for concurrent queries.
+        # Permit bounded concurrency only when claims need no shared KB session.
+        concurrency = max(1, min(self.settings.VERIFICATION_CLAIM_CONCURRENCY, 8))
+        if (
+            db_session is not None
+            or self.kb_service is not None
+            or self.kb_retriever is not None
+            or request.options.enable_kb_search
+        ):
+            concurrency = 1
+        if concurrency > 1:
+            semaphore = asyncio.Semaphore(concurrency)
+
+            async def limited(item: Any):
+                async with semaphore:
+                    return await process_claim(item)
+
+            completed = await asyncio.gather(
+                *(limited(item) for item in extracted_items)
+            )
+        else:
+            completed = [await process_claim(item) for item in extracted_items]
+
+        for claim_data, db_claim, claim_audit in completed:
+            claims_processed.append(claim_data)
             db_claims.append(db_claim)
+            audit_records.extend(claim_audit)
 
         # Step 6: Document-Level Decision Aggregation
         doc_summary = self.decision_engine.aggregate(claims_processed)

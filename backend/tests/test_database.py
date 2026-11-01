@@ -151,6 +151,9 @@ async def test_production_database_persistence_failure_raises_503() -> None:
     orchestrator = VerificationOrchestrator(settings=prod_settings)
 
     mock_session = AsyncMock(spec=AsyncSession)
+    mock_result = MagicMock()
+    mock_result.all.return_value = []
+    mock_session.execute.return_value = mock_result
     mock_session.commit.side_effect = RuntimeError(
         "PostgreSQL connection terminated abruptly"
     )

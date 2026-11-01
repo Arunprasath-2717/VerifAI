@@ -51,6 +51,7 @@ TRUE_CLAIMS = [
     "Python was first released in 1991.",
     "The speed of light is exactly 299,792,458 metres per second.",
     "Nitrogen makes up approximately 78 percent of Earth's atmosphere.",
+    "Oxygen makes up approximately 21 percent of Earth's atmosphere.",
     "Water has the chemical formula H2O.",
     "The Eiffel Tower is located in Paris, France.",
     "ARPANET adopted TCP/IP in 1983.",
@@ -63,7 +64,8 @@ TRUE_CLAIMS = [
 UNSETTLED_TRUE_CLAIMS = [
     "Tokyo is the capital city of Japan.",
     "Neil Armstrong was born in 1930.",
-    "Oxygen makes up approximately 21 percent of Earth's atmosphere.",
+    # The bundled index explicitly states oxygen's approximate share, so
+    # this is now an evidenced true claim rather than unsettled.
 ]
 
 
@@ -255,13 +257,13 @@ def test_strict_consensus_requires_agreement() -> None:
     assert result.consensus_verdict == VerdictType.UNKNOWN
 
 
-def test_relaxed_consensus_accepts_decisive_over_abstaining_judge() -> None:
+def test_relaxed_consensus_does_not_promote_single_judge_opinion() -> None:
     evals = [
         _eval(JudgeDecision.CONTRADICTED),
         _eval(JudgeDecision.INSUFFICIENT_EVIDENCE),
     ]
     result = DisagreementEngine().arbitrate(evals, strict_consensus=False)
-    assert result.consensus_verdict == VerdictType.CONTRADICTED
+    assert result.consensus_verdict == VerdictType.UNKNOWN
     assert result.degraded_evaluation is True
 
 

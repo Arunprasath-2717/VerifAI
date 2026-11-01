@@ -4,18 +4,19 @@ Architecture: A real database session is required. There is no in-memory ephemer
 fallback in production paths. For tests, use a real test DB or SQLite (aiosqlite).
 """
 
+import hashlib
 import logging
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings, get_settings
-from app.core.errors import NotFoundError
+from app.core.errors import AppError, NotFoundError
 from app.models.knowledge import KnowledgeChunk, KnowledgeDocument
 from app.modules.knowledge.ingestion import (
     DuplicateDocumentError,
@@ -36,11 +37,7 @@ def resolve_owner_id(owner_id: str | None, settings: Settings | None = None) -> 
     if owner_id and owner_id.strip():
         return owner_id.strip()
 
-    is_dev = (
-        app_settings.ENVIRONMENT in ("development", "test", "testing")
-        or app_settings.DEBUG
-    )
-    if is_dev:
+    if app_settings.is_development:
         return app_settings.DEFAULT_OWNER_ID
 
     raise ValueError(
@@ -98,6 +95,20 @@ class KnowledgeBaseService:
         )
 
         async with self._session() as session:
+            # Serialize quota reservations by owner on PostgreSQL, preventing
+            # two concurrent uploads from both passing the same quota check.
+            # This lock is released automatically when the transaction ends.
+            if session.get_bind().dialect.name == "postgresql":
+                advisory_key = int.from_bytes(
+                    hashlib.sha256(effective_owner.encode("utf-8")).digest()[:8],
+                    "big",
+                    signed=True,
+                )
+                await session.execute(
+                    text("SELECT pg_advisory_xact_lock(:lock_key)"),
+                    {"lock_key": advisory_key},
+                )
+
             # 2. Check for duplicate document within the same owner namespace
             dup_stmt = select(KnowledgeDocument).where(
                 KnowledgeDocument.owner_id == effective_owner,
@@ -109,6 +120,24 @@ class KnowledgeBaseService:
                     "Document with identical content already exists in namespace "
                     f"'{effective_owner}'."
                 )
+
+            # Enforce a persistent, per-owner storage quota (not a process-local
+            # counter). 0 disables the limit, intended for explicit test setups.
+            limit = self.settings.KB_MAX_OWNER_BYTES
+            if limit > 0:
+                current_bytes = (
+                    await session.execute(
+                        select(
+                            func.coalesce(func.sum(KnowledgeDocument.size_bytes), 0)
+                        ).where(KnowledgeDocument.owner_id == effective_owner)
+                    )
+                ).scalar_one()
+                if current_bytes + ingestion.size_bytes > limit:
+                    raise AppError(
+                        message="Knowledge base owner storage quota exceeded.",
+                        code="STORAGE_QUOTA_EXCEEDED",
+                        status_code=507,
+                    )
 
             # 3. Create document entity
             now = datetime.now(UTC)
@@ -274,5 +303,7 @@ def clear_ephemeral_kb() -> None:
                 pool.submit(asyncio.run, _clean()).result()
         else:
             asyncio.run(_clean())
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug(
+            "Best-effort test knowledge cleanup failed: %s", type(exc).__name__
+        )

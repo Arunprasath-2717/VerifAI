@@ -49,10 +49,10 @@ def test_body_within_limit_accepted() -> None:
     assert response.status_code == 200
 
 
-def test_ephemeral_kb_quota_enforced() -> None:
+def test_persistent_owner_kb_quota_enforced() -> None:
     clear_ephemeral_kb()
     try:
-        with _client(KB_EPHEMERAL_MAX_BYTES=120) as client:
+        with _client(KB_MAX_OWNER_BYTES=120) as client:
             first = client.post(
                 "/api/v1/knowledge/documents",
                 json={"title": "a", "text": "alpha " * 15},

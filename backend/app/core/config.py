@@ -62,13 +62,21 @@ class Settings(BaseSettings):
     # Authentication — Firebase Auth (RS256 via Google JWKS)
     # ===========================================================================
     FIREBASE_AUTH_ENABLED: bool = True
-    FIREBASE_API_KEY: str = "AIzaSyDag7_lFm6ayphrJUDYWK2EQmZmFdaU_5s"
-    FIREBASE_PROJECT_ID: str = "verifai-22c4b"
-    FIREBASE_AUTH_DOMAIN: str = "verifai-22c4b.firebaseapp.com"
-    FIREBASE_STORAGE_BUCKET: str = "verifai-22c4b.firebasestorage.app"
-    FIREBASE_MESSAGING_SENDER_ID: str = "501647364420"
-    FIREBASE_APP_ID: str = "1:501647364420:web:9848f5dc7ba7d236704711"
-    FIREBASE_MEASUREMENT_ID: str = "G-4LPP8CZGG3"
+    # Firebase client identifiers are public, but deployment-project-specific.
+    # No production Firebase project may be silently selected by source defaults.
+    FIREBASE_API_KEY: str = ""
+    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_AUTH_DOMAIN: str = ""
+    FIREBASE_STORAGE_BUCKET: str = ""
+    FIREBASE_MESSAGING_SENDER_ID: str = ""
+    FIREBASE_APP_ID: str = ""
+    FIREBASE_MEASUREMENT_ID: str = ""
+
+    # Optional Supabase integration used by CLI health and status checks.
+    # Service credentials remain SecretStr and are absent unless explicitly set.
+    SUPABASE_URL: str | None = None
+    SUPABASE_PUBLISHABLE_KEY: SecretStr | None = None
+    SUPABASE_SECRET_KEY: SecretStr | None = None
 
     # ===========================================================================
     # Legal & Compliance Configuration
@@ -120,8 +128,12 @@ class Settings(BaseSettings):
     # Verification Engine Configuration
     VERIFICATION_MAX_INPUT_CHARS: int = 20000
     VERIFICATION_MAX_CLAIMS: int = 20
+    VERIFICATION_CLAIM_CONCURRENCY: int = 3  # capped at 8; DB sessions remain serial
     RETRIEVAL_TIMEOUT_SECONDS: float = 8.0
     ENABLE_LIVE_SEARCH: bool = False
+    # Operator-controlled local model judge; never sourced from client requests.
+    JUDGE_MODEL_ENDPOINT: str | None = None
+    JUDGE_MODEL_NAME: str = "llama3:8b"
 
     # ===========================================================================
     # LLM Provider & Multi-Model Execution Configuration
@@ -192,6 +204,10 @@ class Settings(BaseSettings):
     KB_RELEVANCE_THRESHOLD: float = 0.15
     KB_MIN_OVERLAP_TOKENS: int = 2
     KB_MAX_DOCUMENT_BYTES: int = 5 * 1024 * 1024  # 5 MB
+    KB_MAX_OWNER_BYTES: int = 200 * 1024 * 1024  # 200 MB across stored docs
+    # Hard cap on any HTTP request body, enforced on declared and streamed bodies.
+    # 0 disables the limit (tests only; production must keep it enabled).
+    MAX_REQUEST_BODY_BYTES: int = 10 * 1024 * 1024  # 10 MB
     KB_MAX_PASSAGES: int = 3
     KB_CHUNK_SIZE: int = 600
     KB_CHUNK_OVERLAP: int = 100
@@ -302,6 +318,16 @@ class Settings(BaseSettings):
     # Property aliases — convenience shorthands for the orchestrator and tests.
     # These read directly from the TOKEN_BUDGET_* fields above.
     # ---------------------------------------------------------------------------
+    @property
+    def is_development(self) -> bool:
+        """True for local development and test runs (never production/staging)."""
+        return self.ENVIRONMENT in ("development", "test", "testing")
+
+    @property
+    def is_production(self) -> bool:
+        """True for production-like environments where demo fallbacks are forbidden."""
+        return self.ENVIRONMENT in ("production", "staging")
+
     @property
     def USER_DAILY_ANALYSIS_LIMIT(self) -> int:  # noqa: N802
         """Max analyses a single user may run per UTC day."""

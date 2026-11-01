@@ -104,7 +104,7 @@ async def create_document(
         raise AppError(
             message=str(exc),
             code="VALIDATION_ERROR",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         ) from exc
 
 
@@ -145,7 +145,7 @@ async def upload_document_file(
                 f"{settings.KB_MAX_DOCUMENT_BYTES} bytes."
             ),
             code="VALIDATION_ERROR",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
 
     service = KnowledgeBaseService(db_session=db, settings=settings)
@@ -165,7 +165,7 @@ async def upload_document_file(
         raise AppError(
             message=str(exc),
             code="VALIDATION_ERROR",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         ) from exc
 
 

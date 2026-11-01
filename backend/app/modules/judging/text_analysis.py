@@ -337,7 +337,10 @@ def _years(text: str) -> set[str]:
     return {
         t.norm
         for t in tokenize(text)
-        if t.is_number and len(t.norm) == 4 and _MIN_YEAR <= int(t.norm) <= _MAX_YEAR
+        if t.is_number
+        and t.norm.isdecimal()
+        and len(t.norm) == 4
+        and _MIN_YEAR <= int(t.norm) <= _MAX_YEAR
     }
 
 
