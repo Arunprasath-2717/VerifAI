@@ -207,12 +207,12 @@ export const SignupPage: React.FC<SignupPageProps> = ({
       <div className="auth-studio__atmosphere" aria-hidden="true"><i/><i/><i/><i/><i/></div>
       <div className="auth-studio__frame">
         <main className="auth-studio__main" aria-labelledby="auth-studio-title">
-          <header className="auth-studio__header">
-            <a href="/" className="auth-studio__back-link">
-              <ArrowLeft size={17} aria-hidden="true"/> <span>Back to website</span>
-            </a>
-          </header>
           <div className="auth-studio__content">
+            <header className="auth-studio__header">
+              <a href="/" className="auth-studio__back-link">
+                <ArrowLeft size={16} aria-hidden="true"/> <span>Back to website</span>
+              </a>
+            </header>
             <div className="auth-studio__brand-block">
               <div className="auth-studio__brand">
                 <a href="/" className="auth-studio__logo" aria-label="VerifAI homepage">

@@ -100,4 +100,9 @@ function Solutions({isAuthenticated}:{isAuthenticated:boolean}){
  </motion.div></section>
 }
 function Footer({isAuthenticated}:{isAuthenticated:boolean}){return <footer className="rv-footer"><div className="rv-footer-main"><div className="rv-footer-logo">VERIF<span>AI.</span><p>AI hallucinates. We investigate.</p></div><div className="rv-footer-links"><a href={isAuthenticated?'/dashboard':'/login'}>Launch app<ArrowUpRight size={14}/></a><a href="https://github.com/Arunprasath-2717/VerifAI" target="_blank" rel="noopener noreferrer">GitHub<ArrowUpRight size={14}/></a><a href="/privacy">Privacy<ArrowUpRight size={14}/></a><a href="/terms">Terms<ArrowUpRight size={14}/></a></div></div><div className="rv-footer-bottom"><span>© {new Date().getFullYear()} VerifAI. All rights reserved.</span><a href="#top">Back to the beginning ↑</a></div></footer>}
-export function LandingPage({isAuthenticated}:Props){return <div className="rv-site"><a href="#top" className="rv-skip">Skip to content</a><Header isAuthenticated={isAuthenticated}/><main><Hero isAuthenticated={isAuthenticated}/><Technology/><Challenge/><Solutions isAuthenticated={isAuthenticated}/></main><Footer isAuthenticated={isAuthenticated}/></div>}
+export function LandingPage({isAuthenticated}:Props){
+  useEffect(() => {
+    document.documentElement.removeAttribute('data-landing-prepaint');
+  }, []);
+  return <div className="rv-site"><a href="#top" className="rv-skip">Skip to content</a><Header isAuthenticated={isAuthenticated}/><main><Hero isAuthenticated={isAuthenticated}/><Technology/><Challenge/><Solutions isAuthenticated={isAuthenticated}/></main><Footer isAuthenticated={isAuthenticated}/></div>;
+}
