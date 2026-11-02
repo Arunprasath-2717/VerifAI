@@ -84,6 +84,14 @@ class DecisionEngine:
                 "factual claims contradicted by verified evidence. "
                 "Trust score set to 0.0%."
             )
+        elif supported == 0 and unknown == factual_count:
+            # No evidence-based decision is not the same as a zero-accuracy
+            # evaluation. Report an unavailable score rather than a false 0%.
+            trust_score = None
+            summary = (
+                f"All {unknown} factual claims remain UNKNOWN because the "
+                "evidence is insufficient or inconclusive. Trust score unavailable."
+            )
         elif supported == factual_count:
             trust_score = 100.0
             summary = (

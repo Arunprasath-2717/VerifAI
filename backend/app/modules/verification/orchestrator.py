@@ -240,7 +240,9 @@ class VerificationOrchestrator:
 
         # Configure external evidence retriever (live web or local index)
         active_retriever = self.retriever
-        live_search_enabled = (
+        # A private-only verification must never leak claim text into an external
+        # retriever, even when the server enables live search by default.
+        live_search_enabled = not request.options.private_kb_only and (
             request.options.enable_live_search or self.settings.ENABLE_LIVE_SEARCH
         )
         if live_search_enabled:
@@ -351,7 +353,7 @@ class VerificationOrchestrator:
                         )
 
                 # Step 3B: External Retrieval (if KB insufficient or corroboration)
-                should_search_external = (
+                should_search_external = not request.options.private_kb_only and (
                     not kb_hit or request.options.force_external_retrieval
                 )
 

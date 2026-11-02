@@ -7,6 +7,7 @@ export interface VerificationCreatePayload {
   query?: string;
   options?: {
     enable_live_search?: boolean;
+    private_kb_only?: boolean;
     enable_kb_search?: boolean;
     use_web_evidence?: boolean;
     use_knowledge_base?: boolean;
@@ -206,6 +207,7 @@ export const verificationApi = {
       text,
       options: {
         enable_live_search: payload.options?.use_web_evidence ?? payload.options?.enable_live_search ?? false,
+        private_kb_only: payload.options?.private_kb_only ?? false,
         enable_kb_search: payload.options?.use_knowledge_base ?? payload.options?.enable_kb_search ?? true,
         max_claims: payload.options?.max_claims ?? 20,
         strict_consensus: payload.options?.strict_consensus ?? true,

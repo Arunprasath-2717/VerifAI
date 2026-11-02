@@ -83,12 +83,17 @@ def find_contradiction(
         )
 
     best_sentence, best_overlap = ta.best_aligned_sentence(claim, snippet)
+    polarity_segment = ta.aligned_polarity_segment(claim, snippet)
+    polarity_overlap = len(
+        (ta.content_terms(claim) | ta.numbers(claim))
+        & (ta.content_terms(polarity_segment) | ta.numbers(polarity_segment))
+    )
     claim_term_count = len(ta.content_terms(claim) | ta.numbers(claim))
-    aligned = best_overlap >= max(
+    aligned = min(best_overlap, polarity_overlap) >= max(
         MIN_POLARITY_OVERLAP, MIN_POLARITY_COVERAGE * claim_term_count
     )
     if aligned and ta.has_negation(claim) != ta.has_negation(
-        best_sentence, evidence=True
+        polarity_segment, evidence=True
     ):
         return "Polarity mismatch: negation differs between claim and evidence."
     return None
@@ -146,6 +151,8 @@ def evaluate(
         if len(claim_terms & snippet_terms) < MIN_TOPICAL_OVERLAP:
             continue
         cited.append(str(item.id))
+        if ta.is_attributed_claim(claim_text, snippet):
+            continue
 
         contradiction = find_contradiction(claim_text, snippet, number_scope)
         if contradiction is not None:

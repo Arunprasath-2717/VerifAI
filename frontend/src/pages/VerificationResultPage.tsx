@@ -21,7 +21,7 @@ const tabs: { id: ResultTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'claims', label: 'Claims' },
   { id: 'evidence', label: 'Evidence' },
-  { id: 'judgments', label: 'Model Judgments' },
+  { id: 'judgments', label: 'Judge Assessments' },
   { id: 'audit', label: 'Audit' },
 ];
 

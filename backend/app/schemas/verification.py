@@ -70,6 +70,11 @@ class VerificationOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    private_kb_only: bool = Field(
+        default=False,
+        description="Use the owner's private KB only; never web or demo index.",
+    )
+
     enable_live_search: bool = Field(
         default=False,
         description="Whether to attempt live search (requires network/provider).",

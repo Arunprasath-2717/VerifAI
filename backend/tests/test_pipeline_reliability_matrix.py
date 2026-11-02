@@ -259,7 +259,7 @@ TRUST_SCORE_SCENARIOS = [
     (3, 3, 0, 0, 0.0),  # contradiction penalty
     (4, 1, 0, 0, 0.0),  # contradiction penalty
     (1, 4, 0, 0, 0.0),  # contradiction penalty
-    (0, 0, 5, 0, 0.0),  # 0 supported of 5 factual
+    (0, 0, 5, 0, None),  # all unknown: no defensible trust score
     (0, 0, 0, 5, None),  # 0 factual claims -> None
     (0, 0, 0, 0, None),  # empty -> None
     (3, 0, 1, 0, 75.0),  # 3 / 4 * 100 = 75.0

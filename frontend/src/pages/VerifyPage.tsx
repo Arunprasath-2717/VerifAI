@@ -56,6 +56,7 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
         input_text: inputText,
         options: {
           use_web_evidence: verificationMode === 'PRIVATE_KB_PLUS_WEB' && useWebEvidence,
+          private_kb_only: verificationMode === 'PRIVATE_KB_ONLY',
           use_knowledge_base: true,
           strict_consensus: strictConsensus,
           max_claims: maxClaims,
@@ -95,7 +96,7 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
             Paste & Verify
           </h1>
           <p className="text-xs md:text-sm font-medium text-[#356B52] dark:text-slate-300 transition-colors">
-            Analyze an AI-generated answer with claim-level evidence and multi-model consensus.
+            Analyze claims against evidence with independent rule-based and semantic assessments.
           </p>
         </div>
       </div>

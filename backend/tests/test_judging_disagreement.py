@@ -452,3 +452,107 @@ def test_decision_engine_non_factual_exempt() -> None:
     assert summary.contradicted_claims == 0
     assert summary.non_factual_claims == 2
     assert summary.trust_score is None
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("judge_cls", [DeterministicRuleJudge, SecondarySemanticJudge])
+async def test_contrastive_negation_does_not_reverse_supported_claim(judge_cls):
+    """A negation of rotation must not contradict a claim about revolution."""
+    evidence = [
+        RetrievedEvidenceItem(
+            snippet="Earth doesn’t just rotate, though—it also revolves around the Sun.",
+            retriever_name="live_search_fixture",
+        )
+    ]
+    result = await judge_cls().evaluate("The Earth revolves around the Sun", evidence)
+    assert result.judgment == JudgeDecision.SUPPORTED
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("judge_cls", [DeterministicRuleJudge, SecondarySemanticJudge])
+async def test_explicit_negation_still_contradicts(judge_cls):
+    evidence = [
+        RetrievedEvidenceItem(
+            snippet="Earth does not revolve around the Sun.",
+            retriever_name="test",
+        )
+    ]
+    result = await judge_cls().evaluate("The Earth revolves around the Sun", evidence)
+    assert result.judgment == JudgeDecision.CONTRADICTED
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("judge_cls", [DeterministicRuleJudge, SecondarySemanticJudge])
+async def test_quoted_myth_is_not_corroboration(judge_cls):
+    evidence = [
+        RetrievedEvidenceItem(
+            snippet=(
+                '"The Moon is made of green cheese" is a fanciful belief and '
+                "a folkloric proverb, not a scientific finding."
+            ),
+            retriever_name="live_search_fixture",
+        )
+    ]
+    result = await judge_cls().evaluate("The Moon is made of cheese", evidence)
+    assert result.judgment == JudgeDecision.INSUFFICIENT_EVIDENCE
+
+
+@pytest.mark.anyio
+async def test_private_kb_only_never_calls_live_or_demo_retrieval(monkeypatch):
+    """Private claims cannot be sent to external retrieval despite global settings."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    from app.core.config import Settings
+    from app.modules.knowledge.retriever import KBSearchResult
+    from app.modules.verification.orchestrator import VerificationOrchestrator
+    from app.schemas.knowledge import KBSufficiencyStatus
+    from app.schemas.verification import VerificationCreateRequest, VerificationOptions
+
+    def live_search_forbidden(*args, **kwargs):
+        raise AssertionError("Private text was dispatched to web search")
+
+    monkeypatch.setattr(
+        "app.modules.verification.orchestrator.LiveWebRetriever.from_settings",
+        live_search_forbidden,
+    )
+    demo_retriever = MagicMock()
+    demo_retriever.name = "DEMO_INDEX"
+    demo_retriever.retrieve = AsyncMock(side_effect=AssertionError("Demo index used"))
+    kb = MagicMock()
+    kb.search = AsyncMock(
+        return_value=KBSearchResult(
+            sufficiency=KBSufficiencyStatus.KB_EMPTY,
+            evidence_items=[],
+        )
+    )
+    orchestrator = VerificationOrchestrator(
+        settings=Settings(ENABLE_LIVE_SEARCH=True),
+        retriever=demo_retriever,
+        kb_retriever=kb,
+    )
+    result = await orchestrator.verify(
+        VerificationCreateRequest(
+            text="The Earth revolves around the Sun",
+            options=VerificationOptions(private_kb_only=True, enable_kb_search=True),
+        )
+    )
+    assert result.total_claims == 1
+    assert result.claims[0].verdict == VerdictType.UNKNOWN
+    assert result.claims[0].evidence == []
+    assert result.claims[0].judges == []
+    kb.search.assert_awaited()
+
+
+def test_all_unknown_judgments_have_no_fabricated_zero_score():
+    decision = DecisionEngine().aggregate(
+        [
+            {
+                "verdict": VerdictType.UNKNOWN,
+                "is_verifiable": True,
+                "content_type": ContentType.FACTUAL,
+            }
+        ]
+    )
+    assert decision.unknown_claims == 1
+    assert decision.trust_score is None
+    assert "unavailable" in decision.summary_text.lower()
