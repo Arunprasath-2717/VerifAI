@@ -272,7 +272,9 @@ class Settings(BaseSettings):
             try:
                 return json.loads(value)
             except json.JSONDecodeError as exc:
-                raise ValueError("BACKEND_CORS_ORIGINS must be a valid JSON array") from exc
+                raise ValueError(
+                    "BACKEND_CORS_ORIGINS must be a valid JSON array"
+                ) from exc
         if not value:
             return []
         return [origin.strip() for origin in value.split(",")]

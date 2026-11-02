@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -12,7 +11,9 @@ def test_service_routing_preserves_api_and_spa_deep_links():
     assert config["services"]["backend"]["root"] == "backend"
     assert config["services"]["backend"]["entrypoint"] == "app.main:app"
     assert config["services"]["frontend"]["root"] == "frontend"
-    assert {"source": "/(.*)", "destination": "/index.html"} in config["services"]["frontend"]["rewrites"]
+    assert {"source": "/(.*)", "destination": "/index.html"} in config["services"][
+        "frontend"
+    ]["rewrites"]
     rewrites = config["rewrites"]
     assert rewrites[0]["source"] == "/api/(.*)"
     assert rewrites[0]["destination"] == {"service": "backend"}
