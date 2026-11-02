@@ -13,6 +13,7 @@ Security controls:
 - Connection and read timeouts enforced.
 """
 
+import importlib
 import logging
 import uuid
 from datetime import UTC, datetime
@@ -71,17 +72,15 @@ class DuckDuckGoRetriever(BaseEvidenceRetriever):
             return []
 
         try:
-            from ddgs import DDGS  # type: ignore[import-untyped]
+            search_lib = importlib.import_module("ddgs")
         except ImportError:
-            # Keep existing developer installations working until they install
-            # the production-pinned package. This does not affect deployments.
+            # Legacy local installations can still use the prior package.
             try:
-                from duckduckgo_search import (
-                    DDGS,  # type: ignore[no-redef,import-untyped]
-                )
+                search_lib = importlib.import_module("duckduckgo_search")
             except ImportError:
                 logger.warning("DuckDuckGo search library is not installed.")
                 return []
+        search_client = search_lib.DDGS
 
         effective_max = min(max_passages, self._max_results)
 
@@ -89,7 +88,7 @@ class DuckDuckGoRetriever(BaseEvidenceRetriever):
             import asyncio
 
             def _run_search() -> list[dict]:
-                with DDGS(timeout=max(int(self._timeout), 5)) as ddgs:
+                with search_client(timeout=max(int(self._timeout), 5)) as ddgs:
                     return list(
                         ddgs.text(
                             claim_text,
