@@ -20,7 +20,7 @@ import { authApi, TokenResponse } from "../api/auth";
 // Missing values must be set through frontend/.env (development) or deployment env vars.
 // VerifAI Web Firebase Configuration
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDeWBSjAl79IDVRYcYeb4l-5-ag0wG59Oo",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "verifai-819d0.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "verifai-819d0",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "verifai-819d0.firebasestorage.app",
