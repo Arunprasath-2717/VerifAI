@@ -30,7 +30,7 @@ _MAX_SNIPPET_LEN = 600
 class DuckDuckGoRetriever(BaseEvidenceRetriever):
     """Evidence retriever backed by DuckDuckGo web search.
 
-    Uses the ``duckduckgo-search`` library (no API key required).
+    Uses ``ddgs`` in production, with a legacy development fallback (no key).
     Returns structured evidence passages with provenance metadata.
 
     When the library is absent or the search fails, returns an empty list
@@ -71,17 +71,17 @@ class DuckDuckGoRetriever(BaseEvidenceRetriever):
             return []
 
         try:
-            import warnings
-
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                from duckduckgo_search import DDGS  # type: ignore[import-untyped]
+            from ddgs import DDGS  # type: ignore[import-untyped]
         except ImportError:
-            logger.warning(
-                "duckduckgo-search package not installed; skipping DDG retrieval. "
-                "Install with: pip install duckduckgo-search"
-            )
-            return []
+            # Keep existing developer installations working until they install
+            # the production-pinned package. This does not affect deployments.
+            try:
+                from duckduckgo_search import (
+                    DDGS,  # type: ignore[no-redef,import-untyped]
+                )
+            except ImportError:
+                logger.warning("DuckDuckGo search library is not installed.")
+                return []
 
         effective_max = min(max_passages, self._max_results)
 

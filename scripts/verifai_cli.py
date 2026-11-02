@@ -1628,12 +1628,18 @@ async def execute_verification(
 ) -> tuple[dict[str, Any], float]:
     """Execute the real VerifAI verification orchestrator."""
     start_time = time.perf_counter()
-    orchestrator = VerificationOrchestrator()
+    # CLI offline demonstrations intentionally use the bundled local reference
+    # index. Unlike the website's explicit web opt-out, the CLI must preserve
+    # that hermetic demonstration path without accessing live search providers.
+    settings = get_settings()
+    if not live_search:
+        settings = settings.model_copy(update={"ENABLE_LIVE_SEARCH": False})
+    orchestrator = VerificationOrchestrator(settings=settings)
     request = VerificationCreateRequest(
         text=text,
         query=query,
         options=VerificationOptions(
-            enable_live_search=live_search,
+            enable_live_search=True if live_search else None,
             strict_consensus=True,
         ),
     )

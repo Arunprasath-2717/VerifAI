@@ -8,6 +8,8 @@ export interface VerificationCreatePayload {
   options?: {
     enable_live_search?: boolean;
     private_kb_only?: boolean;
+    bypass_cache?: boolean;
+    force_external_retrieval?: boolean;
     enable_kb_search?: boolean;
     use_web_evidence?: boolean;
     use_knowledge_base?: boolean;
@@ -208,6 +210,8 @@ export const verificationApi = {
       options: {
         enable_live_search: payload.options?.use_web_evidence ?? payload.options?.enable_live_search ?? false,
         private_kb_only: payload.options?.private_kb_only ?? false,
+        force_external_retrieval: payload.options?.force_external_retrieval ?? false,
+        bypass_cache: payload.options?.bypass_cache ?? false,
         enable_kb_search: payload.options?.use_knowledge_base ?? payload.options?.enable_kb_search ?? true,
         max_claims: payload.options?.max_claims ?? 20,
         strict_consensus: payload.options?.strict_consensus ?? true,

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  RotateCw, 
-  ChevronDown, 
-  ChevronUp, 
-  Globe, 
-  Lock, 
-  ArrowRight, 
-  Layers, 
-  Cpu, 
-  FileCheck2 
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  ShieldCheck,
+  RotateCw,
+  ChevronDown,
+  ChevronUp,
+  Globe,
+  Lock,
+  ArrowRight,
+  Layers,
+  Cpu,
+  FileCheck2
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { VerificationRecord, ClaimItem, VerificationStatus } from '../types';
@@ -26,11 +26,13 @@ interface VerifyPageProps {
 
 export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme: propTheme }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const retryInput = (location.state as { verificationText?: string } | null)?.verificationText;
   const context = useTheme();
   const isDark = (propTheme || context.theme) === 'dark';
 
   const [inputText, setInputText] = useState(
-    'Electric vehicles are better for the environment because they produce zero emissions and have a lower carbon footprint compared to gasoline cars.'
+    retryInput ?? 'Electric vehicles are better for the environment because they produce zero emissions and have a lower carbon footprint compared to gasoline cars.'
   );
   const [verificationMode, setVerificationMode] = useState<'PRIVATE_KB_ONLY' | 'PRIVATE_KB_PLUS_WEB'>('PRIVATE_KB_PLUS_WEB');
   const [useWebEvidence, setUseWebEvidence] = useState(true);
@@ -57,6 +59,8 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
         options: {
           use_web_evidence: verificationMode === 'PRIVATE_KB_PLUS_WEB' && useWebEvidence,
           private_kb_only: verificationMode === 'PRIVATE_KB_ONLY',
+          force_external_retrieval: verificationMode === 'PRIVATE_KB_PLUS_WEB' && useWebEvidence,
+          bypass_cache: true,
           use_knowledge_base: true,
           strict_consensus: strictConsensus,
           max_claims: maxClaims,
@@ -80,7 +84,7 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -103,7 +107,7 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
 
       {/* Main Workspace Card */}
       <div className="w-full rounded-2xl p-6 sm:p-8 border shadow-xs space-y-6 transition-colors bg-[#FFFFFF] border-[#74C69D] dark:bg-[#23262F] dark:border-[#333742]">
-        
+
         {/* Large Input Area */}
         <div className="space-y-2">
           <div className="flex justify-between items-center text-sm">
@@ -175,6 +179,14 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
           </div>
         </div>
 
+        <p className="text-xs leading-relaxed text-[#356B52] dark:text-slate-300">
+          {verificationMode === 'PRIVATE_KB_ONLY'
+            ? 'Private-only mode searches your uploaded knowledge base. If no relevant document exists, claims remain UNKNOWN; no text is sent to web providers.'
+            : useWebEvidence
+            ? 'Web evidence is enabled. Claim text is sent to configured search providers to collect traceable source passages for judging.'
+            : 'Web evidence is off. Only your private knowledge base will be used; claims without matching documents may remain UNKNOWN.'}
+        </p>
+
         {/* Toggle Switch: Use Web Evidence */}
         <div className="flex items-center justify-between p-4 rounded-2xl border transition-colors bg-[#D8F3DC] border-[#74C69D] dark:bg-[#181A20] dark:border-[#333742]">
           <div>
@@ -184,16 +196,19 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
           <button
             type="button"
             onClick={() => setUseWebEvidence(!useWebEvidence)}
-            className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
-              useWebEvidence 
-                ? 'bg-[#1B4332] dark:bg-[#B6FF2E]' 
+            disabled={verificationMode === 'PRIVATE_KB_ONLY'}
+            aria-label="Use public web evidence"
+            aria-pressed={verificationMode === 'PRIVATE_KB_PLUS_WEB' && useWebEvidence}
+            className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+              verificationMode === 'PRIVATE_KB_PLUS_WEB' && useWebEvidence
+                ? 'bg-[#1B4332] dark:bg-[#B6FF2E]'
                 : 'bg-[#74C69D] dark:bg-slate-700'
             }`}
           >
             <span
               className={`block w-5 h-5 rounded-full shadow-xs transition-transform transform ${
-                useWebEvidence 
-                  ? 'translate-x-6 bg-[#FFFFFF] dark:bg-[#181A20]' 
+                verificationMode === 'PRIVATE_KB_PLUS_WEB' && useWebEvidence
+                  ? 'translate-x-6 bg-[#FFFFFF] dark:bg-[#181A20]'
                   : 'translate-x-0.5 bg-[#FFFFFF]'
               }`}
             />
@@ -344,8 +359,8 @@ export const VerifyPage: React.FC<VerifyPageProps> = ({ onAddVerification, theme
           ].map((s) => {
             const Icon = s.icon;
             return (
-              <div 
-                key={s.step} 
+              <div
+                key={s.step}
                 className="p-5 rounded-2xl border shadow-xs space-y-3 transition-colors bg-[#FFFFFF] border-[#74C69D] dark:bg-[#23262F] dark:border-[#333742]"
               >
                 <div className="flex items-center justify-between">

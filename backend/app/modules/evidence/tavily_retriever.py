@@ -21,6 +21,8 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
+import httpx
+
 from app.modules.evidence.interface import BaseEvidenceRetriever
 from app.modules.evidence.models import RetrievedEvidenceItem
 from app.modules.evidence.security import compute_domain_authority, is_safe_url
@@ -95,33 +97,33 @@ class TavilySearchRetriever(BaseEvidenceRetriever):
         if not claim_text.strip():
             return []
 
-        try:
-            from tavily import TavilyClient  # type: ignore[import-untyped]
-        except ImportError:
-            logger.warning(
-                "tavily-python package not installed; skipping Tavily retrieval. "
-                "Install with: pip install tavily-python"
-            )
-            return []
-
         effective_max = min(max_passages, self._max_results)
 
         try:
-            client = TavilyClient(api_key=self._api_key)
-            # search() is synchronous — run in thread pool to stay async-safe
-            import asyncio
-
-            response = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: client.search(
-                    query=claim_text,
-                    search_depth=self._search_depth,
-                    max_results=effective_max,
-                    include_answer=False,
-                    include_raw_content=False,
-                ),
-            )
+            # Use the documented Tavily REST API directly via the already
+            # deployed httpx dependency. Production does not install the
+            # optional tavily-python SDK; depending on it silently lost all
+            # evidence even with a valid TAVILY_API_KEY.
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                api_response = await client.post(
+                    "https://api.tavily.com/search",
+                    headers={"Authorization": f"Bearer {self._api_key}"},
+                    json={
+                        "query": claim_text,
+                        "search_depth": self._search_depth,
+                        "max_results": effective_max,
+                        "include_answer": False,
+                        "include_raw_content": False,
+                    },
+                )
+                api_response.raise_for_status()
+                if len(api_response.content) > 3_000_000:
+                    logger.warning("Tavily returned an oversized result; ignoring it.")
+                    return []
+                response = api_response.json()
         except Exception as exc:
+            # Do not log exception strings: they may include authentication
+            # headers, query content, or other private request details.
             logger.warning(
                 "Tavily search request failed (%s): gracefully returning empty.",
                 type(exc).__name__,

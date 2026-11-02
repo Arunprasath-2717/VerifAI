@@ -55,14 +55,25 @@ async def test_tavily_retriever_success_mocked() -> None:
         ]
     }
 
-    mock_tavily_client = MagicMock()
-    mock_tavily_client.search.return_value = mock_response
+    upstream = MagicMock()
+    upstream.raise_for_status.return_value = None
+    upstream.content = b'{"results": []}'
+    upstream.json.return_value = mock_response
+    client = AsyncMock()
+    client.post.return_value = upstream
+    context = AsyncMock()
+    context.__aenter__.return_value = client
 
-    with patch.dict(
-        "sys.modules",
-        {"tavily": MagicMock(TavilyClient=MagicMock(return_value=mock_tavily_client))},
+    with patch(
+        "app.modules.evidence.tavily_retriever.httpx.AsyncClient", return_value=context
     ):
         items = await retriever.retrieve("Water formula is H2O", max_passages=5)
+
+    args, kwargs = client.post.call_args
+    assert args[0] == "https://api.tavily.com/search"
+    assert kwargs["headers"]["Authorization"] == "Bearer tvly-mock-key"
+    assert kwargs["json"]["query"] == "Water formula is H2O"
+    assert "api_key" not in kwargs["json"]
 
     # AWS metadata result must have been filtered out
     assert len(items) == 1
@@ -80,12 +91,13 @@ async def test_tavily_retriever_exception_handled() -> None:
     """TavilySearchRetriever never raises; returns [] on network/API exceptions."""
     retriever = TavilySearchRetriever(api_key="tvly-mock-key")
 
-    mock_tavily_client = MagicMock()
-    mock_tavily_client.search.side_effect = ConnectionError("Tavily unreachable")
+    client = AsyncMock()
+    client.post.side_effect = ConnectionError("Tavily unreachable")
+    context = AsyncMock()
+    context.__aenter__.return_value = client
 
-    with patch.dict(
-        "sys.modules",
-        {"tavily": MagicMock(TavilyClient=MagicMock(return_value=mock_tavily_client))},
+    with patch(
+        "app.modules.evidence.tavily_retriever.httpx.AsyncClient", return_value=context
     ):
         items = await retriever.retrieve("Any claim")
         assert items == []
@@ -131,11 +143,7 @@ async def test_duckduckgo_retriever_success_mocked() -> None:
 
     with patch.dict(
         "sys.modules",
-        {
-            "duckduckgo_search": MagicMock(
-                DDGS=MagicMock(return_value=mock_ddgs_context)
-            )
-        },
+        {"ddgs": MagicMock(DDGS=MagicMock(return_value=mock_ddgs_context))},
     ):
         items = await retriever.retrieve("Quantum mechanics", max_passages=3)
 
@@ -157,11 +165,7 @@ async def test_duckduckgo_retriever_exception_handled() -> None:
 
     with patch.dict(
         "sys.modules",
-        {
-            "duckduckgo_search": MagicMock(
-                DDGS=MagicMock(return_value=mock_ddgs_context)
-            )
-        },
+        {"ddgs": MagicMock(DDGS=MagicMock(return_value=mock_ddgs_context))},
     ):
         items = await retriever.retrieve("Some search")
         assert items == []
