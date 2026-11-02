@@ -1,9 +1,11 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
+# ==============================================================================
+# VerifAI Master .gitignore
+# Covers Python (FastAPI), React/Vite/TypeScript, SQLite, OS, & Secrets
+# ==============================================================================
 
-# Environment variables & secrets (Strictly local - NEVER commit)
+# ------------------------------------------------------------------------------
+# Secrets & Environment Variables (CRITICAL: NEVER COMMIT)
+# ------------------------------------------------------------------------------
 .env
 .env.*
 *.env
@@ -14,8 +16,46 @@ frontend/.env.*
 !.env.example
 !backend/.env.example
 !frontend/.env.example
+*.pem
+*.key
+*.cert
+*.pfx
+*.p12
+service-account*.json
+firebase-adminsdk*.json
 
-# Python
+# ------------------------------------------------------------------------------
+# Databases & Local Data Stores
+# ------------------------------------------------------------------------------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+verifai.db
+*.sqlite-journal
+
+# ------------------------------------------------------------------------------
+# Node & Frontend Dependencies / Builds
+# ------------------------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.pnpm-store/
+dist/
+dist-ssr/
+build/
+.next/
+out/
+.parcel-cache/
+.turbo/
+
+# ------------------------------------------------------------------------------
+# Python & Virtual Environments
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -25,33 +65,59 @@ env/
 venv/
 .venv/
 ENV/
+env.bak/
+venv.bak/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+eggs/
+.eggs/
 
-# Production build
-build/
-dist/
-.next/
-out/
-
-# Logs
+# ------------------------------------------------------------------------------
+# Logs & Temporary Files
+# ------------------------------------------------------------------------------
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+tmp/
+temp/
+.cache/
 
-# OS Files
+# ------------------------------------------------------------------------------
+# Operating System Files
+# ------------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
 
-# IDE Files
+# ------------------------------------------------------------------------------
+# IDE & Editor Configuration
+# ------------------------------------------------------------------------------
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+*.sublime-workspace
+*.sublime-project
 
-# Impeccable review artifacts
+# ------------------------------------------------------------------------------
+# Tooling & Agent Artifacts
+# ------------------------------------------------------------------------------
 .impeccable/
 .backups/
+.gemini/

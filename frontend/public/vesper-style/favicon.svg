@@ -1,1 +1,71 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#050505"/><path d="M32 7 52 15v17c0 13-8 21-20 25-12-4-20-12-20-25V15L32 7Z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><path d="m22 32 7 7 14-15" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <!-- Background lacquer: obsidian to dark cinematic emerald -->
+    <linearGradient id="vf-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a231b"/>
+      <stop offset="40%" stop-color="#04140f"/>
+      <stop offset="100%" stop-color="#010604"/>
+    </linearGradient>
+
+    <!-- Bezel ring: polished emerald platinum -->
+    <linearGradient id="vf-bezel" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#56d79e" stop-opacity="0.85"/>
+      <stop offset="30%" stop-color="#23825d" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#0e3c2b" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#2ca777" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- Left facet: luminous platinum-mint ivory -->
+    <linearGradient id="vf-left" x1="16" y1="16" x2="32" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#D7F2E5"/>
+      <stop offset="100%" stop-color="#88CCA9"/>
+    </linearGradient>
+
+    <!-- Right facet: deep architectural emerald -->
+    <linearGradient id="vf-right" x1="48" y1="16" x2="32" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="45%" stop-color="#1B875D"/>
+      <stop offset="100%" stop-color="#0D4B33"/>
+    </linearGradient>
+
+    <!-- Core seal emblem shadow for dimensional lift -->
+    <filter id="vf-shadow" x="8" y="10" width="48" height="46" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3.5" stdDeviation="3" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
+
+    <!-- Inner specular sheen -->
+    <linearGradient id="vf-sheen" x1="10" y1="6" x2="40" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base Plate: Architectural Squircle -->
+  <rect x="1.5" y="1.5" width="61" height="61" rx="14.5" fill="url(#vf-bg)" stroke="url(#vf-bezel)" stroke-width="1.5"/>
+
+  <!-- Optical Precision Hairline Border -->
+  <rect x="5.5" y="5.5" width="53" height="53" rx="10.5" fill="none" stroke="#2a7756" stroke-width="0.75" stroke-opacity="0.3"/>
+
+  <!-- Subtle Top Surface Sheen -->
+  <rect x="2" y="2" width="60" height="24" rx="14" fill="url(#vf-sheen)"/>
+
+  <!-- Precision Corner Reticle Marks (Cinematic Optical Gauge) -->
+  <path d="M9 14 V9 H14 M50 9 H55 V14 M55 50 V55 H50 M14 55 H9 V50" stroke="#3cd191" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.45"/>
+
+  <!-- Center Monogram: Chiseled Evidence "V" & Verification Prism -->
+  <g filter="url(#vf-shadow)">
+    <!-- Left Wing (Luminous Platinum-Mint Chiseled Facet) -->
+    <path d="M16 16.5 L24.2 16.5 L32 37.8 L32 47.5 L16 16.5 Z" fill="url(#vf-left)"/>
+
+    <!-- Right Wing (Deep Emerald Precision Facet) -->
+    <path d="M48 16.5 L39.8 16.5 L32 37.8 L32 47.5 L48 16.5 Z" fill="url(#vf-right)"/>
+
+    <!-- Central Precision Ridge Line -->
+    <line x1="32" y1="37.8" x2="32" y2="47.5" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round" stroke-opacity="0.7"/>
+
+    <!-- Verification Diamond / Truth Anchor (Subtle floating diamond at the apex) -->
+    <path d="M32 17 L35.2 21.8 L32 26.6 L28.8 21.8 Z" fill="#E8FFF3" stroke="#2FA873" stroke-width="0.75"/>
+    <circle cx="32" cy="21.8" r="1.1" fill="#0D4B33"/>
+  </g>
+</svg>

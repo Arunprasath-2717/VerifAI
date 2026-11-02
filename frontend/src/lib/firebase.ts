@@ -6,7 +6,7 @@ import {
   signOut as fbSignOut,
   updateProfile,
   sendPasswordResetEmail,
-  onAuthStateChanged,
+  onAuthStateChanged as fbOnAuthStateChanged,
   User as FirebaseUser,
   getIdToken,
   Auth,
@@ -20,27 +20,38 @@ import { authApi, TokenResponse } from "../api/auth";
 // Missing values must be set through frontend/.env (development) or deployment env vars.
 // VerifAI Web Firebase Configuration
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDeWBSjAl79IDVRYcYeb4l-5-ag0wG59Oo",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "verifai-819d0.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "verifai-819d0",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "verifai-819d0.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "155971042326",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:155971042326:web:e15c616961f30924670937",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-6NRZE0PG6E",
 };
 
-// Singleton Firebase Application instance
-export const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+export const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey &&
+  typeof firebaseConfig.apiKey === "string" &&
+  firebaseConfig.apiKey.trim().length > 0 &&
+  firebaseConfig.projectId &&
+  typeof firebaseConfig.projectId === "string" &&
+  firebaseConfig.projectId.trim().length > 0
+);
 
-// Firebase Authentication instance
-export const auth: Auth = getAuth(app);
+// Singleton Firebase Application instance (only initialized if configuration is present)
+export const app: FirebaseApp | null = isFirebaseConfigured
+  ? (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig))
+  : null;
+
+// Firebase Authentication instance (null when Firebase is unconfigured in local development)
+export const auth: Auth | null = app ? getAuth(app) : null;
 
 // Safe browser Analytics instance
 export let analytics: Analytics | null = null;
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && isFirebaseConfigured && app) {
   isSupported()
     .then((supported) => {
-      if (supported) {
+      if (supported && app) {
         try {
           analytics = getAnalytics(app);
         } catch {
@@ -52,10 +63,29 @@ if (typeof window !== "undefined") {
 }
 
 export interface AuthSuccessResult {
-  firebaseUser: FirebaseUser;
+  firebaseUser: FirebaseUser | null;
   tokenResponse: TokenResponse | null;
   email: string;
   displayName: string;
+}
+
+/**
+ * Safe onAuthStateChanged wrapper that falls back gracefully when Firebase is unconfigured.
+ */
+export function onAuthStateChanged(
+  authInstance: any,
+  observerOrNext: any,
+  ...args: any[]
+): () => void {
+  if (!isFirebaseConfigured || !auth) {
+    if (typeof observerOrNext === "function") {
+      observerOrNext(null);
+    } else if (observerOrNext && typeof observerOrNext.next === "function") {
+      observerOrNext.next(null);
+    }
+    return () => {};
+  }
+  return fbOnAuthStateChanged(auth, observerOrNext, ...args);
 }
 
 /**
@@ -118,6 +148,9 @@ export async function firebaseSignUp(params: {
   fullName?: string;
   termsAccepted?: boolean;
 }): Promise<AuthSuccessResult> {
+  if (!isFirebaseConfigured || !auth) {
+    throw new Error("Firebase authentication is not configured in this local environment. Please register using standard username/password.");
+  }
   const cleanEmail = params.email.trim().toLowerCase();
   const cleanName = params.fullName?.trim() || cleanEmail.split("@")[0];
 
@@ -163,6 +196,9 @@ export async function firebaseSignIn(params: {
   email: string;
   password: string;
 }): Promise<AuthSuccessResult> {
+  if (!isFirebaseConfigured || !auth) {
+    throw new Error("Firebase authentication is not configured in this local environment. Please sign in using standard email/username and password.");
+  }
   const cleanEmail = params.email.trim().toLowerCase();
 
   // 1. Sign in via Firebase Authentication
@@ -197,6 +233,9 @@ export async function firebaseSignInWithGoogle(options?: {
   termsAccepted?: boolean;
   isSignup?: boolean;
 }): Promise<AuthSuccessResult> {
+  if (!isFirebaseConfigured || !auth) {
+    throw new Error("Google Sign-In requires Firebase configuration. Please use standard email/username and password.");
+  }
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
@@ -228,19 +267,23 @@ export async function firebaseSignInWithGoogle(options?: {
  * Sign out user from Firebase and clear VerifAI session tokens.
  */
 export async function firebaseSignOut(): Promise<void> {
-  try {
-    await fbSignOut(auth);
-  } catch (err) {
-    console.warn("Firebase sign out error:", err);
-  } finally {
-    authApi.logout();
+  if (isFirebaseConfigured && auth) {
+    try {
+      await fbSignOut(auth);
+    } catch (err) {
+      console.warn("Firebase sign out error:", err);
+    }
   }
+  authApi.logout();
 }
 
 /**
  * Trigger password reset email via Firebase.
  */
 export async function firebaseResetPassword(email: string): Promise<void> {
+  if (!isFirebaseConfigured || !auth) {
+    throw new Error("Password reset via Firebase is not configured.");
+  }
   const cleanEmail = email.trim().toLowerCase();
   await sendPasswordResetEmail(auth, cleanEmail);
 }
@@ -249,6 +292,7 @@ export async function firebaseResetPassword(email: string): Promise<void> {
  * Retrieve current Firebase user.
  */
 export function getCurrentFirebaseUser(): FirebaseUser | null {
+  if (!isFirebaseConfigured || !auth) return null;
   return auth.currentUser;
 }
 
@@ -256,10 +300,10 @@ export function getCurrentFirebaseUser(): FirebaseUser | null {
  * Retrieve active Firebase ID token (refreshes if expired).
  */
 export async function getFirebaseIdToken(forceRefresh = false): Promise<string | null> {
+  if (!isFirebaseConfigured || !auth) return null;
   const user = auth.currentUser;
   if (!user) return null;
   return user.getIdToken(forceRefresh);
 }
 
-export { onAuthStateChanged };
 export type { FirebaseUser };
