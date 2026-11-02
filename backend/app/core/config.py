@@ -1,10 +1,11 @@
 """Environment-driven configuration for VerifAI backend."""
 
+import json
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 INSECURE_DEV_JWT_SECRET: str = (
     "verifai_insecure_development_secret_key_change_in_production_32chars!"
@@ -38,7 +39,7 @@ class Settings(BaseSettings):
     # CORS Configuration
     # NOTE: Default origins are strictly for local development and must be
     # explicitly overridden in production.
-    BACKEND_CORS_ORIGINS: list[str] = Field(
+    BACKEND_CORS_ORIGINS: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
             "http://localhost:5173",
@@ -259,6 +260,22 @@ class Settings(BaseSettings):
                 f"Unsupported JWT_ALGORITHM '{v}'. Strictly permitted: {allowed_list}"
             )
         return v
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: object) -> object:
+        """Accept JSON arrays or plain comma-separated origins from hosting envs."""
+        if not isinstance(value, str):
+            return value
+        value = value.strip()
+        if value.startswith("["):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise ValueError("BACKEND_CORS_ORIGINS must be a valid JSON array") from exc
+        if not value:
+            return []
+        return [origin.strip() for origin in value.split(",")]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="after")
     @classmethod

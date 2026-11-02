@@ -70,3 +70,26 @@ def test_clear_settings_cache() -> None:
     s2 = get_settings()
     assert s1 is not s2
     assert s1.PROJECT_NAME == s2.PROJECT_NAME
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ('["https://verifai-mauve.vercel.app"]', ["https://verifai-mauve.vercel.app"]),
+        ("https://verifai-mauve.vercel.app", ["https://verifai-mauve.vercel.app"]),
+        (
+            "https://verifai-mauve.vercel.app, https://example.org/",
+            ["https://verifai-mauve.vercel.app", "https://example.org"],
+        ),
+    ],
+)
+def test_cors_env_formats(monkeypatch: pytest.MonkeyPatch, raw: str, expected: list[str]) -> None:
+    monkeypatch.setenv("BACKEND_CORS_ORIGINS", raw)
+    settings = Settings(_env_file=None)
+    assert settings.BACKEND_CORS_ORIGINS == expected
+
+
+def test_malformed_cors_json_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BACKEND_CORS_ORIGINS", '["https://example.org",]')
+    with pytest.raises(ValidationError, match="BACKEND_CORS_ORIGINS must be a valid JSON array"):
+        Settings(_env_file=None)
