@@ -5,7 +5,7 @@ import { authApi } from '../api/auth';
 import { ApiError, setAuthToken } from '../api/client';
 import { firebaseSignInWithGoogle, firebaseSignOut, formatFirebaseErrorMessage } from '../lib/firebase';
 import { PolicyModal, type PolicyTab } from '../components/legal/PolicyModal';
-import authIllustration from '../assets/auth-illustration.png';
+import authIllustration from '../assets/auth-illustration.webp';
 import './AuthReference.css';
 
 interface SignupPageProps {
@@ -327,6 +327,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({
         <section className="auth-studio__visual" aria-label="Trust and verification illustration">
           <img className="auth-studio__photo"
             src={authIllustration}
+            loading="eager" decoding="async"
             alt="Green verification shield, evidence documents and magnifying glass framed by sculpted white paper"/>
         </section>
       </div>
