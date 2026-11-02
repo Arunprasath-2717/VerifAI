@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowRight, ArrowUpRight, Braces, Check, ChevronDown, CircleCheck, Fingerprint, GitBranch, Menu, ScanSearch, ShieldCheck, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import './LandingPage.css';
@@ -24,7 +25,7 @@ const solutions = [
 ];
 
 function EnterLink({isAuthenticated,children,className=''}:{isAuthenticated:boolean;children:string;className?:string}){
- return <a className={'rv-enter '+className} href={isAuthenticated?'/dashboard':'/login'}>{children}<ArrowUpRight size={15} aria-hidden="true"/></a>
+ return <Link className={'rv-enter '+className} to={isAuthenticated?'/dashboard':'/login'}>{children}<ArrowUpRight size={15} aria-hidden="true"/></Link>
 }
 function Header({isAuthenticated}:{isAuthenticated:boolean}){
  const[open,setOpen]=useState(false);
@@ -34,8 +35,8 @@ function Header({isAuthenticated}:{isAuthenticated:boolean}){
    <nav className="rv-header-nav" aria-label="Main navigation">
      <a href="#technology">Technology</a><a href="#challenges">Why VerifAI</a><a href="#solutions">Solutions</a>
    </nav>
-   <div className="rv-header-right"><a className="rv-header-signin" href={isAuthenticated?'/dashboard':'/login'}>{isAuthenticated?'Dashboard':'Log in'}</a><EnterLink isAuthenticated={isAuthenticated}>Get started</EnterLink><button type="button" className="rv-menu-btn" aria-label={open?'Close menu':'Open menu'} aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X size={20}/>:<Menu size={20}/>}</button></div>
-   <AnimatePresence>{open&&<motion.nav className="rv-mobile-menu" aria-label="Mobile navigation" initial={{opacity:0,y:-12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-12}} transition={{duration:.24}}>{[['Technology','#technology'],['Why VerifAI','#challenges'],['Solutions','#solutions'],['Enter VerifAI',isAuthenticated?'/dashboard':'/login']].map(([label,path])=><a key={label} href={path} onClick={()=>setOpen(false)}>{label}<ArrowUpRight size={16}/></a>)}</motion.nav>}</AnimatePresence>
+   <div className="rv-header-right"><Link className="rv-header-signin" to={isAuthenticated?'/dashboard':'/login'}>{isAuthenticated?'Dashboard':'Log in'}</Link><EnterLink isAuthenticated={isAuthenticated}>Get started</EnterLink><button type="button" className="rv-menu-btn" aria-label={open?'Close menu':'Open menu'} aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X size={20}/>:<Menu size={20}/>}</button></div>
+   <AnimatePresence>{open&&<motion.nav className="rv-mobile-menu" aria-label="Mobile navigation" initial={{opacity:0,y:-12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-12}} transition={{duration:.24}}>{[['Technology','#technology'],['Why VerifAI','#challenges'],['Solutions','#solutions'],['Enter VerifAI',isAuthenticated?'/dashboard':'/login']].map(([label,path])=>path.startsWith('/')?<Link key={label} to={path} onClick={()=>setOpen(false)}>{label}<ArrowUpRight size={16}/></Link>:<a key={label} href={path} onClick={()=>setOpen(false)}>{label}<ArrowUpRight size={16}/></a>)}</motion.nav>}</AnimatePresence>
  </header>;
 }
 function EmeraldFilm({className=''}:{className?:string}){
@@ -99,7 +100,7 @@ function Solutions({isAuthenticated}:{isAuthenticated:boolean}){
    <div className="rv-solution-list">{solutions.map((s,i)=>{const Icon=s.icon;return <Button variant="ghost" type="button" key={s.title} className={'rv-solution-button'+(active===i?' active':'')} onClick={()=>setActive(i)} aria-pressed={active===i}><span className="rv-solution-number"><Icon size={19} strokeWidth={1.5}/></span><span className="rv-solution-text"><strong>{s.title}</strong><AnimatePresence mode="wait">{active===i&&<motion.small key={s.detail} initial={reduce?false:{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={reduce?undefined:{opacity:0,height:0}} transition={{duration:.28}}>{s.detail}</motion.small>}</AnimatePresence></span><ChevronDown className="rv-solution-chevron" size={17}/></Button>})}<EnterLink isAuthenticated={isAuthenticated}>Explore the workspace</EnterLink></div>
  </motion.div></section>
 }
-function Footer({isAuthenticated}:{isAuthenticated:boolean}){return <footer className="rv-footer"><div className="rv-footer-main"><div className="rv-footer-logo">VERIF<span>AI.</span><p>AI hallucinates. We investigate.</p></div><div className="rv-footer-links"><a href={isAuthenticated?'/dashboard':'/login'}>Launch app<ArrowUpRight size={14}/></a><a href="https://github.com/Arunprasath-2717/VerifAI" target="_blank" rel="noopener noreferrer">GitHub<ArrowUpRight size={14}/></a><a href="/privacy">Privacy<ArrowUpRight size={14}/></a><a href="/terms">Terms<ArrowUpRight size={14}/></a></div></div><div className="rv-footer-bottom"><span>© {new Date().getFullYear()} VerifAI. All rights reserved.</span><a href="#top">Back to the beginning ↑</a></div></footer>}
+function Footer({isAuthenticated}:{isAuthenticated:boolean}){return <footer className="rv-footer"><div className="rv-footer-main"><div className="rv-footer-logo">VERIF<span>AI.</span><p>AI hallucinates. We investigate.</p></div><div className="rv-footer-links"><Link to={isAuthenticated?'/dashboard':'/login'}>Launch app<ArrowUpRight size={14}/></Link><a href="https://github.com/Arunprasath-2717/VerifAI" target="_blank" rel="noopener noreferrer">GitHub<ArrowUpRight size={14}/></a><Link to="/privacy">Privacy<ArrowUpRight size={14}/></Link><Link to="/terms">Terms<ArrowUpRight size={14}/></Link></div></div><div className="rv-footer-bottom"><span>© {new Date().getFullYear()} VerifAI. All rights reserved.</span><a href="#top">Back to the beginning ↑</a></div></footer>}
 export function LandingPage({isAuthenticated}:Props){
   useEffect(() => {
     document.documentElement.removeAttribute('data-landing-prepaint');

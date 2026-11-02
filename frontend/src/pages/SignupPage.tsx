@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, AtSign, AlertCircle, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../api/auth';
 import { ApiError, setAuthToken } from '../api/client';
 import { firebaseSignInWithGoogle, firebaseSignOut, formatFirebaseErrorMessage } from '../lib/firebase';
@@ -38,7 +38,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({
     || (location.pathname !== '/login' && initialMode === 'signup');
   const incoming = (location.state as { from?: unknown } | null)?.from;
   const destination = typeof incoming === 'string' &&
-    /^\/(dashboard|chat|verify|verification|knowledge-base|history|reports|model-leaderboard|settings)(\/|$)/.test(incoming)
+    /^\/(dashboard|chat|verify|verification|knowledge-base|history|reports|model-leaderboard|leaderboard|settings)(\/|$)/.test(incoming)
     ? incoming : '/dashboard';
 
   const [username, setUsername] = useState('');
@@ -209,16 +209,16 @@ export const SignupPage: React.FC<SignupPageProps> = ({
         <main className="auth-studio__main" aria-labelledby="auth-studio-title">
           <div className="auth-studio__content">
             <header className="auth-studio__header">
-              <a href="/" className="auth-studio__back-link">
+              <Link to="/" className="auth-studio__back-link">
                 <ArrowLeft size={16} aria-hidden="true"/> <span>Back to website</span>
-              </a>
+              </Link>
             </header>
             <div className="auth-studio__brand-block">
               <div className="auth-studio__brand">
-                <a href="/" className="auth-studio__logo" aria-label="VerifAI homepage">
+                <Link to="/" className="auth-studio__logo" aria-label="VerifAI homepage">
                   <span className="auth-studio__logo-mark"><ShieldCheck size={24}/></span>
                   <span>Verif<span>AI</span></span>
-                </a>
+                </Link>
                 <span className="auth-studio__brand-subline">
                   {isSignup ? 'CREATE YOUR WORKSPACE' : 'WELCOME BACK'}
                 </span>

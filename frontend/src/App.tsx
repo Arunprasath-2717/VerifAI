@@ -42,9 +42,18 @@ function RedirectAfterLogin() {
   const location = useLocation();
   const requested = (location.state as { from?: unknown } | null)?.from;
   const safePath = typeof requested === 'string' &&
-    /^\/(dashboard|chat|verify|verification|knowledge-base|history|reports|model-leaderboard|settings)(\/|$)/.test(requested)
+    /^\/(dashboard|chat|verify|verification|knowledge-base|history|reports|model-leaderboard|leaderboard|settings)(\/|$)/.test(requested)
     ? requested : '/dashboard';
   return <Navigate to={safePath} replace />;
+}
+
+/** Guard protected workspace routes and preserve the attempted URL. */
+function RequireAuth({ isAuthenticated, children }: { isAuthenticated: boolean; children: React.ReactElement }) {
+  const location = useLocation();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
+  }
+  return children;
 }
 
 export default function App() {
@@ -401,7 +410,7 @@ export default function App() {
           {/* Main Authenticated Product Workspace Shell - Strict Auth Guard */}
           <Route
             element={
-              isAuthenticated ? (
+              <RequireAuth isAuthenticated={isAuthenticated}>
                 <AppShell
                   userSettings={userSettings}
                   dataLoadErrors={Object.values(resourceErrors)}
@@ -413,9 +422,7 @@ export default function App() {
                   onToggleTheme={handleToggleTheme}
                   onLogout={handleLogout}
                 />
-              ) : (
-                <Navigate to="/login" state={{ from: window.location.pathname + window.location.search }} replace />
-              )
+              </RequireAuth>
             }
           >
 
