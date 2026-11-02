@@ -20,13 +20,13 @@ import { authApi, TokenResponse } from "../api/auth";
 // Missing values must be set through frontend/.env (development) or deployment env vars.
 // VerifAI Web Firebase Configuration
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDeWBSjAl79IDVRYcYeb4l-5-ag0wG59Oo",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "verifai-819d0.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "verifai-819d0",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "verifai-819d0.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "155971042326",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:155971042326:web:e15c616961f30924670937",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-6NRZE0PG6E",
 };
 
 export const isFirebaseConfigured = Boolean(

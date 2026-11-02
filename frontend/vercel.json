@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/:match*",
+      "destination": "https://whole-needles-jam.loca.lt/api/:match*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
