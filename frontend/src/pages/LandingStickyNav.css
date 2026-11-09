@@ -1,0 +1,199 @@
+/* VerifAI — truly page-sticky, unified header.
+   Sits outside the static hero iframe so it remains visible across sections. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+.vr-root .vrs-nav {
+  position:fixed;
+  inset:0 0 auto 0;
+  z-index:240;
+  pointer-events:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:clamp(16px,2.4vh,26px) 24px 0;
+  font-family:"Inter","Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.vr-root .vrs-nav__inner {
+  position:relative;
+  z-index:2;
+  pointer-events:auto;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) 96px;
+  align-items:center;
+  column-gap:clamp(16px,2vw,24px);
+  width:min(100%,738px);
+  min-height:52px;
+  transition:transform .42s cubic-bezier(.22,1,.36,1),padding .42s,background .42s,box-shadow .42s,border-color .42s;
+}
+.vr-root .vrs-nav--scrolled .vrs-nav__inner {
+  transform:translateY(-4px);
+  border-radius:100px;
+  background:rgba(5,18,11,.87);
+  border:1px solid rgba(109,143,99,.46);
+  padding:8px 13px;
+  box-shadow:0 12px 32px rgba(0,0,0,.24);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+.vr-root .vrs-nav__logo {
+  display:grid;place-items:center;
+  justify-self:start;
+  width:46px;height:46px;
+  flex:0 0 auto;
+  background:#f5fff7;
+  border:1px solid rgba(57,255,136,.38);
+  border-radius:50%;
+  box-shadow:0 4px 14px rgba(0,0,0,.16);
+  transition:transform .24s ease;
+}
+.vr-root .vrs-nav__logo:hover {transform:scale(1.045);}
+.vr-root .vrs-nav__logo img {width:72%;height:72%;object-fit:contain;}
+.vr-root .vrs-nav__links {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  align-items:center;
+  min-width:0;
+  width:100%;
+  min-height:48px;
+  padding:4px 7px;
+  background:rgba(6,21,12,.9);
+  border:1px solid rgba(109,143,99,.45);
+  border-radius:999px;
+  box-shadow:0 4px 14px rgba(0,0,0,.16);
+  backdrop-filter:blur(18px);
+}
+.vr-root .vrs-nav__links a {
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  min-height:38px;
+  padding:0 5px 6px;
+  color:#b4cabc;
+  font-size:clamp(12px,1vw,13.5px);
+  line-height:1.2;
+  font-weight:500;
+  letter-spacing:-.012em;
+  white-space:nowrap;
+  opacity:.86;
+  border-radius:99px;
+  transition:background .28s ease,color .28s ease,opacity .28s ease;
+}
+.vr-root .vrs-nav__links a:hover,.vr-root .vrs-nav__links a.active {
+  color:#f2fff5;
+  opacity:1;
+}
+.vr-root .vrs-nav__links a:hover {background:rgba(109,143,99,.12);}
+.vr-root .vrs-nav__links a.active::after {
+  content:"";
+  position:absolute;
+  bottom:4px;left:calc(50% - 1.5px);
+  width:3px;height:3px;border-radius:50%;
+  background:#39ff88;
+  box-shadow:-5px 0 #39ff88,5px 0 #39ff88;
+}
+.vr-root .vrs-nav__sign-in {
+  display:grid;place-items:center;
+  justify-self:stretch;
+  min-height:48px;
+  border-radius:999px;
+  background:rgba(6,21,12,.93);
+  border:1px solid rgba(109,143,99,.45);
+  color:#edfff1;
+  font-size:13px;
+  font-weight:500;
+  white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.16);
+  transition:background .25s,color .25s,transform .25s;
+}
+.vr-root .vrs-nav__sign-in:hover {transform:translateY(-1px);background:#153921;color:#39FF88;}
+.vr-root .vrs-nav__burger,.vr-root .vrs-nav__mobile,.vr-root .vrs-nav__scrim {display:none;}
+
+@media(max-width:720px) {
+  .vr-root .vrs-nav {padding:14px 14px 0;}
+  .vr-root .vrs-nav__inner {
+    width:100%;
+    grid-template-columns:48px 48px;
+    justify-content:space-between;
+    column-gap:0;
+    min-height:48px;
+  }
+  .vr-root .vrs-nav--scrolled .vrs-nav__inner {
+    padding:6px 8px;
+  }
+  .vr-root .vrs-nav__logo {width:48px;height:48px;}
+  .vr-root .vrs-nav__links,.vr-root .vrs-nav__sign-in {display:none;}
+  .vr-root .vrs-nav__burger {
+    display:flex;align-items:center;justify-content:center;
+    width:48px;height:48px;
+    border-radius:50%;
+    border:1px solid rgba(109,143,99,.55);
+    background:rgba(6,21,12,.94);
+    color:#f5fff8;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.16);
+  }
+  .vr-root .vrs-nav__scrim {
+    display:block;
+    position:fixed;
+    z-index:0;
+    inset:0;
+    width:100vw;height:100dvh;
+    border:0;
+    background:rgba(0,0,0,.68);
+    backdrop-filter:blur(7px);
+    pointer-events:auto;
+  }
+  .vr-root .vrs-nav__mobile {
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    z-index:3;
+    pointer-events:auto;
+    width:min(100%,450px);
+    margin:9px auto 0;
+    padding:13px 18px 18px;
+    border-radius:22px;
+    border:1px solid rgba(109,143,99,.46);
+    background:rgba(7,22,12,.98);
+    box-shadow:0 18px 52px rgba(0,0,0,.42);
+    animation:vrs-menu-appear .32s cubic-bezier(.22,1,.36,1) both;
+  }
+  .vr-root .vrs-nav__mobile a {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:15px 10px;
+    border-bottom:1px solid rgba(109,143,99,.2);
+    font-size:16px;font-weight:500;color:#f2fff4;
+  }
+  .vr-root .vrs-nav__mobile a:last-child {border-bottom:0;}
+  .vr-root .vrs-nav__mobile-action {color:#39ff88!important;}
+}
+@keyframes vrs-menu-appear {
+  from {opacity:0;transform:translateY(-8px);}
+  to {opacity:1;transform:none;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .vr-root .vrs-nav__inner,.vr-root .vrs-nav__links a,.vr-root .vrs-nav__mobile {
+    transition:none!important;animation:none!important;
+  }
+}
+
+/* Keep just the three deliberate pills visible during scroll: no double-glass shell. */
+.vr-root .vrs-nav--scrolled .vrs-nav__inner {
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  padding:0;
+  transform:translateY(-3px);
+}
+.vr-root .vrs-nav--scrolled .vrs-nav__links,
+.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {
+  background:rgba(5,17,9,.95);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+}
+@media(max-width:720px) {
+  .vr-root .vrs-nav--scrolled .vrs-nav__inner {padding:0;}
+}

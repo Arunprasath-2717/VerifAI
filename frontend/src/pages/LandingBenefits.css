@@ -1,0 +1,135 @@
+/* Key Benefits — three equal cards, original orb center. Only public landing. */
+.verifai-landing #benefits.vi-benefits {
+  background:#0b0b0b; color:#f3eee8;
+  padding:clamp(90px,8vw,130px) 0 clamp(95px,8vw,130px);
+  border-block:1px solid #332e2a;
+  scroll-margin-top:80px;
+}
+.vi-benefits-head {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,365px);
+  align-items:end; gap:clamp(24px,4vw,75px);
+  margin-bottom:clamp(36px,4.5vw,58px); padding-bottom:30px; border-bottom:1px solid #423b34;
+}
+.vi-benefits-head .vi-kicker {display:block;margin:0 0 22px;}
+.verifai-landing #benefits.vi-benefits h2 {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .18em;
+  font:400 clamp(65px,7.3vw,110px)/.97 var(--vi-face-display);
+  letter-spacing:-.025em; text-transform:none; color:#f3eee8; margin:0;
+}
+.verifai-landing #benefits.vi-benefits h2 span {text-transform:uppercase;}
+.verifai-landing #benefits.vi-benefits h2 em {
+  font:400 .82em/1.08 var(--vi-face-script); letter-spacing:-.045em; color:#dfb79b;
+  white-space:nowrap; font-style:normal;
+}
+.verifai-landing #benefits.vi-benefits .vi-benefits-intro {
+  padding-left:23px; border-left:1px solid #806551; margin:0 0 5px;
+  font:400 clamp(16px,1.4vw,20px)/1.6 var(--vi-face-body); color:#c9c0b7;
+}
+.vi-benefits-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch;}
+.vi-benefit-card {
+  position:relative;display:flex;flex-direction:column;min-width:0;min-height:640px;
+  background:#151515;border:1px solid #474039;border-radius:4px;
+  overflow:hidden;color:#f4eee6;
+}
+.vi-benefit-card-left,.vi-benefit-card-right {padding:clamp(24px,2.4vw,33px);}
+.vi-benefit-card-left::before,.vi-benefit-card-right::before {
+  content:'';position:absolute;width:250px;height:250px;border-radius:100%;
+  filter:blur(85px);opacity:.2;pointer-events:none;
+}
+.vi-benefit-card-left::before {background:#27396d;left:-160px;bottom:0;}
+.vi-benefit-card-right::before {background:#304773;right:-170px;top:0;}
+.vi-benefit-topline {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  color:#d7b393;margin-bottom:clamp(34px,4vw,62px);position:relative;
+}
+.vi-benefit-topline span,.vi-benefit-video-kicker,
+.vi-benefit-bottomline span,.vi-benefit-panel-label,.vi-benefit-center-note span {
+  font:700 10px/1.45 var(--vi-face-body);letter-spacing:.13em;
+}
+.verifai-landing #benefits.vi-benefits .vi-benefit-card h3 {
+  font:400 clamp(29px,2.5vw,40px)/1.16 var(--vi-face-script);
+  letter-spacing:-.028em;color:#f3ece4;margin:0 0 24px;
+  position:relative;overflow-wrap:break-word;
+}
+.verifai-landing #benefits.vi-benefits .vi-benefit-card p {
+  font:400 clamp(15px,1.15vw,17px)/1.65 var(--vi-face-body);
+  color:#c6c0b8;margin:0;position:relative;
+}
+.vi-benefit-panel {
+  padding:20px;border:1px solid #4b4641;background:#1d1b1a;
+  margin:18px 0 25px;position:relative;
+}
+.vi-benefit-panel-label {color:#a9a096;}
+.vi-benefit-panel-lines {display:grid;gap:8px;margin:17px 0;}
+.vi-benefit-panel-lines span {height:1px;background:#5e564e;}
+.vi-benefit-panel-lines span:nth-child(2) {width:84%;}
+.vi-benefit-panel-lines span:nth-child(3) {width:60%;background:#d0ab8e;}
+.vi-benefit-panel strong {font:500 15px/1.5 var(--vi-face-body);color:#f2dcc7;}
+.vi-benefit-bottomline {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:15px;margin-top:auto;padding-top:18px;border-top:1px solid #51473e;
+  color:#d4ae91;position:relative;
+}
+.vi-benefit-card-left > p,.vi-benefit-card-right > p {margin-bottom:26px!important;}
+.vi-benefit-card-center {background:#121212;}
+.vi-benefit-video-wrap {height:345px;flex:none;position:relative;overflow:hidden;background:#070707;}
+.vi-benefit-video {display:block;width:100%;height:100%;object-fit:cover;}
+.vi-benefit-video-kicker {position:absolute;z-index:2;top:24px;left:25px;color:#e9d1bc;}
+.vi-benefit-video-fade {
+  position:absolute;inset:auto 0 0;height:145px;
+  background:linear-gradient(to bottom,transparent,#121212);pointer-events:none;
+}
+.vi-benefit-video-copy {padding:12px clamp(24px,2.4vw,33px) 29px;display:flex;flex-direction:column;flex:1;}
+.vi-benefit-video-copy h3 {margin-bottom:17px!important;}
+.vi-benefit-center-note {margin:23px 0 26px;border-top:1px solid #51473e;padding-top:17px;display:grid;gap:6px;}
+.vi-benefit-center-note span {color:#dab395;}
+.vi-benefit-center-note small {color:#a79e96;font:400 13px/1.45 var(--vi-face-body);}
+.vi-benefit-outcomes {margin:26px 0 28px;border-top:1px solid #4a433d;}
+.vi-benefit-outcomes > div {
+  display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;
+  gap:9px;padding:13px 0;border-bottom:1px solid #4a433d;
+}
+.vi-benefit-outcomes svg {color:#d4aa89;}
+.vi-benefit-outcomes span {color:#f0e8dd;font:500 14px/1.3 var(--vi-face-body);}
+.vi-benefit-outcomes small {color:#aaa097;text-align:right;font:400 11px/1.4 var(--vi-face-body);}
+@media(max-width:1120px) and (min-width:861px){
+  .vi-benefits-grid {gap:12px;}
+  .vi-benefit-card-left,.vi-benefit-card-right {padding:23px;}
+  .vi-benefit-video-wrap {height:305px;}
+  .vi-benefit-video-copy {padding:14px 23px 25px;}
+  .verifai-landing #benefits.vi-benefits .vi-benefit-card h3 {font-size:29px;}
+  .vi-benefit-outcomes > div {grid-template-columns:18px 1fr;}
+  .vi-benefit-outcomes small {grid-column:2;text-align:left;}
+}
+@media(max-width:860px){
+  .vi-benefits-head {grid-template-columns:1fr;gap:24px;}
+  .vi-benefits-grid {grid-template-columns:1fr;gap:16px;}
+  .vi-benefit-card {min-height:0;}
+  .vi-benefit-card-left,.vi-benefit-card-right {padding:30px;min-height:420px;}
+  .vi-benefit-video-wrap {height:360px;}
+  .vi-benefit-video-copy {padding:18px 30px 30px;min-height:235px;}
+  .vi-benefit-topline {margin-bottom:35px;}
+  .vi-benefit-panel {max-width:510px;}
+  .vi-benefit-outcomes {max-width:550px;}
+}
+@media(max-width:640px){
+  .verifai-landing #benefits.vi-benefits {padding:84px 0 93px;scroll-margin-top:67px;}
+  .vi-benefits-head {margin-bottom:31px;padding-bottom:26px;gap:19px;}
+  .verifai-landing #benefits.vi-benefits h2 {font-size:clamp(55px,13.7vw,76px);}
+  .verifai-landing #benefits.vi-benefits .vi-benefits-intro {
+    border-left:0;border-top:1px solid #725744;padding:16px 0 0;font-size:16px;
+  }
+  .vi-benefit-card-left,.vi-benefit-card-right {padding:25px;min-height:0;}
+  .vi-benefit-video-wrap {height:310px;}
+  .vi-benefit-video-copy {padding:17px 25px 27px;min-height:235px;}
+  .verifai-landing #benefits.vi-benefits .vi-benefit-card h3 {font-size:clamp(29px,7.2vw,36px);}
+  .vi-benefit-panel {padding:17px;}
+  .vi-benefit-outcomes > div {grid-template-columns:18px minmax(0,1fr);}
+  .vi-benefit-outcomes small {grid-column:2;text-align:left;}
+}
+@media(max-width:370px){
+  .verifai-landing #benefits.vi-benefits h2 {font-size:52px;}
+  .vi-benefit-card-left,.vi-benefit-card-right {padding:21px;}
+  .vi-benefit-video-copy {padding-inline:21px;}
+  .verifai-landing #benefits.vi-benefits .vi-benefit-card h3 {font-size:27px;}
+}

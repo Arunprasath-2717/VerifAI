@@ -1,0 +1,354 @@
+/*
+ * VerifAI public landing display system.
+ * All typefaces are served from existing local frontend assets.
+ * Scoped to .verifai-landing so the authenticated app is unaffected.
+ */
+@font-face {
+  font-family: 'Verif Guerrilla';
+  src: url('/assets/Black_Ops_One,Protest_Guerrilla,Quintessential/Protest_Guerrilla/ProtestGuerrilla-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Verif Black Ops';
+  src: url('/assets/Black_Ops_One,Protest_Guerrilla,Quintessential/Black_Ops_One/BlackOpsOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Verif Quintessential';
+  src: url('/assets/Black_Ops_One,Protest_Guerrilla,Quintessential/Quintessential/Quintessential-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Verif Space';
+  src: url('/landing-film/fonts/space-grotesk.ttf') format('truetype');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.verifai-landing {
+  --vi-ink: #f0eee9;
+  --vi-muted: #a9a7a4;
+  --vi-line: rgba(228, 218, 200, .18);
+  --vi-accent: #e8b78c;
+  --vi-canvas: #090909;
+  --vi-face-display: 'Verif Guerrilla', Impact, 'Arial Narrow', sans-serif;
+  --vi-face-mark: 'Verif Black Ops', Impact, sans-serif;
+  --vi-face-script: 'Verif Quintessential', Georgia, serif;
+  --vi-face-body: 'Verif Space', 'Arial', sans-serif;
+  font-family: var(--vi-face-body);
+  color: var(--vi-ink);
+  background: var(--vi-canvas);
+  font-synthesis: none;
+  font-optical-sizing: auto;
+}
+.verifai-landing * { font-synthesis: none; }
+.verifai-landing :focus-visible { outline: 2px solid #f0bb8d; outline-offset: 4px; }
+.verifai-landing ::selection { color: #16110e; background: #eab58b; }
+
+/* Persistent navigation; branding deliberately uses the stencil face. */
+.verifai-landing .vi-nav {
+  background: rgba(9,9,9,.4);
+  border-bottom-color: rgba(234,218,200,.18);
+  backdrop-filter: blur(16px);
+}
+.verifai-landing .vi-nav.is-scrolled { background: rgba(10,10,10,.94); border-bottom-color: #38312d; }
+.verifai-landing .vi-wordmark {
+  font-family: var(--vi-face-mark);
+  font-size: clamp(19px, 2vw, 27px);
+  font-weight: 400;
+  letter-spacing: -.035em;
+  text-transform: uppercase;
+  gap: 11px;
+}
+.verifai-landing .vi-wordmark svg, .verifai-landing .vi-wordmark-accent { color: var(--vi-accent); }
+.verifai-landing .vi-nav-links a, .verifai-landing .vi-nav-signin {
+  font-family: var(--vi-face-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.verifai-landing .vi-nav-cta {
+  border-color: #e8b78c;
+  background: #e8b78c;
+  color: #16120e;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 2px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.verifai-landing .vi-nav-cta:hover { background: #f4ceaa; border-color: #f4ceaa; }
+.verifai-landing .vi-nav-menu { border-radius: 2px; }
+.verifai-landing .vi-nav-mobile { background: #11100e; }
+.verifai-landing .vi-nav-mobile a { font-family: var(--vi-face-body); }
+
+/* Strong typography, simple ruled geometry. No synthetic neon glows. */
+.verifai-landing .vi-kicker, .verifai-landing .vi-eyebrow {
+  font-family: var(--vi-face-mark);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+  font-size: clamp(12px, 1.15vw, 15px);
+  color: var(--vi-accent);
+  line-height: 1.55;
+}
+.verifai-landing .vi-kicker { margin-bottom: 29px; }
+.verifai-landing .vi-eyebrow { gap: 14px; color: #e9cfb5; margin-bottom: 36px; }
+.verifai-landing .vi-eyebrow-mark { background: var(--vi-accent); box-shadow: none; width: 9px; height: 9px; border-radius: 0; transform: rotate(45deg); }
+.verifai-landing .vi-button {
+  font-family: var(--vi-face-body);
+  border-radius: 2px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  min-height: 58px;
+  padding: 0 27px;
+  gap: 25px;
+}
+.verifai-landing .vi-button-light { background: #e9c7a8; border-color: #e9c7a8; color: #191410; }
+.verifai-landing .vi-button-light:hover { background: #f3d7bb; border-color: #f3d7bb; }
+.verifai-landing .vi-text-link { font-family: var(--vi-face-body); font-weight: 600; border-bottom-color: #c6a98b; }
+.verifai-landing .vi-text-link:hover { color: #e9c7a8; border-bottom-color: #e9c7a8; }
+
+/* Hero: the content is the image, not another glass card. */
+.verifai-landing .vi-hero { background: #0b0c0d; }
+.verifai-landing .vi-hero-scrim {
+  background: linear-gradient(90deg, rgba(0,0,0,.91), rgba(4,5,7,.58) 62%, rgba(4,5,7,.24)),
+              linear-gradient(0deg, #090909 0%, transparent 36%, rgba(0,0,0,.12) 100%);
+}
+.verifai-landing .vi-hero-frame { border-inline: 1px solid rgba(232,216,197,.1); padding-inline: clamp(8px,1.5vw,26px); }
+.verifai-landing .vi-hero-copy { width: min(100%, 1100px); margin-bottom: 64px; }
+.verifai-landing .vi-hero h1 {
+  max-width: 1130px;
+  margin: 0;
+  line-height: .77;
+  font-family: var(--vi-face-display);
+  font-size: clamp(61px, 9.4vw, 150px);
+  font-weight: 400;
+  letter-spacing: -.018em;
+  text-transform: uppercase;
+}
+.verifai-landing .vi-display-word { display: block; white-space: nowrap; }
+.verifai-landing .vi-display-word:last-child { color: #f4f0e8; }
+.verifai-landing .vi-hero-handwritten {
+  display: block;
+  font-family: var(--vi-face-script);
+  font-size: clamp(35px, 4vw, 64px);
+  font-weight: 400;
+  color: #e8b78c;
+  letter-spacing: -.025em;
+  line-height: 1.3;
+  margin-top: 23px;
+}
+.verifai-landing .vi-hero-copy > p {
+  margin-top: 22px;
+  max-width: 560px;
+  color: #d9d8d3;
+  font-weight: 400;
+  font-size: clamp(17px, 1.45vw, 20px);
+  line-height: 1.6;
+  letter-spacing: -.01em;
+}
+.verifai-landing .vi-hero-bottom {
+  font-family: var(--vi-face-body);
+  font-size: 11px;
+  letter-spacing: .11em;
+  color: #c0ae9d;
+  border-top-color: #8f796c;
+}
+.verifai-landing .vi-scroll-line { background: #e6b68c; }
+
+/* Section headings combine expressive lettering with hand-lettered serif lines. */
+.verifai-landing .vi-difference { background: #10100f; border-top-color: #3b332e; }
+.verifai-landing .vi-section-lead h2,
+.verifai-landing .vi-approach-intro h2,
+.verifai-landing .vi-consensus-intro h2 {
+  font-family: var(--vi-face-display);
+  text-transform: uppercase;
+  font-weight: 400;
+  font-size: clamp(54px, 6.5vw, 100px);
+  line-height: .93;
+  letter-spacing: -.012em;
+}
+.verifai-landing .vi-section-lead h2 span,
+.verifai-landing .vi-approach-intro h2 span,
+.verifai-landing .vi-consensus-intro h2 span {
+  display: inline-block;
+  color: #e8b78c;
+  font-family: var(--vi-face-script);
+  font-weight: 400;
+  font-size: .84em;
+  text-transform: none;
+  letter-spacing: -.04em;
+  line-height: 1.2;
+}
+.verifai-landing .vi-section-lead > p,
+.verifai-landing .vi-approach-intro > p,
+.verifai-landing .vi-consensus-intro > p:not(.vi-consensus-disclaimer) {
+  color: #bcb7b1;
+  font-family: var(--vi-face-body);
+  font-size: clamp(17px, 1.5vw, 19px);
+  line-height: 1.7;
+}
+
+/* Evidence record: editorial utility, readable rather than ornamental. */
+.verifai-landing .vi-claim-option { border-color: #39352f; }
+.verifai-landing .vi-claim-option::before { background: #e3b58c; }
+.verifai-landing .vi-claim-option:hover, .verifai-landing .vi-claim-option.is-selected { background: rgba(226,183,144,.08); }
+.verifai-landing .vi-option-index, .verifai-landing .vi-principle-index {
+  font-family: var(--vi-face-mark);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #c6a789;
+}
+.verifai-landing .vi-option-title { font-size: clamp(17px,1.6vw,22px); }
+.verifai-landing .vi-record {
+  background: #171715;
+  border: 1px solid #51443a;
+  border-radius: 3px;
+  box-shadow: none;
+}
+.verifai-landing .vi-record-top { color: #c2ad96; border-bottom-color: #4e443c; }
+.verifai-landing .vi-record-dot { border-radius: 0; transform: rotate(45deg); background: #e8b78c; }
+.verifai-landing .vi-record-caption, .verifai-landing .vi-record-result > span,
+.verifai-landing .vi-record-source span { color: #bcb0a5; }
+.verifai-landing .vi-record-claim {
+  font-family: var(--vi-face-body);
+  font-size: clamp(26px,2.6vw,40px);
+  line-height: 1.24;
+  font-weight: 600;
+  letter-spacing: -.045em;
+}
+.verifai-landing .vi-record-divider, .verifai-landing .vi-record-source { border-color: #4b4138; }
+.verifai-landing .vi-record-result strong { font-family: var(--vi-face-body); font-weight: 700; }
+.verifai-landing .vi-record-evidence { color: #e2dcd5; }
+
+/* Compare distinct answer streams without celebratory dashboard styling. */
+.verifai-landing .vi-consensus { background: #101110; border-color: #3a3430; }
+.verifai-landing .vi-consensus::before { opacity: .16; }
+.verifai-landing .vi-consensus-intro h2 { font-size: clamp(55px, 5.4vw, 84px); }
+.verifai-landing .vi-consensus-controls { background: #171615; border-color: #514238; border-radius: 2px; }
+.verifai-landing .vi-consensus-controls button { font-family: var(--vi-face-body); border-radius: 1px; }
+.verifai-landing .vi-consensus-controls button.is-selected { background: #e7bd98; color: #18130f; }
+.verifai-landing .vi-consensus-stage { border-color: #50453b; border-radius: 3px; background: #1b1a18; box-shadow: none; }
+.verifai-landing .vi-consensus-stage-head,
+.verifai-landing .vi-consensus-stage-foot,
+.verifai-landing .vi-consensus-pane-label { color: #b8a89b; border-color: #50453b; }
+.verifai-landing .vi-consensus-stage-head svg { color: #efc49b; }
+.verifai-landing .vi-consensus-response { background: #25221e; border-color: #53473b; border-radius: 2px; }
+.verifai-landing .vi-consensus-avatar {
+  font-family: var(--vi-face-mark);
+  font-size: 18px;
+  border-color: #936e56;
+  border-radius: 1px;
+  color: #edc29c;
+}
+.verifai-landing .vi-consensus-response p { font-family: var(--vi-face-body); font-size: 15px; }
+.verifai-landing .vi-consensus-verdict strong,
+.verifai-landing .vi-consensus-final strong { font-family: var(--vi-face-body); }
+.verifai-landing .vi-consensus-next,
+.verifai-landing .vi-consensus-reset { color: #f3c5a0; border-color: #d3a781; }
+.verifai-landing .vi-consensus-evidence-icon { border-color: #936e56; color: #efc39b; border-radius: 2px; }
+.verifai-landing .vi-consensus-stage-progress span { background: #e8b78c; }
+
+/* Principles read as an editorial index; the quote carries the decorative serif. */
+.verifai-landing .vi-approach { background: #0a0a09; border-top-color: #40362f; }
+.verifai-landing .vi-principles { border-top-color: #695446; }
+.verifai-landing .vi-principle { border-bottom-color: #463b32; }
+.verifai-landing .vi-principle-index { font-size: 32px; margin-top: 3px; }
+.verifai-landing .vi-principle h3 {
+  font-family: var(--vi-face-body);
+  font-weight: 600;
+  font-size: clamp(23px, 2.15vw, 32px);
+  letter-spacing: -.04em;
+}
+.verifai-landing .vi-principle p { color: #b8b2a9; }
+.verifai-landing .vi-principle svg { color: #dbb58e; }
+.verifai-landing .vi-approach-aside {
+  background: #1d1814;
+  border-color: #715641;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 9px #1d1814, inset 0 0 0 10px rgba(231,187,148,.16);
+}
+.verifai-landing .vi-aside-top { color: #e0c7ab; }
+.verifai-landing .vi-aside-top svg { color: #e7bc93; }
+.verifai-landing .vi-aside-quote {
+  font-family: var(--vi-face-script);
+  font-weight: 400;
+  font-size: clamp(40px, 3.7vw, 60px);
+  line-height: 1.2;
+  letter-spacing: -.045em;
+}
+.verifai-landing .vi-aside-quote em { color: #e5b48b; }
+.verifai-landing .vi-aside-foot { border-top-color: #66513f; }
+.verifai-landing .vi-aside-foot svg { color: #e7bd97; }
+
+/* Close with one clear action; typography is the artwork. */
+.verifai-landing .vi-footer { background: #1c1713; border-top-color: #8a6650; padding-block: clamp(95px, 12vw, 174px); }
+.verifai-landing .vi-footer h2 {
+  font-family: var(--vi-face-display);
+  text-transform: uppercase;
+  font-size: clamp(60px, 8.5vw, 130px);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  line-height: .9;
+  margin-bottom: 44px;
+}
+.verifai-landing .vi-footer-script {
+  display: inline-block;
+  font-family: var(--vi-face-script);
+  text-transform: none;
+  font-weight: 400;
+  color: #e7bd97;
+  font-size: .95em;
+  letter-spacing: -.04em;
+  line-height: 1.3;
+}
+
+@media (min-width: 1500px) {
+  .verifai-landing .vi-hero h1 { font-size: 155px; }
+}
+@media (max-width: 900px) {
+  .verifai-landing .vi-hero h1 { font-size: clamp(58px, 10vw, 110px); }
+  .verifai-landing .vi-section-lead h2,
+  .verifai-landing .vi-approach-intro h2 { font-size: clamp(58px, 9vw, 90px); }
+  .verifai-landing .vi-consensus-intro h2 { font-size: clamp(58px, 9vw, 90px); }
+}
+@media (max-width: 640px) {
+  .verifai-landing .vi-hero-frame { padding-inline: 0; border: 0; }
+  .verifai-landing .vi-hero h1 { font-size: clamp(47px, 12.15vw, 76px); letter-spacing: -.027em; }
+  .verifai-landing .vi-hero-handwritten { font-size: clamp(30px, 8vw, 46px); margin-top: 16px; }
+  .verifai-landing .vi-hero-copy > p { font-size: 16px; max-width: 410px; }
+  .verifai-landing .vi-kicker { font-size: 12px; letter-spacing: 0; }
+  .verifai-landing .vi-section-lead h2,
+  .verifai-landing .vi-approach-intro h2,
+  .verifai-landing .vi-consensus-intro h2 { font-size: clamp(47px, 11.4vw, 65px); line-height: .97; }
+  .verifai-landing .vi-section-lead h2 span,
+  .verifai-landing .vi-approach-intro h2 span,
+  .verifai-landing .vi-consensus-intro h2 span { font-size: .87em; }
+  .verifai-landing .vi-option-index { font-size: 18px; }
+  .verifai-landing .vi-principle-index { font-size: 21px; }
+  .verifai-landing .vi-approach-aside { padding: 26px; }
+  .verifai-landing .vi-aside-quote { font-size: 41px; }
+  .verifai-landing .vi-footer h2 { font-size: clamp(58px, 12vw, 84px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .verifai-landing .vi-button { transform: none !important; }
+}
+
+/* Keep the hero introduction below the fixed header on shorter viewports. */
+@media (min-width: 641px) {
+  .verifai-landing .vi-hero { min-height: 890px; height: max(100svh, 890px); }
+}
+@media (max-width: 640px) {
+  .verifai-landing .vi-hero { min-height: 790px; height: max(100svh, 790px); }
+}

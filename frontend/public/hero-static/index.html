@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" class="brands-fallback">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="../brand/owl-favicon.svg" />
+  <script>
+    if (new URLSearchParams(location.search).get("embedded") === "1")
+      document.documentElement.classList.add("hero-embedded");
+  </script>
+  <meta name="description" content="Compare AI answers, examine individual claims, and trace conclusions to evidence—with uncertainty made visible." />
+  <title>VerifAI — Evidence Before Confidence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://db.onlinewebfonts.com" crossorigin />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <!-- Font credit: BubbledotICG-FinePos via OnlineWebFonts, CC BY 4.0. https://www.onlinewebfonts.com/fonts -->
+  <link href="https://db.onlinewebfonts.com/c/8cb707a9b8a73f8a7403336b861c3074?family=BubbledotICG-FinePos" rel="stylesheet" media="print" onload="this.media='all'" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    rel="stylesheet" media="print" onload="this.media='all'"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <div class="page" id="home">
+    <div class="bg" aria-hidden="true">
+      <video class="bg-video" autoplay muted loop playsinline preload="metadata">
+        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <header class="header" aria-label="Site header">
+      <div class="header-inner">
+        <a href="/#top" target="_parent" class="logo" aria-label="VerifAI home">
+          <img src="../brand/owl-mark.svg" alt="" width="52" height="52" />
+        </a>
+        <nav class="nav-pill" aria-label="Primary navigation">
+          <a class="active" aria-current="page" href="/#top" target="_parent">Home</a>
+          <a href="/#difference" target="_parent">Difference</a>
+          <a href="/#benefits" target="_parent">Key Benefits</a>
+          <a href="/#consensus" target="_parent">Consensus</a>
+          <a href="/#approach" target="_parent">Approach</a>
+        </nav>
+        <a class="sign-in" href="/login" target="_parent">Sign in</a>
+      </div>
+      <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+
+    <main class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="trust anim" style="--d:0.05s">
+          <div class="trust-avatars" aria-hidden="true">
+            <span class="avatar a1" title="Supported"><span class="avatar-inner">✓</span></span>
+            <span class="avatar a2" title="Contradicted"><span class="avatar-inner">×</span></span>
+            <span class="avatar a3" title="Unresolved"><span class="avatar-inner">?</span></span>
+          </div>
+          <span class="trust-pill">Evidence before confidence</span>
+        </div>
+        <h1 class="headline" id="hero-title">
+          <span>Don't Just Trust.</span>
+          <span>Verify the Answer.</span>
+        </h1>
+        <p class="subhead anim" style="--d:0.28s">
+          Compare AI-generated answers, check individual claims against sources,
+          and see what is supported, contradicted, or still uncertain.
+        </p>
+        <a class="cta anim" style="--d:0.4s" href="/login" target="_parent">Start Verifying</a>
+      </div>
+    </main>
+
+    <footer class="stats" aria-label="VerifAI capabilities">
+      <div class="stat anim" style="--d:0.5s">
+        <span class="stat-symbol" aria-hidden="true">&lt;</span>
+        <strong class="stat-value" data-target="3" data-decimals="0" data-pad="2">03</strong>
+        <span class="stat-label">Verdict States</span>
+      </div>
+      <div class="stat anim" style="--d:0.58s">
+        <span class="stat-symbol" aria-hidden="true">%</span>
+        <strong class="stat-value" data-target="3" data-decimals="0" data-pad="2">03</strong>
+        <span class="stat-label">Evidence Review Steps</span>
+      </div>
+      <div class="stat anim" style="--d:0.66s">
+        <span class="stat-symbol" aria-hidden="true">*</span>
+        <strong class="stat-value">MULTI</strong>
+        <span class="stat-label">Model Comparison</span>
+      </div>
+      <div class="stat anim" style="--d:0.74s">
+        <span class="stat-symbol" aria-hidden="true">#</span>
+        <strong class="stat-value">TRACE</strong>
+        <span class="stat-label">Evidence Sources</span>
+      </div>
+    </footer>
+
+    <div class="menu-overlay" hidden></div>
+    <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation" hidden>
+      <a class="active" aria-current="page" style="--i:0" href="/#top" target="_parent">Home</a>
+      <a style="--i:1" href="/#difference" target="_parent">Difference</a>
+      <a style="--i:2" href="/#benefits" target="_parent">Key Benefits</a>
+      <a style="--i:3" href="/#consensus" target="_parent">Consensus</a>
+      <a style="--i:4" href="/#approach" target="_parent">Approach</a>
+      <a class="mobile-sign-in" style="--i:5" href="/login" target="_parent">Sign in</a>
+    </nav>
+  </div>
+</body>
+</html>

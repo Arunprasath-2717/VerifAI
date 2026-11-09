@@ -1,109 +1,348 @@
-import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
-import { Link } from 'react-router-dom';
-import { ArrowDown, ArrowRight, ArrowUpRight, Braces, Check, ChevronDown, CircleCheck, Fingerprint, GitBranch, Menu, ScanSearch, ShieldCheck, X } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import Lenis from 'lenis';
+import {
+  ArrowUpRight, Check, CheckCircle2, CircleHelp, SearchCheck, XCircle, Menu, X,
+} from 'lucide-react';
+import { BenefitsSection } from '../components/landing/BenefitsSection';
 import './LandingPage.css';
+import './LandingDisplay.css';
+import './LandingEditorial.css';
+import './LandingBenefits.css';
+import './LandingPalette.css';
+import './LandingClean.css';
+import './LandingReimagined.css';
+import './LandingStickyNav.css';
+import './LandingLight.css';
+import './LandingAfterDark.css';
+import './LandingMonochromeHero.css';
+import './LandingSectionFlow.css';
+import './LandingMidnight.css';
+import './LandingInk.css';
 
-type Props = { isAuthenticated: boolean };
-const ease = [0.22, 1, 0.36, 1] as const;
-const methods = [
- { icon: Braces, title:'Multiple perspectives', copy:'Compare AI responses side by side before settling on a direction.' },
- { icon: ScanSearch, title:'Claim-by-claim review', copy:'Investigate statements and examine the context supporting them.' },
- { icon: Fingerprint, title:'Evidence-aware synthesis', copy:'See agreement, disagreement, and uncertainty together.' },
-];
-const risks = [
- {title:'Convincing hallucinations',detail:'Fluent answers can still make unsupported claims.'},
- {title:'Conflicting model outputs',detail:'Different systems may offer incompatible conclusions.'},
- {title:'Missing source context',detail:'A confident summary can obscure where its evidence came from.'},
- {title:'Uncertain conclusions',detail:'The limits of a response deserve to remain visible.'},
-];
-const solutions = [
- {title:'Compare perspectives',detail:'Review different model responses in a single workspace.',href:'/chat',icon:GitBranch},
- {title:'Inspect the claim',detail:'Look for supporting or conflicting evidence before relying on an answer.',href:'/verify',icon:ScanSearch},
- {title:'Preserve uncertainty',detail:'Synthesize what models agree on, and make unresolved points apparent.',href:'/chat',icon:ShieldCheck},
-];
+interface LandingPageProps { isAuthenticated: boolean }
 
-function EnterLink({isAuthenticated,children,className=''}:{isAuthenticated:boolean;children:string;className?:string}){
- return <Link className={'rv-enter '+className} to={isAuthenticated?'/dashboard':'/login'}>{children}<ArrowUpRight size={15} aria-hidden="true"/></Link>
-}
-function Header({isAuthenticated}:{isAuthenticated:boolean}){
- const[open,setOpen]=useState(false);
- useEffect(()=>{if(!open)return;const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpen(false)};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[open]);
- return <header className="rv-header">
-   <a href="#top" className="rv-wordmark" aria-label="VerifAI home"><span className="rv-wordmark-glyph">V</span>VERIF<span>AI</span><b>®</b></a>
-   <nav className="rv-header-nav" aria-label="Main navigation">
-     <a href="#technology">Technology</a><a href="#challenges">Why VerifAI</a><a href="#solutions">Solutions</a>
-   </nav>
-   <div className="rv-header-right"><Link className="rv-header-signin" to={isAuthenticated?'/dashboard':'/login'}>{isAuthenticated?'Dashboard':'Log in'}</Link><EnterLink isAuthenticated={isAuthenticated}>Get started</EnterLink><button type="button" className="rv-menu-btn" aria-label={open?'Close menu':'Open menu'} aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X size={20}/>:<Menu size={20}/>}</button></div>
-   <AnimatePresence>{open&&<motion.nav className="rv-mobile-menu" aria-label="Mobile navigation" initial={{opacity:0,y:-12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-12}} transition={{duration:.24}}>{[['Technology','#technology'],['Why VerifAI','#challenges'],['Solutions','#solutions'],['Enter VerifAI',isAuthenticated?'/dashboard':'/login']].map(([label,path])=>path.startsWith('/')?<Link key={label} to={path} onClick={()=>setOpen(false)}>{label}<ArrowUpRight size={16}/></Link>:<a key={label} href={path} onClick={()=>setOpen(false)}>{label}<ArrowUpRight size={16}/></a>)}</motion.nav>}</AnimatePresence>
- </header>;
-}
-function EmeraldFilm({className=''}:{className?:string}){
- const reduced=useReducedMotion();const media=useRef<HTMLVideoElement>(null);
- useEffect(()=>{
-  if(reduced||!media.current)return;
-  const el=media.current;
-  const observer=new IntersectionObserver(([entry])=>{if(entry.isIntersecting){void el.play().catch(()=>{});}else{el.pause()}},{threshold:.04});
-  observer.observe(el);
-  return()=>observer.disconnect();
- },[reduced]);
- return <div className={'rv-emerald-film '+className} aria-hidden="true">
-  {!reduced && <video ref={media} autoPlay muted loop playsInline preload="metadata" poster="/reference-motion/emerald-poster.png"><source src="/reference-motion/emerald-ribbons.mp4" type="video/mp4"/></video>}
-  <div className="rv-emerald-fallback"/>
- </div>
-}
-function CoreChip(){
- const nodes=Array.from({length:28},(_,i)=>i);
- return <div className="rv-chip-perspective" aria-hidden="true"><motion.div className="rv-chip-shell" initial={{rotateX:38,rotateY:-27,scale:.78,opacity:0}} animate={{rotateX:[38,21,27,21],rotateY:[-27,14,-14,14],scale:1,opacity:1}} transition={{rotateX:{duration:14,repeat:Infinity,ease:'easeInOut'},rotateY:{duration:14,repeat:Infinity,ease:'easeInOut'},scale:{duration:1.25,ease},opacity:{duration:.9}}}>
- <div className="rv-chip-top"><div className="rv-chip-connections">{nodes.map(n=><i key={n}/>)}</div><div className="rv-chip-inner"><span>VERIF</span><strong>AI</strong><small>VERIFY / TRUST</small></div><div className="rv-chip-corners"><i/><i/><i/><i/></div></div>
- <div className="rv-chip-depth"/><div className="rv-chip-base"/>
- </motion.div></div>
-}
-function Hero({isAuthenticated}:{isAuthenticated:boolean}){
- const ref=useRef<HTMLElement>(null),reduce=useReducedMotion();
- const {scrollYProgress:p}=useScroll({target:ref,offset:['start start','end start']});
- const float=useTransform(p,[0,1],[0,-115]);const fade=useTransform(p,[0,.73,1],[1,1,0]);const chipY=useTransform(p,[0,1],[0,-205]);
- return <section className="rv-hero" ref={ref} id="top" aria-labelledby="rv-title"><EmeraldFilm className="rv-hero-background"/><div className="rv-hero-grid" aria-hidden="true"/>
-   <div className="rv-hero-content"><motion.div className="rv-chip-position" style={reduce?undefined:{y:chipY}}><CoreChip/></motion.div>
-     <motion.div className="rv-hero-copy" style={reduce?undefined:{y:float,opacity:fade}}>
-       <motion.h1 id="rv-title" initial={reduce?false:{y:32,opacity:0,filter:'blur(13px)'}} animate={{y:0,opacity:1,filter:'blur(0px)'}} transition={{duration:1.12,delay:.32,ease}}>Verify to <span>trust AI.</span></motion.h1>
-       <motion.p initial={reduce?false:{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:.63,duration:.76,ease}}>Compare model perspectives. Investigate claims.<br/>Make evidence part of every answer.</motion.p>
-       <motion.div className="rv-hero-cta" initial={reduce?false:{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{delay:.86,duration:.66}}><EnterLink isAuthenticated={isAuthenticated}>Enter VerifAI</EnterLink></motion.div>
-     </motion.div>
-     <div className="rv-hero-trust"><span>ONE QUESTION. MORE CLARITY.</span><div><span>COMPARE</span><i/><span>VERIFY</span><i/><span>SYNTHESIZE</span></div></div>
-   </div><a href="#technology" className="rv-scroll-cue">SCROLL TO EXPLORE<ArrowDown size={15}/></a>
- </section>
-}
-function Technology(){
- const ref=useRef<HTMLElement>(null),reduce=useReducedMotion();const {scrollYProgress:p}=useScroll({target:ref,offset:['start end','end start']});
- const x=useTransform(p,[0,1],[-50,50]);const reveal=useTransform(p,[0,.34,1],[.70,1,1]);
- return <section className="rv-tech" id="technology" ref={ref} aria-labelledby="rv-tech-title">
-   <div className="rv-tech-inner"><motion.div className="rv-tech-header" style={reduce?undefined:{scale:reveal}}><h2 id="rv-tech-title">Verification changes<br/><span>the answer.</span></h2><p>VerifAI brings the model, the claim, and the evidence into one continuous review.</p></motion.div>
-    <div className="rv-verify-track"><span className="rv-verify-spine" aria-hidden="true"/>{methods.map((entry,i)=>{const Icon=entry.icon;return <motion.article className="rv-verify-step" key={entry.title} initial={reduce?false:{y:40,opacity:0}} whileInView={{y:0,opacity:1}} viewport={{once:true,amount:.36}} transition={{delay:i*.14,duration:.74,ease}}><span className="rv-verify-node"><Icon size={32} strokeWidth={1.1}/></span><span className="rv-verify-no">0{i+1} / 03</span><h3>{entry.title}</h3><p>{entry.copy}</p></motion.article>})}</div>
-    <motion.p className="rv-tech-outro" style={reduce?undefined:{x}}>NOT ANOTHER ASSUMPTION. A REASON TO TRUST.</motion.p>
-   </div>
- </section>;
-}
-function Challenge(){
- const reduce=useReducedMotion();return <section className="rv-challenge" id="challenges" aria-labelledby="rv-challenge-title">
- <div className="rv-challenge-shell"><motion.div className="rv-challenge-heading" initial={reduce?false:{opacity:0,y:32}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.45}} transition={{duration:.78,ease}}><span className="rv-mini-pill">The challenge</span><h2 id="rv-challenge-title">More AI answers.<br/><em>More questions.</em></h2><p>Generative models can sound certain even when the evidence is incomplete. Better decisions require a way to examine what lies underneath.</p></motion.div>
- <div className="rv-challenge-grid"><div className="rv-challenge-art"><EmeraldFilm className="rv-challenge-media"/><span className="rv-challenge-art-title">What lies<br/><i>beneath?</i></span><div className="rv-challenge-orb" aria-hidden="true"/><span className="rv-challenge-art-meta">INSPECT THE SIGNAL / 001</span></div>
-  <div className="rv-challenge-detail"><div className="rv-challenge-detail-top"><h3>The hard part<br/>isn't the question.</h3><ScanSearch size={30} strokeWidth={1.25}/></div><div className="rv-risk-list">{risks.map((r,i)=><motion.div key={r.title} className="rv-risk-row" initial={reduce?false:{opacity:0,x:24}} whileInView={{opacity:1,x:0}} viewport={{once:true,amount:.55}} transition={{delay:i*.10,duration:.55,ease}}><span><ArrowRight size={15}/></span><div><strong>{r.title}</strong><small>{r.detail}</small></div></motion.div>)}</div><a href="#solutions" className="rv-risk-link">Explore the approach<ArrowUpRight size={16}/></a></div>
- </div></div></section>
-}
-function Solutions({isAuthenticated}:{isAuthenticated:boolean}){
- const[active,setActive]=useState(0);const reduce=useReducedMotion();
- return <section className="rv-solutions" id="solutions" aria-labelledby="rv-solutions-title"><div className="rv-solutions-intro"><span className="rv-mini-pill">A clearer way forward</span><h2 id="rv-solutions-title">Trust grows when<br/><em>evidence is visible.</em></h2></div>
- <motion.div className="rv-solutions-panel" initial={reduce?false:{clipPath:'inset(0 0 13% 0)',opacity:.7}} whileInView={{clipPath:'inset(0 0 0% 0)',opacity:1}} viewport={{once:true,amount:.13}} transition={{duration:1.05,ease}}>
-   <div className="rv-solutions-illustration" aria-hidden="true"><span>VERIFIABLE.</span><div className="rv-orbit-dots"><i/><i/><i/><i/><i/></div></div>
-   <div className="rv-solution-list">{solutions.map((s,i)=>{const Icon=s.icon;return <Button variant="ghost" type="button" key={s.title} className={'rv-solution-button'+(active===i?' active':'')} onClick={()=>setActive(i)} aria-pressed={active===i}><span className="rv-solution-number"><Icon size={19} strokeWidth={1.5}/></span><span className="rv-solution-text"><strong>{s.title}</strong><AnimatePresence mode="wait">{active===i&&<motion.small key={s.detail} initial={reduce?false:{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={reduce?undefined:{opacity:0,height:0}} transition={{duration:.28}}>{s.detail}</motion.small>}</AnimatePresence></span><ChevronDown className="rv-solution-chevron" size={17}/></Button>})}<EnterLink isAuthenticated={isAuthenticated}>Explore the workspace</EnterLink></div>
- </motion.div></section>
-}
-function Footer({isAuthenticated}:{isAuthenticated:boolean}){return <footer className="rv-footer"><div className="rv-footer-main"><div className="rv-footer-logo">VERIF<span>AI.</span><p>AI hallucinates. We investigate.</p></div><div className="rv-footer-links"><Link to={isAuthenticated?'/dashboard':'/login'}>Launch app<ArrowUpRight size={14}/></Link><a href="https://github.com/Arunprasath-2717/VerifAI" target="_blank" rel="noopener noreferrer">GitHub<ArrowUpRight size={14}/></a><Link to="/privacy">Privacy<ArrowUpRight size={14}/></Link><Link to="/terms">Terms<ArrowUpRight size={14}/></Link></div></div><div className="rv-footer-bottom"><span>© {new Date().getFullYear()} VerifAI. All rights reserved.</span><a href="#top">Back to the beginning ↑</a></div></footer>}
-export function LandingPage({isAuthenticated}:Props){
+const cases = [
+  {
+    label: 'A familiar myth', domain: 'Observation',
+    claim: 'The Great Wall of China is visible from the Moon with the naked eye.',
+    verdict: 'Contradicted', kind: 'contradicted',
+    note: 'Its narrow width and low contrast make the wall impossible to distinguish with the unaided eye from lunar distance.',
+    insight: 'A statement can be familiar without being factual.', icon: XCircle,
+  },
+  {
+    label: 'An established fact', domain: 'Astronomy',
+    claim: 'Earth completes an orbit around the Sun in approximately one year.',
+    verdict: 'Supported', kind: 'supported',
+    note: 'Independent astronomical observations establish Earth’s orbital period at roughly one year.',
+    insight: 'Strong conclusions follow repeated, independent observations.', icon: CheckCircle2,
+  },
+  {
+    label: 'An absolute prediction', domain: 'AI systems',
+    claim: 'Future AI models will never make a factual error.',
+    verdict: 'Unresolved', kind: 'unresolved',
+    note: 'An absolute statement about unknown future systems cannot be established by evidence available today.',
+    insight: '“Not established” is often the most useful answer.', icon: CircleHelp,
+  },
+] as const;
+
+const principles = [
+  { title: 'Isolate the claim.', detail: 'Pull apart a polished answer until each factual assertion can stand on its own.' },
+  { title: 'Trace the evidence.', detail: 'Follow the reasoning back to independent material that actually addresses the claim.' },
+  { title: 'Keep uncertainty visible.', detail: 'Show what is supported, contradicted, or still impossible to conclude.' },
+] as const;
+
+const voices = [
+  { letter: 'A', line: 'Lightning never strikes the same place twice.' },
+  { letter: 'B', line: 'A location cannot receive a second lightning strike.' },
+  { letter: 'C', line: 'Lightning always chooses a different point.' },
+] as const;
+
+function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
+  const [scrolled, setScrolled] = useState(false);
+  const [active, setActive] = useState('#top');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const launch = isAuthenticated ? '/dashboard' : '/login';
+  const items = [
+    { text: 'Home', href: '#top' },
+    { text: 'Difference', href: '#difference' },
+    { text: 'Key Benefits', href: '#benefits' },
+    { text: 'Consensus', href: '#consensus' },
+    { text: 'Approach', href: '#approach' },
+  ];
   useEffect(() => {
-    document.documentElement.removeAttribute('data-landing-prepaint');
+    const update = () => {
+      setScrolled(window.scrollY > 38);
+      let current = '#top';
+      for (const id of ['#difference', '#benefits', '#consensus', '#approach', '#footer']) {
+        const el = document.querySelector(id);
+        if (el && el.getBoundingClientRect().top < window.innerHeight * .42) current = id;
+      }
+      setActive(current === '#footer' ? '#approach' : current);
+    };
+    const dismiss = (event: KeyboardEvent) => { if (event.key === 'Escape') setMobileOpen(false); };
+    const resize = () => { if (window.innerWidth > 720) setMobileOpen(false); };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('keydown', dismiss);
+    window.addEventListener('resize', resize, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('keydown', dismiss);
+      window.removeEventListener('resize', resize);
+    };
   }, []);
-  return <div className="rv-site"><a href="#top" className="rv-skip">Skip to content</a><Header isAuthenticated={isAuthenticated}/><main><Hero isAuthenticated={isAuthenticated}/><Technology/><Challenge/><Solutions isAuthenticated={isAuthenticated}/></main><Footer isAuthenticated={isAuthenticated}/></div>;
+  return (
+    <header className={'vrs-nav' + (scrolled ? ' vrs-nav--scrolled' : '') + (mobileOpen ? ' vrs-nav--open' : '')}>
+      <div className="vrs-nav__inner">
+        <a className="vrs-nav__logo" href="#top" aria-label="VerifAI home" onClick={() => setMobileOpen(false)}>
+          <img src="/brand/owl-mark.svg" width="52" height="52" alt=""/>
+        </a>
+        <nav className="vrs-nav__links" aria-label="Primary navigation">
+          {items.map(item => <a href={item.href} className={active === item.href ? 'active' : ''} aria-current={active === item.href ? 'page' : undefined} key={item.href}>{item.text}</a>)}
+        </nav>
+        <a className="vrs-nav__sign-in" href={launch}>{isAuthenticated ? 'Workspace' : 'Sign in'}</a>
+        <button className="vrs-nav__burger" type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="vrs-mobile-navigation" onClick={() => setMobileOpen(open => !open)}>
+          {mobileOpen ? <X size={21} strokeWidth={1.8}/> : <Menu size={21} strokeWidth={1.8}/>}
+        </button>
+      </div>
+      {mobileOpen && <>
+        <button aria-label="Close navigation" type="button" className="vrs-nav__scrim" onClick={() => setMobileOpen(false)}/>
+        <nav id="vrs-mobile-navigation" className="vrs-nav__mobile" aria-label="Mobile navigation">
+          {items.map(item => <a href={item.href} key={item.href} onClick={() => setMobileOpen(false)}>{item.text}<ArrowUpRight size={17}/></a>)}
+          <a href={launch} onClick={() => setMobileOpen(false)} className="vrs-nav__mobile-action">{isAuthenticated ? 'Workspace' : 'Sign in'}<ArrowUpRight size={17}/></a>
+        </nav>
+      </>}
+    </header>
+  );
+}
+
+/** The hero is a complete framework-free HTML/CSS/JS document.
+ * Its links open the parent app; the rest of VerifAI remains React. */
+function Hero() {
+  return (
+    <section className="vr-hero-static" id="top" aria-label="VerifAI — Evidence Before Confidence">
+      <iframe
+        className="vr-hero-static__frame"
+        title="VerifAI — Evidence Before Confidence"
+        src="/hero-static/index.html?embedded=1"
+        loading="eager"
+        allow="autoplay"
+      />
+    </section>
+  );
+}
+
+function Difference() {
+  const [index, setIndex] = useState(0);
+  const reduced = useReducedMotion();
+  const item = cases[index];
+  const VerdictIcon = item.icon;
+  return (
+    <section className="vr-difference vr-section" id="difference" aria-labelledby="vr-difference-heading">
+      <div className="vr-container">
+        <div className="vr-section__heading vr-difference__heading">
+          <motion.div initial={reduced ? false : { opacity: 0, y: 35 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .22 }} transition={{ duration: .8 }}>
+            <h2 id="vr-difference-heading">A claim is not <em>a conclusion.</em></h2>
+          </motion.div>
+          <p>Look beyond how an answer sounds. The difference is knowing what can actually be demonstrated.</p>
+        </div>
+        <div className="vr-forensic" onPointerMove={event => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          event.currentTarget.style.setProperty('--pointer-x', `${event.clientX - rect.left}px`);
+          event.currentTarget.style.setProperty('--pointer-y', `${event.clientY - rect.top}px`);
+        }}>
+          <div className="vr-forensic__index" role="group" aria-label="Choose an example claim">
+            {cases.map((choice, i) => <button key={choice.label} type="button" aria-pressed={i === index} className={i === index ? 'selected' : ''} onClick={() => setIndex(i)}>
+              <span>{choice.label}</span><ArrowUpRight size={19}/>
+            </button>)}
+          </div>
+          <div className="vr-forensic__reading">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={index} initial={reduced ? false : { opacity: 0, y: 23, filter: 'blur(5px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={reduced ? undefined : { opacity: 0, y: -17 }} transition={{ duration: .3 }}>
+                <blockquote>“{item.claim}”</blockquote>
+                <div className="vr-forensic__verdict" role="status"><VerdictIcon size={26} strokeWidth={1.5}/><strong>{item.verdict}</strong></div>
+                <p>{item.note}</p>
+                <p className="vr-forensic__insight">{item.insight}</p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+        <p className="vr-disclaimer">Illustrative examples, not live verification results.</p>
+      </div>
+    </section>
+  );
+}
+
+function Consensus() {
+  const [showEvidence, setShowEvidence] = useState(false);
+  const reduced = useReducedMotion();
+  return (
+    <section className="vr-consensus vr-section" id="consensus" aria-labelledby="vr-consensus-heading">
+      <div className="vr-container">
+        <div className="vr-section__heading vr-consensus__heading">
+          <motion.h2 id="vr-consensus-heading" initial={reduced ? false : { opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .75 }}>
+            AGREEMENT <em>ISN'T PROOF.</em>
+          </motion.h2>
+          <p>Three models can repeat the same mistake. An independent source matters more than an agreement count.</p>
+        </div>
+        <div className="vr-consensus__lines" aria-label="Three hypothetical model answers">
+          {voices.map((voice, i) => <motion.div key={voice.letter} className="vr-consensus__voice" initial={reduced ? false : { opacity: 0, x: i % 2 ? 24 : -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .63, delay: i * .08 }}>
+            <span>MODEL {voice.letter}</span>
+            <blockquote>“{voice.line}”</blockquote>
+            <Check size={22} strokeWidth={1.4} aria-label="Agrees with the other examples" />
+          </motion.div>)}
+        </div>
+        <div className="vr-consensus__decision">
+          <div><strong>3 / 3 agree.</strong><p>That doesn't make it true.</p></div>
+          <button type="button" className="vr-button vr-button--outline" aria-expanded={showEvidence} aria-controls="vr-consensus-evidence" onClick={() => setShowEvidence(value => !value)}>
+            {showEvidence ? 'Hide evidence' : 'Reveal the evidence'} <ArrowUpRight size={18}/>
+          </button>
+        </div>
+        <AnimatePresence initial={false}>
+          {showEvidence && <motion.div id="vr-consensus-evidence" className="vr-consensus__evidence" role="region" aria-label="Evidence explanation"
+            initial={reduced ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={reduced ? undefined : { opacity: 0, height: 0 }} transition={{ duration: .45 }}>
+            <div className="vr-consensus__evidence-inner"><XCircle size={32} strokeWidth={1.5}/><div><strong>The shared claim is false.</strong><p>Lightning can strike the same place many times. The three responses above are deliberately hypothetical and wrong.</p></div></div>
+          </motion.div>}
+        </AnimatePresence>
+        <p className="vr-disclaimer">A demonstration using hypothetical responses—not output from live models.</p>
+      </div>
+    </section>
+  );
+}
+
+function Approach() {
+  const reduced = useReducedMotion();
+  return <section className="vr-approach vr-section" id="approach" aria-labelledby="vr-approach-heading">
+    <div className="vr-container">
+      <div className="vr-section__heading vr-approach__heading">
+        <h2 id="vr-approach-heading">A BETTER <em>WAY TO KNOW.</em></h2>
+        <p>The best answer should show how it reached its conclusion.</p>
+      </div>
+      <div className="vr-approach__layout">
+        <div className="vr-approach__steps">
+          {principles.map((item, i) => <motion.article key={item.title} initial={reduced ? false : { opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .25 }} transition={{ duration: .6, delay: i * .09 }}>
+            <span aria-hidden="true">0{i + 1}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><ArrowUpRight size={22} strokeWidth={1.4} aria-hidden="true"/>
+          </motion.article>)}
+        </div>
+        <motion.aside className="vr-approach__statement" initial={reduced ? false : { opacity: 0, x: 28 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: .2 }} transition={{ duration: .7 }}>
+          <SearchCheck size={41} strokeWidth={1.2} aria-hidden="true" />
+          <p>Trust is not the absence of questions. <em>It's knowing where to look.</em></p>
+          <span className="vr-approach__rule" aria-hidden="true"/>
+        </motion.aside>
+      </div>
+    </div>
+  </section>;
+}
+
+function Footer({ isAuthenticated }: LandingPageProps) {
+  const launchPath = isAuthenticated ? '/dashboard' : '/login';
+  return (
+    <footer className="vr-finale" id="footer" aria-label="VerifAI footer">
+      <div className="vr-finale__atmosphere" aria-hidden="true" />
+      <div className="vr-finale__grain" aria-hidden="true" />
+
+      <div className="vr-finale__inner">
+        <div className="vr-finale__lead">
+          <div className="vr-finale__lead-title">
+            <p className="vr-finale__overline">
+              <span className="vr-finale__light" aria-hidden="true" />
+              FROM QUESTION TO CLARITY
+            </p>
+            <h2>Know more.<br/><em>Assume less.</em></h2>
+          </div>
+          <div className="vr-finale__lead-action">
+            <p>Don't stop at a convincing answer. Find the claim, follow the evidence, and know what remains uncertain.</p>
+            <a className="vr-finale__cta" href={launchPath}>
+              <span>{isAuthenticated ? 'Open your workspace' : 'Start verifying'}</span>
+              <ArrowUpRight size={21} strokeWidth={1.8} aria-hidden="true"/>
+            </a>
+          </div>
+        </div>
+
+        <div className="vr-finale__directory">
+          <div className="vr-finale__identity">
+            <a className="vr-finale__logo" href="#top" aria-label="VerifAI home">
+              <span className="vr-finale__logo-mark"><img src="/brand/owl-mark.svg" width="33" height="33" alt=""/></span>
+              <span>Verif<span>AI</span></span>
+            </a>
+            <p>Independent thinking deserves<br/>visible evidence.</p>
+          </div>
+
+          <nav className="vr-finale__column" aria-label="Explore the website">
+            <h3>Explore</h3>
+            <a href="#difference">The Difference</a>
+            <a href="#benefits">Key Benefits</a>
+            <a href="#consensus">Why Consensus Matters</a>
+            <a href="#approach">Our Approach</a>
+          </nav>
+          <nav className="vr-finale__column" aria-label="Platform">
+            <h3>Platform</h3>
+            <a href={launchPath}>{isAuthenticated ? 'Workspace' : 'Get Started'}</a>
+            {!isAuthenticated && <a href="/login">Sign in</a>}
+            <a href="#difference">Claim verification</a>
+            <a href="#consensus">Model comparison</a>
+          </nav>
+          <nav className="vr-finale__column" aria-label="Information">
+            <h3>Information</h3>
+            <a href="#approach">How it works</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms of use</a>
+            <a href="#top">Back to top</a>
+          </nav>
+        </div>
+
+        <div className="vr-finale__signature" aria-label="VerifAI">
+          VERIF<span>AI</span>
+        </div>
+
+        <div className="vr-finale__closing">
+          <span>© {new Date().getFullYear()} VerifAI. All rights reserved.</span>
+          <span className="vr-finale__motto"><span aria-hidden="true" /> Evidence before confidence.</span>
+          <a href="#top">Return to top <ArrowUpRight size={16} aria-hidden="true"/></a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+export function LandingPage({ isAuthenticated }: LandingPageProps) {
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    const title = document.title;
+    document.title = 'VerifAI — Evidence Before Confidence';
+    return () => { document.title = title; };
+  }, []);
+  useEffect(() => {
+    if (reduced) return;
+    const lenis = new Lenis({
+      autoRaf: true, smoothWheel: true,
+      duration: 1.18, anchors: { offset: -92 },
+      easing: t => 1 - Math.pow(1 - t, 4),
+    });
+    const relay = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== document.querySelector<HTMLIFrameElement>('.vr-hero-static__frame')?.contentWindow) return;
+      if (event.data?.type !== 'verifai:hero-scroll') return;
+      const delta = Number(event.data.delta);
+      if (!Number.isFinite(delta) || !delta) return;
+      const bounded = Math.max(-400, Math.min(400, delta));
+      lenis.scrollTo(lenis.targetScroll + bounded, { duration: 1.08 });
+    };
+    window.addEventListener('message', relay);
+    return () => { window.removeEventListener('message', relay); lenis.destroy(); };
+  }, [reduced]);
+  return (
+    <div className="verifai-landing vr-root">
+      <StickyLandingNav isAuthenticated={isAuthenticated}/>
+      <main>
+        <Hero />
+        <Difference />
+        <BenefitsSection />
+        <Consensus />
+        <Approach />
+      </main>
+      <Footer isAuthenticated={isAuthenticated} />
+    </div>
+  );
 }

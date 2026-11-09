@@ -1,0 +1,219 @@
+/*
+ * VerifAI public landing colour system — emerald / moss / jet black.
+ * Brand colours:
+ * Jet Black      #000000
+ * Muted Moss     #6D8F63
+ * Neon Emerald   #39FF88
+ * Neutrals exist only to maintain readable text and dark surface depth.
+ * Imported last; isolated from login, dashboard and backend UI.
+ */
+.verifai-landing {
+  --vi-canvas: #000000;
+  --vi-accent: #39FF88;
+  --vi-ink: #f0f7f1;
+  --vi-muted: #a8b6a9;
+  --vi-line: rgba(109,143,99,.31);
+  --vi-moss: #6D8F63;
+  --vi-emerald: #39FF88;
+  --vi-green-dim: #a7c69f;
+  --vi-surface: #0a110c;
+  --vi-surface-raised: #101a13;
+  --vi-stroke: rgba(109,143,99,.43);
+  color: var(--vi-ink);
+  background: #000000;
+}
+.verifai-landing ::selection { background:#39FF88; color:#000; }
+.verifai-landing :focus-visible { outline:2px solid #39FF88; outline-offset:4px; }
+.verifai-landing .vi-kicker,
+.verifai-landing .vi-eyebrow { color:#39FF88; }
+.verifai-landing .vi-button-light,
+.verifai-landing .vi-nav-cta {
+  background:#39FF88; border-color:#39FF88; color:#000000;
+  box-shadow:none;
+}
+.verifai-landing .vi-button-light:hover,
+.verifai-landing .vi-nav-cta:hover {
+  background:#6D8F63; border-color:#6D8F63; color:#000000;
+}
+.verifai-landing .vi-text-link { border-color:#6D8F63; color:#e7f3e9; }
+.verifai-landing .vi-text-link:hover { border-color:#39FF88; color:#39FF88; }
+
+/* Header and hero: deep black, green editorial highlights. */
+.verifai-landing .vi-nav { background:rgba(0,0,0,.55); border-bottom-color:rgba(109,143,99,.35); }
+.verifai-landing .vi-nav.is-scrolled { background:rgba(0,0,0,.96); border-bottom-color:#6D8F63; }
+.verifai-landing .vi-wordmark svg,
+.verifai-landing .vi-wordmark-accent { color:#39FF88; }
+.verifai-landing .vi-nav-links a,
+.verifai-landing .vi-nav-signin { color:#d7e3d8; }
+.verifai-landing .vi-nav-links a:hover,
+.verifai-landing .vi-nav-signin:hover { color:#39FF88; }
+.verifai-landing .vi-nav-menu { background:#0c180f; border-color:#6D8F63; }
+.verifai-landing .vi-nav-mobile { background:#000; }
+.verifai-landing .vi-nav-mobile a { border-bottom-color:#304a34; color:#dce9dd; }
+.verifai-landing .vi-nav-mobile a.vi-nav-mobile-launch { color:#39FF88; }
+.verifai-landing .vi-hero { background:#000; }
+.verifai-landing .vi-hero-scrim {
+  background:linear-gradient(90deg,rgba(0,0,0,.96) 0%,rgba(0,0,0,.78) 40%,rgba(0,0,0,.32) 100%),
+    linear-gradient(0deg,#000 0%,transparent 37%,rgba(0,0,0,.3) 100%);
+}
+.verifai-landing .vi-hero-frame { border-inline-color:rgba(109,143,99,.2); }
+.verifai-landing .vi-eyebrow { color:#a9d8b0; }
+.verifai-landing .vi-eyebrow-mark { background:#39FF88; }
+.verifai-landing .vi-display-word:last-child { color:#f4f8f4; }
+.verifai-landing .vi-hero-handwritten { color:#39FF88; }
+.verifai-landing .vi-hero-copy > p { color:#c9d6cb; }
+.verifai-landing .vi-hero-bottom { border-top-color:#6D8F63; color:#abc2ae; }
+.verifai-landing .vi-scroll-line { background:#39FF88; }
+
+/* The Difference: a black and moss forensic dossier, not beige paper. */
+.verifai-landing .vi-exhibit {
+  background:#000000; color:#eaf4ec; border-top:1px solid #6D8F63;
+}
+.verifai-landing .vi-exhibit .vi-kicker { color:#39FF88; }
+.verifai-landing .vi-exhibit-intro h2 em { color:#39FF88; }
+.verifai-landing .vi-exhibit-rule { background:#39FF88; }
+.verifai-landing .vi-exhibit-dek p { color:#c3d4c5; }
+.verifai-landing .vi-exhibit-dek > span:last-child { color:#91cba1; }
+.verifai-landing .vi-exhibit-paper { border-color:#6D8F63; }
+.verifai-landing .vi-exhibit-sheet { background:#101a13; color:#f1f7f1; }
+.verifai-landing .vi-exhibit-sheet::after { border-color:rgba(109,143,99,.3); }
+.verifai-landing .vi-exhibit-meta { color:#91bf91; }
+.verifai-landing .vi-exhibit-statement > span { color:#a7bca9; }
+.verifai-landing .vi-exhibit-statement blockquote { color:#f4f8f4; }
+.verifai-landing .vi-exhibit-annotation { color:#9eb1a0; }
+.verifai-landing .vi-exhibit-analysis { background:#080f0a; color:#eef7f0; }
+.verifai-landing .vi-exhibit-analysis-head { border-color:#35583b; color:#a9caac; }
+.verifai-landing .vi-exhibit-analysis-eyebrow { color:#93bd99; }
+.verifai-landing .vi-exhibit-verdict { color:#39FF88; }
+.verifai-landing .vi-exhibit-verdict.is-supported { color:#39FF88; }
+.verifai-landing .vi-exhibit-verdict.is-unknown { color:#b4d6a9; }
+.verifai-landing .vi-exhibit-analysis-body > p { color:#cdddcf; }
+.verifai-landing .vi-exhibit-source,
+.verifai-landing .vi-exhibit-takeaway { border-color:#35583b; }
+.verifai-landing .vi-exhibit-source span,
+.verifai-landing .vi-exhibit-takeaway > span { color:#91bf91; }
+.verifai-landing .vi-exhibit-source strong { color:#e9f4ea; }
+.verifai-landing .vi-exhibit-takeaway p { color:#b5cdb9; }
+.verifai-landing .vi-exhibit-index { border-color:#42664a; }
+.verifai-landing .vi-exhibit-index-item { color:#edf6ee; border-color:#35583b; }
+.verifai-landing .vi-exhibit-index-item:hover,
+.verifai-landing .vi-exhibit-index-item.is-active { background:#1a3120; }
+.verifai-landing .vi-exhibit-index-count,
+.verifai-landing .vi-exhibit-index-item svg { color:#39FF88; }
+.verifai-landing .vi-exhibit-index-copy small { color:#aac5af; }
+
+/* Key Benefits: retain three equal cards and video; change only colour system. */
+.verifai-landing #benefits.vi-benefits {
+  background:#000000; border-color:#6D8F63; color:#ecf6ed;
+}
+.verifai-landing #benefits.vi-benefits h2 { color:#f1f8f2; }
+.verifai-landing #benefits.vi-benefits h2 em { color:#39FF88; }
+.verifai-landing #benefits.vi-benefits .vi-benefits-intro {
+  border-color:#6D8F63; color:#bbd1bf;
+}
+.verifai-landing .vi-benefits-head { border-color:#436a49; }
+.verifai-landing .vi-benefit-card {
+  background:#0b120d; border-color:#496e4e; color:#edf6ed;
+}
+.verifai-landing .vi-benefit-card-left::before,
+.verifai-landing .vi-benefit-card-right::before { background:#6D8F63; opacity:.17; }
+.verifai-landing .vi-benefit-topline,
+.verifai-landing .vi-benefit-bottomline,
+.verifai-landing .vi-benefit-video-kicker { color:#39FF88; }
+.verifai-landing #benefits.vi-benefits .vi-benefit-card h3 { color:#f0f8f1; }
+.verifai-landing #benefits.vi-benefits .vi-benefit-card p { color:#b9cdbb; }
+.verifai-landing .vi-benefit-panel { background:#121e15; border-color:#4e7455; }
+.verifai-landing .vi-benefit-panel-label { color:#a2c5a5; }
+.verifai-landing .vi-benefit-panel-lines span { background:#42684a; }
+.verifai-landing .vi-benefit-panel-lines span:nth-child(3) { background:#39FF88; }
+.verifai-landing .vi-benefit-panel strong { color:#daf6df; }
+.verifai-landing .vi-benefit-card-center,
+.verifai-landing .vi-benefit-video-wrap { background:#000; }
+/* Keep the orb footage in its original blue/violet/amber colours. */
+.verifai-landing #benefits .vi-benefit-video {
+  filter:none;
+  mix-blend-mode:normal;
+}
+.verifai-landing .vi-benefit-video-fade {
+  background:linear-gradient(to bottom,transparent,#000000);
+}
+.verifai-landing .vi-benefit-center-note,
+.verifai-landing .vi-benefit-outcomes,
+.verifai-landing .vi-benefit-outcomes > div,
+.verifai-landing .vi-benefit-bottomline { border-color:#3b5f42; }
+.verifai-landing .vi-benefit-center-note span,
+.verifai-landing .vi-benefit-outcomes svg { color:#39FF88; }
+.verifai-landing .vi-benefit-center-note small,
+.verifai-landing .vi-benefit-outcomes small { color:#a1bda5; }
+.verifai-landing .vi-benefit-outcomes span { color:#e5f3e7; }
+
+/* Consensus: dark comparison board, moss rails and emerald evidence reveal. */
+.verifai-landing .vi-chorus { background:#030804; color:#f0f7f1; }
+.verifai-landing .vi-chorus-heading h2 em { color:#39FF88; }
+.verifai-landing .vi-chorus-context > span,
+.verifai-landing .vi-chorus-statement > div span { color:#8cc598; }
+.verifai-landing .vi-chorus-context p,
+.verifai-landing .vi-chorus-statement p { color:#b5cbb9; }
+.verifai-landing .vi-chorus-board,
+.verifai-landing .vi-chorus-voices,
+.verifai-landing .vi-chorus-voice,
+.verifai-landing .vi-chorus-voice-bottom,
+.verifai-landing .vi-chorus-footnote { border-color:#44674a; }
+.verifai-landing .vi-chorus-topline,
+.verifai-landing .vi-chorus-footnote { color:#9fbaa3; }
+.verifai-landing .vi-chorus-voice { background:#101b12; }
+.verifai-landing .vi-chorus-voice:nth-child(2) { background:#0b150e; }
+.verifai-landing .vi-chorus-voice-top,
+.verifai-landing .vi-chorus-voice-bottom { color:#9dc9a3; }
+.verifai-landing .vi-chorus-voice-top strong,
+.verifai-landing .vi-chorus-statement strong { color:#39FF88; }
+.verifai-landing .vi-chorus-point,
+.verifai-landing .vi-chorus-connector i,
+.verifai-landing .vi-chorus-connector span { background:#6D8F63; }
+.verifai-landing .vi-chorus-action {
+  background:#39FF88; border-color:#39FF88; color:#000000;
+}
+.verifai-landing .vi-chorus-action:hover { background:#6D8F63; border-color:#6D8F63; }
+.verifai-landing .vi-chorus-reveal-inner { background:#162b1b; color:#ecf8ed; border-top:1px solid #6D8F63; }
+.verifai-landing .vi-chorus-reveal-mark,
+.verifai-landing .vi-chorus-reveal-head em,
+.verifai-landing .vi-chorus-reveal-text span { color:#39FF88; }
+.verifai-landing .vi-chorus-reveal-text p { color:#d6ead9; }
+
+/* Approach: moss-tinted editorial index, no brown quotation card. */
+.verifai-landing .vi-approach { background:#000; border-top-color:#426d4c; }
+.verifai-landing .vi-approach-intro h2 span { color:#39FF88; }
+.verifai-landing .vi-approach-intro > p,
+.verifai-landing .vi-principle p { color:#b1c7b5; }
+.verifai-landing .vi-principles,
+.verifai-landing .vi-principle { border-color:#416547; }
+.verifai-landing .vi-principle-index,
+.verifai-landing .vi-principle svg { color:#6D8F63; }
+.verifai-landing .vi-approach-aside {
+  background:#0e1910; border-color:#6D8F63;
+  box-shadow:inset 0 0 0 9px #0e1910,inset 0 0 0 10px rgba(109,143,99,.25);
+}
+.verifai-landing .vi-aside-top { color:#aaccae; }
+.verifai-landing .vi-aside-top svg,
+.verifai-landing .vi-aside-quote em,
+.verifai-landing .vi-aside-foot svg { color:#39FF88; }
+.verifai-landing .vi-aside-foot { border-color:#46634a; }
+
+/* Footer: productive navigation in black, emerald finish. */
+.verifai-landing .vi-footer,
+.verifai-landing .vi-footer-expanded {
+  background:#000; color:#f0f7f1; border-top-color:#6D8F63;
+}
+.verifai-landing .vi-footer-script { color:#39FF88; }
+.verifai-landing .vi-footer-side,
+.verifai-landing .vi-footer-bottom { border-color:#436947; }
+.verifai-landing .vi-footer-side-intro > span,
+.verifai-landing .vi-footer-links h3,
+.verifai-landing .vi-footer-brand { color:#39FF88; }
+.verifai-landing .vi-footer-side-intro p { color:#d9eede; }
+.verifai-landing .vi-footer-invite > p,
+.verifai-landing .vi-footer-links a { color:#bcd0bf; }
+.verifai-landing .vi-footer-links a:hover,
+.verifai-landing .vi-footer-to-top:hover { color:#39FF88; }
+.verifai-landing .vi-footer-bottom { color:#a2b8a5; }
+.verifai-landing .vi-footer-to-top { color:#d0e9d3; }

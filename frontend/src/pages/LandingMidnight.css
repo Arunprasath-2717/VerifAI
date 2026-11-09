@@ -1,0 +1,259 @@
+/*
+ * VerifAI — Midnight Navy.
+ * Calm charcoal + ink-blue atmospheric surfaces, without section separators.
+ * All decoration is CSS-only; no extra network requests or canvas animation.
+ * Loaded LAST so older forest / cream styles cannot bleed through.
+ */
+.verifai-landing.vr-root {
+  --vr-black:#0A0E16;
+  --vr-green:#AEC9F3;
+  --vr-moss:#839EC8;
+  --vr-white:#F5F7FC;
+  --vr-mute:#B2C2D9;
+  --vr-hairline:rgba(158,185,227,.22);
+  --vr-flow-base:#0B1220;
+  color:#F1F5FE;
+  background:#0B1220;
+}
+.verifai-landing.vr-root main {background:#0B1220;}
+.verifai-landing.vr-root ::selection {background:#A5C8FA;color:#091322;}
+.verifai-landing.vr-root :focus-visible {outline-color:#9AC5FF;}
+
+/* All sections enter and exit through the same ink-dark perimeter.
+   Their centre lighting changes to give a sense of progression, not panels. */
+.verifai-landing.vr-root .vr-difference {
+  border:0;
+  background:
+    radial-gradient(ellipse 64% 50% at 96% 51%,rgba(42,81,148,.25),transparent 77%),
+    radial-gradient(ellipse 41% 34% at 5% 49%,rgba(63,89,153,.12),transparent 83%),
+    radial-gradient(circle at 1px 1px,rgba(158,190,240,.08) 1px,transparent 1.9px) 0 0/49px 49px,
+    linear-gradient(180deg,#070C15 0%,#0B1322 14%,#101B30 43%,#101B30 65%,#0B1220 100%);
+}
+.verifai-landing.vr-root #benefits.vi-benefits {
+  border:0;
+  color:#EFF4FC;
+  background:
+    radial-gradient(ellipse 47% 47% at 7% 47%,rgba(55,80,153,.21),transparent 78%),
+    radial-gradient(ellipse 46% 46% at 94% 46%,rgba(46,88,145,.22),transparent 82%),
+    radial-gradient(circle at 1px 1px,rgba(150,181,239,.08) 1px,transparent 1.8px) 16px 16px/61px 61px,
+    linear-gradient(180deg,#0B1220 0%,#111D33 32%,#101A2C 65%,#0B1220 100%);
+}
+.verifai-landing.vr-root .vr-consensus {
+  border:0;
+  background:
+    radial-gradient(ellipse 52% 63% at 91% 47%,rgba(35,73,141,.22),transparent 83%),
+    radial-gradient(ellipse 52% 48% at 6% 59%,rgba(77,78,142,.15),transparent 81%),
+    radial-gradient(circle at 1px 1px,rgba(162,194,250,.07) 1px,transparent 1.8px) 0 0/55px 55px,
+    linear-gradient(180deg,#0B1220 0%,#101A2C 27%,#101C34 60%,#0B1220 100%);
+}
+.verifai-landing.vr-root .vr-approach {
+  border:0;
+  background:
+    radial-gradient(ellipse 56% 59% at 96% 47%,rgba(61,83,155,.23),transparent 79%),
+    radial-gradient(ellipse 50% 60% at 2% 61%,rgba(36,80,144,.15),transparent 77%),
+    repeating-linear-gradient(90deg,transparent 0 124px,rgba(151,179,236,.025) 125px,transparent 126px),
+    linear-gradient(180deg,#0B1220 0%,#0E1A2B 38%,#111D32 66%,#0B1220 100%);
+}
+.verifai-landing.vr-root > .vr-finale {
+  border:0;
+  background:
+    radial-gradient(ellipse 52% 53% at 95% 25%,rgba(59,93,167,.23),transparent 79%),
+    radial-gradient(ellipse 48% 49% at 8% 73%,rgba(70,83,143,.18),transparent 79%),
+    radial-gradient(circle at 1px 1px,rgba(170,197,248,.065) 1px,transparent 1.8px) 16px 10px/57px 57px,
+    linear-gradient(180deg,#0B1220 0%,#101A2A 31%,#0B1322 66%,#080D16 100%);
+}
+
+/* Faint diagrams that suggest networks of evidence, never divider lines. */
+.verifai-landing.vr-root .vr-difference::before {
+  background:
+    radial-gradient(ellipse at 78% 42%,transparent 0 16%,rgba(134,176,239,.18) 16.12%,transparent 16.3%,transparent 25%,rgba(134,176,239,.12) 25.1%,transparent 25.3%,transparent 36%,rgba(134,176,239,.08) 36.1%,transparent 36.3%),
+    linear-gradient(90deg,transparent 0 60%,rgba(145,174,222,.06) 60.1%,transparent 60.25%);
+  background-size:100% 100%;
+  opacity:.65;
+  mask-image:linear-gradient(90deg,transparent 22%,black 70%,transparent 100%);
+  pointer-events:none;
+}
+.verifai-landing.vr-root .vr-consensus::before {
+  border-color:rgba(139,176,238,.19);
+  box-shadow:0 0 0 75px rgba(105,150,228,.029),0 0 0 145px rgba(105,150,228,.018);
+}
+.verifai-landing.vr-root .vr-section::after {
+  opacity:.13;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+}
+.verifai-landing.vr-root .vr-section__heading h2 {color:#F5F7FF;}
+.verifai-landing.vr-root .vr-section__heading h2 em {color:#ADC8ED;}
+.verifai-landing.vr-root .vr-section__heading > p {color:#B8C9E2;}
+.verifai-landing.vr-root .vr-disclaimer {color:#9DACC5;}
+
+/* Forensic verdict interface: midnight glass, fine blue edges. */
+.verifai-landing.vr-root .vr-forensic {
+  background:rgba(9,18,33,.73);
+  border:1px solid rgba(138,171,220,.24);
+  box-shadow:0 28px 70px rgba(2,5,14,.28),inset 0 1px rgba(203,221,255,.035);
+}
+.verifai-landing.vr-root .vr-forensic__index {
+  background:rgba(17,30,51,.85);
+  border-color:rgba(134,171,224,.18);
+}
+.verifai-landing.vr-root .vr-forensic__index button {
+  color:#C3D0E4;
+  border-color:rgba(139,172,225,.18);
+}
+.verifai-landing.vr-root .vr-forensic__index button:hover,
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  color:#F3F8FF;
+  background:rgba(89,136,211,.14);
+}
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  box-shadow:inset 3px 0 0 #9FC7FA;
+}
+.verifai-landing.vr-root .vr-forensic__index button.selected svg {color:#A7CAFF;}
+.verifai-landing.vr-root .vr-forensic__reading {
+  background:linear-gradient(127deg,rgba(15,29,53,.95),rgba(12,23,44,.88));
+}
+.verifai-landing.vr-root .vr-forensic__reading blockquote {color:#F2F6FF;}
+.verifai-landing.vr-root .vr-forensic__reading p {color:#BCCEE7;}
+.verifai-landing.vr-root .vr-forensic__verdict {color:#B1CEFA;}
+.verifai-landing.vr-root .vr-forensic__reading .vr-forensic__insight {
+  border-color:rgba(148,191,251,.6);
+  color:#DDE9FC;
+}
+
+/* Preserve Benefits card composition, original orb video, card palettes. */
+.verifai-landing.vr-root #benefits.vi-benefits h2 {color:#F4F7FF;}
+.verifai-landing.vr-root #benefits.vi-benefits h2 em {color:#B5CFFA;}
+.verifai-landing.vr-root #benefits.vi-benefits .vi-benefits-intro {color:#C2CFE3;}
+.verifai-landing.vr-root #benefits .vi-benefit-card {
+  border-color:rgba(165,187,235,.22);
+  box-shadow:0 25px 65px rgba(3,7,18,.25);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card:hover {
+  border-color:rgba(174,199,247,.48);
+  box-shadow:0 30px 80px rgba(3,7,18,.36);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video {
+  filter:none!important;
+  mix-blend-mode:normal!important;
+}
+
+/* Model consensus / sources — cool blue, no forest cast. */
+.verifai-landing.vr-root .vr-consensus__lines,
+.verifai-landing.vr-root .vr-consensus__voice {border-color:rgba(146,174,223,.19);}
+.verifai-landing.vr-root .vr-consensus__voice:hover {background:rgba(96,142,214,.075);}
+.verifai-landing.vr-root .vr-consensus__voice > span {color:#AFC4E3;}
+.verifai-landing.vr-root .vr-consensus__voice blockquote {color:#F2F5FC;}
+.verifai-landing.vr-root .vr-consensus__voice svg {color:#9FBFEF;}
+.verifai-landing.vr-root .vr-consensus__decision strong {color:#B0CCF6;}
+.verifai-landing.vr-root .vr-consensus__decision p {color:#B9C9E0;}
+.verifai-landing.vr-root .vr-consensus__evidence {
+  border:1px solid rgba(143,180,240,.3);
+  background:rgba(13,26,49,.65);
+}
+.verifai-landing.vr-root .vr-consensus__evidence-inner {
+  background:linear-gradient(100deg,rgba(71,112,193,.17),transparent);
+}
+.verifai-landing.vr-root .vr-consensus__evidence-inner > svg {color:#A8C7F3;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner strong {color:#F3F6FF;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner p {color:#B9CDE7;}
+
+/* Approach timeline: spatial contrast, still contiguous with consensus. */
+.verifai-landing.vr-root .vr-approach__steps {
+  border-color:rgba(154,184,232,.2);
+  border-left-color:rgba(154,184,232,.27);
+}
+.verifai-landing.vr-root .vr-approach__steps article {border-color:rgba(154,184,232,.19);}
+.verifai-landing.vr-root .vr-approach__steps article:hover {background:rgba(94,143,216,.08);}
+.verifai-landing.vr-root .vr-approach__steps article > span {color:#A9C6EF;}
+.verifai-landing.vr-root .vr-approach__steps h3 {color:#F1F5FC;}
+.verifai-landing.vr-root .vr-approach__steps p {color:#B8C9E0;}
+.verifai-landing.vr-root .vr-approach__steps svg {color:#A2BFEA;}
+.verifai-landing.vr-root .vr-approach__statement {
+  background:linear-gradient(150deg,rgba(24,43,75,.95),rgba(13,27,50,.92));
+  border:1px solid rgba(149,183,235,.26);
+  box-shadow:0 26px 65px rgba(4,8,19,.26);
+}
+.verifai-landing.vr-root .vr-approach__statement > svg {color:#A9CAF6;}
+.verifai-landing.vr-root .vr-approach__statement p {color:#F0F5FF;}
+.verifai-landing.vr-root .vr-approach__statement em {color:#ADC8EE;}
+.verifai-landing.vr-root .vr-approach__rule {background:linear-gradient(90deg,#A3C5F5,transparent);}
+
+/* Soft blue-white primary actions, without fluorescent green. */
+.verifai-landing.vr-root .vr-button--primary,
+.verifai-landing.vr-root .vr-finale__cta {
+  color:#111D30!important;
+  background:#D9E7FD;
+  border-color:#D9E7FD;
+}
+.verifai-landing.vr-root .vr-button--primary:hover,
+.verifai-landing.vr-root .vr-finale__cta:hover {background:#F3F7FF;border-color:#F3F7FF;}
+.verifai-landing.vr-root .vr-button--outline {
+  color:#E6EEFC!important;
+  background:rgba(135,170,229,.06);
+  border-color:rgba(152,185,234,.34);
+}
+.verifai-landing.vr-root .vr-button--outline:hover {
+  background:rgba(114,164,237,.15);
+  border-color:rgba(177,208,250,.56);
+}
+
+/* Closing editorial scene: subtle blue orbit lighting behind the wordmark. */
+.verifai-landing.vr-root .vr-finale__atmosphere {
+  background:
+    radial-gradient(ellipse 48% 40% at 79% 24%,rgba(100,139,222,.15),transparent 82%),
+    radial-gradient(ellipse 35% 46% at 22% 74%,rgba(60,100,181,.13),transparent 84%),
+    repeating-radial-gradient(circle at 79% 62%,transparent 0 108px,rgba(151,190,255,.026) 109px,transparent 110px,transparent 157px);
+}
+.verifai-landing.vr-root .vr-finale__grain {opacity:.14;}
+.verifai-landing.vr-root .vr-finale__overline {color:#AEC2E0;}
+.verifai-landing.vr-root .vr-finale__light {
+  background:#9AC2F8;
+  box-shadow:0 0 0 5px rgba(127,172,235,.11);
+}
+.verifai-landing.vr-root .vr-finale__lead-title h2 {color:#F5F7FD;}
+.verifai-landing.vr-root .vr-finale__lead-title h2 em {color:#B6CDEF;}
+.verifai-landing.vr-root .vr-finale__lead-action > p {color:#BECDE2;}
+.verifai-landing.vr-root .vr-finale__directory {
+  border-color:rgba(151,178,222,.19);
+}
+.verifai-landing.vr-root .vr-finale__logo span:last-child > span {color:#AAC6EE;}
+.verifai-landing.vr-root .vr-finale__identity > p,
+.verifai-landing.vr-root .vr-finale__column a {color:#B9C9DE;}
+.verifai-landing.vr-root .vr-finale__column a:hover {color:#F4F8FF;}
+.verifai-landing.vr-root .vr-finale__signature {color:#C4D5EE;}
+.verifai-landing.vr-root .vr-finale__signature span {color:#88AEE2;}
+.verifai-landing.vr-root .vr-finale__closing {
+  border-color:rgba(151,178,222,.18);
+  color:#AEBFD8;
+}
+.verifai-landing.vr-root .vr-finale__motto > span {background:#9BBEF4;}
+
+/* Mobile: keep the atmosphere behind the content, avoid dense dot noise. */
+@media(max-width:720px) {
+  .verifai-landing.vr-root .vr-difference,
+  .verifai-landing.vr-root #benefits.vi-benefits,
+  .verifai-landing.vr-root .vr-consensus,
+  .verifai-landing.vr-root .vr-approach,
+  .verifai-landing.vr-root > .vr-finale {background-size:auto,auto,73px 73px,auto;}
+  .verifai-landing.vr-root .vr-difference::before {opacity:.28;}
+  .verifai-landing.vr-root .vr-finale__atmosphere {opacity:.65;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vr-section::after,
+  .verifai-landing.vr-root .vr-finale__grain {animation:none;}
+}
+
+/* Full-width signature should fill the screen without clipping glyphs. */
+@media(min-width:1281px) {
+  .verifai-landing.vr-root .vr-finale__signature {
+    font-size:min(29.6vw,528px);
+  }
+}
+/* One proportional signature size across laptop, tablet and phone widths. */
+.verifai-landing.vr-root .vr-finale__signature {
+  font-size:clamp(70px,29vw,540px);
+}
+@media(max-width:360px) {
+  .verifai-landing.vr-root .vr-finale__signature {font-size:28vw;}
+}

@@ -1,0 +1,91 @@
+/* Landing copy simplification: remove empty space left by the deleted
+   micro labels and let readable content—not decorative type—lead. */
+.verifai-landing .vi-hero-copy { margin-bottom: 0; }
+.verifai-landing .vi-hero-frame { padding-bottom: clamp(65px,9vw,125px); }
+.verifai-landing .vi-hero-actions { margin-top: 12px; }
+.verifai-landing .vi-exhibit-statement { padding-block: clamp(25px,4vw,55px); }
+.verifai-landing .vi-exhibit-statement blockquote { margin-top: 0; }
+.verifai-landing .vi-exhibit-sheet { min-height: 380px; }
+.verifai-landing .vi-exhibit-analysis-body { justify-content: center; }
+.verifai-landing .vi-exhibit-verdict { margin: 0 0 22px; }
+.verifai-landing .vi-exhibit-source { padding-block: 17px; }
+.verifai-landing .vi-exhibit-takeaway { margin-top: 12px; padding-top: 14px; }
+.verifai-landing .vi-exhibit-index { margin-top: 19px; }
+.verifai-landing .vi-exhibit-index-item {
+  grid-template-columns: minmax(0,1fr);
+  padding: clamp(19px,2.6vw,30px);
+  min-height: 76px;
+}
+.verifai-landing .vi-exhibit-index-copy strong { font-size: clamp(16px,1.45vw,19px); }
+.verifai-landing .vi-example-disclosure {
+  margin: 24px 0 0;
+  max-width: 760px;
+  font: 400 15px/1.6 var(--vi-face-body);
+  color: #b9d1bd;
+}
+
+/* Three cards remain, but read from headline to explanation with no labels. */
+.verifai-landing .vi-benefits-head { padding-bottom: 30px; }
+.verifai-landing .vi-benefit-card-left,
+.verifai-landing .vi-benefit-card-right {
+  padding: clamp(30px,3vw,47px);
+}
+.verifai-landing .vi-benefit-card-left h3,
+.verifai-landing .vi-benefit-card-right h3 { margin-bottom: 24px; }
+.verifai-landing .vi-benefit-panel { margin: auto 0 27px; }
+.verifai-landing .vi-benefit-card-left > p { margin-top: auto !important; }
+.verifai-landing .vi-benefit-video-copy { justify-content: center; padding-top: 27px; }
+.verifai-landing .vi-benefit-outcomes { margin: auto 0 0; }
+.verifai-landing .vi-benefit-outcomes > div { grid-template-columns: 22px minmax(0,1fr); padding-block: 16px; }
+.verifai-landing .vi-benefit-outcomes span { font-size: 16px; }
+.verifai-landing .vi-benefit-outcomes svg { width: 18px; height: 18px; }
+
+/* Consensus: three statements, one conclusion, and a reveal.
+   There is no need for status ribbons and little label text. */
+.verifai-landing .vi-chorus-context p { margin-top: 0; }
+.verifai-landing .vi-chorus-heading { margin-bottom: 24px; }
+.verifai-landing .vi-chorus .vi-example-disclosure { margin: 0 0 22px; }
+.verifai-landing .vi-chorus-voice { min-height: 245px; }
+.verifai-landing .vi-chorus-voice p { margin-top: 24px; }
+.verifai-landing .vi-chorus-voice-top strong { font-size: 39px; }
+.verifai-landing .vi-chorus-statement { padding-block: 29px; }
+.verifai-landing .vi-chorus-statement strong { font-size: clamp(35px,3.6vw,51px); }
+.verifai-landing .vi-chorus-reveal-mark span { font-size: 17px; letter-spacing: 0; text-transform: none; }
+
+/* Principles: remove empty first columns and expand descriptions. */
+.verifai-landing .vi-principle { grid-template-columns: minmax(0,1fr) 34px; }
+.verifai-landing .vi-principle p { font-size: clamp(16px,1.24vw,18px); max-width: 520px; }
+.verifai-landing .vi-approach-aside { min-height: 380px; }
+.verifai-landing .vi-aside-quote { margin: auto 0; }
+
+/* Footer stays useful without stacked mini-taglines. */
+.verifai-landing .vi-footer-side { justify-content: center; }
+.verifai-landing .vi-footer-links { gap: 30px; }
+.verifai-landing .vi-footer-links h3 { font-size: 15px; letter-spacing: 0; text-transform: none; margin-bottom: 10px; }
+.verifai-landing .vi-footer-links a { font-size: 15px; }
+.verifai-landing .vi-footer-bottom { grid-template-columns: auto 1fr auto; }
+.verifai-landing .vi-footer-bottom > span { justify-self: center; }
+
+@media (max-width: 850px) {
+  .verifai-landing .vi-benefit-card-left,
+  .verifai-landing .vi-benefit-card-right { padding: 30px; }
+  .verifai-landing .vi-benefit-panel { margin: 27px 0; }
+  .verifai-landing .vi-benefit-card-left > p { margin-top: 0 !important; }
+  .verifai-landing .vi-benefit-outcomes { margin-top: 26px; }
+  .verifai-landing .vi-chorus-voice { min-height: 200px; }
+}
+@media (max-width: 640px) {
+  .verifai-landing .vi-hero-frame { padding-bottom: 58px; }
+  .verifai-landing .vi-exhibit-sheet { min-height: 275px; }
+  .verifai-landing .vi-exhibit-paper { min-height: 0; }
+  .verifai-landing .vi-exhibit-analysis { min-height: 330px; }
+  .verifai-landing .vi-exhibit-index-item { min-height: 65px; }
+  .verifai-landing .vi-benefit-card-left,
+  .verifai-landing .vi-benefit-card-right { padding: 25px; }
+  .verifai-landing .vi-chorus-voice { min-height: 160px; }
+  .verifai-landing .vi-chorus-voice p { margin-top: 14px; }
+  .verifai-landing .vi-chorus-statement { gap: 18px; }
+  .verifai-landing .vi-principle { grid-template-columns: minmax(0,1fr) 24px; }
+  .verifai-landing .vi-footer-bottom { grid-template-columns: 1fr auto; }
+  .verifai-landing .vi-footer-bottom > span { justify-self: end; }
+}

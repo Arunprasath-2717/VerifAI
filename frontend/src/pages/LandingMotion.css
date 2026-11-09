@@ -1,0 +1,457 @@
+/*
+  VerifAI / motion-led landing
+  Original interpretation of cinematic motion showcases and React Bits' spotlight
+  and reveal interaction patterns. No third-party template copied.
+  Strictly excludes the #benefits section and its children.
+*/
+
+/* Navigation — suspended glass capsule, custom evidence-path monogram */
+.verifai-landing .vm-nav {
+  position:fixed;inset:0 0 auto;z-index:100;
+  background:transparent !important;border:0 !important;backdrop-filter:none !important;
+  padding:15px 20px;pointer-events:none;
+}
+.verifai-landing .vm-nav-inner {
+  pointer-events:auto; width:min(100%,1290px); min-height:72px;padding:0 clamp(16px,2vw,32px);
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  background:rgba(4,10,6,.73);border:1px solid rgba(109,143,99,.31);
+  border-radius:22px;box-shadow:0 18px 55px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.055);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  transition:background .35s,border-color .35s,box-shadow .35s;
+}
+.verifai-landing .vm-nav.is-scrolled .vm-nav-inner {
+  background:rgba(0,4,1,.94);border-color:rgba(109,143,99,.52);
+  box-shadow:0 14px 50px rgba(0,0,0,.7),0 0 42px rgba(57,255,136,.045);
+}
+.verifai-landing .vm-wordmark {display:inline-flex;align-items:center;gap:10px;letter-spacing:-.05em;text-transform:none;}
+.verifai-landing .vm-logo-mark {
+  display:grid;place-items:center;width:43px;height:43px;flex:none;
+  color:#f4fff6;border:1px solid rgba(109,143,99,.44);border-radius:13px;
+  background:linear-gradient(140deg,rgba(109,143,99,.22),rgba(9,24,13,.65));
+  transition:transform .4s,border-color .4s;
+}
+.verifai-landing .vm-wordmark:hover .vm-logo-mark {transform:rotate(-9deg) scale(1.07);border-color:#39FF88;}
+.verifai-landing .vm-wordmark-text {font:600 26px/1 var(--vi-face-body);letter-spacing:-.065em;color:#f3fff5;}
+.verifai-landing .vm-wordmark-text span {color:#39FF88;}
+.verifai-landing .vm-nav-links {gap:4px;padding:4px;border-radius:14px;background:rgba(109,143,99,.07);border:1px solid rgba(109,143,99,.15);}
+.verifai-landing .vm-nav-links a {
+  position:relative;padding:11px 15px;border-radius:10px;
+  font:600 12px/1.1 var(--vi-face-body);letter-spacing:0;text-transform:none;
+  color:#aabfad;transition:color .25s,background .25s;
+}
+.verifai-landing .vm-nav-links a:hover,.verifai-landing .vm-nav-links a.is-active {
+  color:#e9fff0;background:rgba(109,143,99,.22);
+}
+.verifai-landing .vm-nav-links a.is-active:after {
+  content:"";position:absolute;bottom:3px;left:calc(50% - 3px);width:6px;height:2px;
+  border-radius:10px;background:#39FF88;box-shadow:0 0 12px rgba(57,255,136,.65);
+}
+.verifai-landing .vm-nav-actions {gap:21px;}
+.verifai-landing .vm-nav-cta {
+  border-radius:11px;padding:14px 18px;font-size:12px;
+  box-shadow:0 0 0 1px rgba(57,255,136,.3),0 0 35px rgba(57,255,136,.12);
+  transition:transform .25s,box-shadow .25s,background .25s;
+}
+.verifai-landing .vm-nav-cta:hover {transform:translateY(-2px);box-shadow:0 5px 34px rgba(57,255,136,.2);}
+.verifai-landing .vm-nav-toggle {border-radius:12px;}
+.verifai-landing .vm-nav-mobile {
+  pointer-events:auto;width:min(100%,1290px);margin:7px auto 0;
+  border-radius:16px;border:1px solid #426e48;overflow:hidden;
+  background:rgba(3,10,5,.98);backdrop-filter:blur(24px);padding:12px 22px 22px;
+}
+.verifai-landing .vm-nav-mobile a {padding:17px 0;font-size:16px;}
+
+/* Hero — kinetic typography + distant atmospheric graphic, no extra card */
+.verifai-landing .vi-hero {min-height:790px;}
+.verifai-landing .vi-hero-scrim {
+  background:linear-gradient(90deg,#000 2%,rgba(0,0,0,.82) 43%,rgba(0,0,0,.17) 100%),
+  linear-gradient(0deg,#000 0%,transparent 40%,rgba(0,0,0,.44) 100%);
+}
+.verifai-landing .vi-hero-frame {z-index:2;border:0;}
+.verifai-landing .vi-hero h1 {font-size:clamp(60px,8.25vw,130px);letter-spacing:-.018em;line-height:.85;}
+.verifai-landing .vi-display-word {transform-origin:left center;animation:vm-heading-in 1.15s cubic-bezier(.16,1,.3,1) both;}
+.verifai-landing .vi-display-word:last-child {animation-delay:.12s;}
+@keyframes vm-heading-in {from{opacity:0;transform:translateY(42px) skewY(4deg);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
+.verifai-landing .vi-hero-handwritten {text-shadow:0 0 44px rgba(57,255,136,.1);}
+.verifai-landing .vi-hero-copy > p {font-size:clamp(17px,1.35vw,20px);max-width:570px;line-height:1.68;}
+.verifai-landing .vm-hero-orbit {
+  position:absolute;right:-16%;top:4%;width:min(77vw,1080px);aspect-ratio:1;z-index:-1;
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at center,rgba(109,143,99,.09) 0,transparent 56%);
+  animation:vm-breathe 13s ease-in-out infinite alternate;
+}
+.verifai-landing .vm-hero-orbit span {
+  position:absolute;inset:13%;border-radius:50%;border:1px solid rgba(109,143,99,.18);
+  transform:rotate(-24deg) scaleY(.68);
+}
+.verifai-landing .vm-hero-orbit span:nth-child(2) {inset:23%;transform:rotate(34deg) scaleY(.72);border-color:rgba(57,255,136,.17);}
+.verifai-landing .vm-hero-orbit span:nth-child(3) {inset:35%;border-color:rgba(109,143,99,.24);transform:rotate(75deg) scaleY(.62);}
+@keyframes vm-breathe {to{transform:rotate(8deg) scale(1.06);}}
+.verifai-landing .vi-hero-actions .vi-button-light {border-radius:12px;box-shadow:0 0 40px rgba(57,255,136,.14);}
+.verifai-landing .vi-text-link {transition:gap .3s,color .3s;}.verifai-landing .vi-text-link:hover {gap:23px;}
+
+/* DIFFERENCE — interactive floating evidence glass over expansive editorial field */
+.verifai-landing .vi-exhibit {
+  position:relative;overflow:hidden;background:radial-gradient(ellipse at 100% 35%,rgba(109,143,99,.16),transparent 44%),#000;
+  padding:clamp(110px,10vw,175px) 0;
+}
+.verifai-landing .vi-exhibit:before {
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;
+  background-image:linear-gradient(rgba(109,143,99,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(109,143,99,.12) 1px,transparent 1px);
+  background-size:80px 80px;mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 68%,transparent);
+}
+.verifai-landing .vi-exhibit-intro {position:relative;z-index:1;grid-template-columns:1.1fr .7fr;gap:7%;margin-bottom:75px;}
+.verifai-landing .vi-exhibit-intro h2 {font-size:clamp(61px,7.15vw,105px);line-height:.94;}
+.verifai-landing .vi-exhibit-intro h2 em {text-shadow:0 0 52px rgba(57,255,136,.08);}
+.verifai-landing .vi-exhibit-rule {height:3px;width:45px;border-radius:8px;}
+.verifai-landing .vi-exhibit-dek p {font-size:clamp(18px,1.5vw,22px);line-height:1.55;}
+.verifai-landing .vm-exhibit-paper {
+  position:relative;isolation:isolate;display:grid;
+  grid-template-columns:minmax(0,1.13fr) minmax(0,.87fr);
+  gap:clamp(15px,2vw,28px);border:0;background:transparent;
+  min-height:480px;
+}
+.verifai-landing .vm-exhibit-paper:before {
+  content:"";position:absolute;inset:-25px -12px;z-index:-1;pointer-events:none;
+  background:radial-gradient(480px circle at var(--mx,48%) var(--my,45%),rgba(57,255,136,.12),transparent 74%);
+  filter:blur(7px);
+}
+.verifai-landing .vi-exhibit-sheet {
+  min-height:440px;padding:clamp(40px,5vw,75px);
+  background:linear-gradient(128deg,rgba(28,53,33,.92),rgba(6,15,9,.88) 66%);
+  border:1px solid rgba(109,143,99,.46);border-radius:27px;
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 26px 80px rgba(0,0,0,.38);
+  transform:rotate(-1.1deg);transition:transform .6s cubic-bezier(.16,1,.3,1),border-color .4s;
+}
+.verifai-landing .vm-exhibit-paper:hover .vi-exhibit-sheet {transform:rotate(0deg) translateY(-4px);border-color:rgba(57,255,136,.54);}
+.verifai-landing .vi-exhibit-sheet:after {inset:22px;border-radius:18px;border-color:rgba(109,143,99,.2);}
+.verifai-landing .vi-exhibit-statement blockquote {font-size:clamp(30px,3.1vw,47px);line-height:1.26;}
+.verifai-landing .vi-exhibit-analysis {
+  border:1px solid rgba(109,143,99,.45);border-radius:27px;
+  background:linear-gradient(155deg,rgba(15,30,19,.94),rgba(5,12,7,.95));
+  overflow:hidden;box-shadow:0 25px 90px rgba(0,0,0,.33),inset 0 1px rgba(255,255,255,.065);
+  transform:translateY(42px) rotate(1.2deg);transition:transform .6s cubic-bezier(.16,1,.3,1),border-color .4s;
+}
+.verifai-landing .vm-exhibit-paper:hover .vi-exhibit-analysis {transform:translateY(22px) rotate(0deg);border-color:rgba(57,255,136,.55);}
+.verifai-landing .vi-exhibit-analysis-body {padding:clamp(32px,3.3vw,49px);}
+.verifai-landing .vi-exhibit-verdict {font-size:clamp(35px,3.5vw,52px);}
+.verifai-landing .vi-exhibit-analysis-body > p {font-size:clamp(16px,1.25vw,19px);}
+.verifai-landing .vi-example-disclosure {font-size:14px;color:#9fb7a4;}
+.verifai-landing .vi-exhibit .vi-example-disclosure {margin-top:75px;}
+.verifai-landing .vi-exhibit-index {
+  border:0;gap:12px;margin-top:22px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.verifai-landing .vm-exhibit-tab {
+  border:1px solid rgba(109,143,99,.32)!important;border-radius:15px;
+  background:rgba(14,29,18,.48);color:#d8efdc;
+  transition:transform .25s,background .25s,border-color .25s,box-shadow .25s;
+}
+.verifai-landing .vm-exhibit-tab:hover,.verifai-landing .vm-exhibit-tab.is-active {
+  transform:translateY(-4px);background:rgba(26,61,34,.86);
+  border-color:rgba(57,255,136,.64)!important;box-shadow:0 12px 30px rgba(0,0,0,.26),0 0 34px rgba(57,255,136,.05);
+}
+
+/* CONSENSUS — three floating translucent answer panes, staged reveal */
+.verifai-landing .vi-chorus {
+  position:relative;overflow:hidden;padding:clamp(120px,12vw,185px) 0;
+  background:radial-gradient(ellipse at 50% 45%,rgba(38,83,49,.17),transparent 58%),#010403;
+}
+.verifai-landing .vi-chorus:before {
+  content:"";pointer-events:none;position:absolute;width:70vw;height:70vw;max-width:1050px;max-height:1050px;
+  top:8%;left:15%;border:1px solid rgba(109,143,99,.1);border-radius:50%;
+  box-shadow:0 0 0 90px rgba(109,143,99,.015),0 0 0 180px rgba(109,143,99,.01);
+}
+.verifai-landing .vi-chorus-heading {position:relative;z-index:1;align-items:end;margin-bottom:30px;}
+.verifai-landing .vi-chorus-heading h2 {font-size:clamp(61px,7.1vw,106px);line-height:.96;}
+.verifai-landing .vi-chorus-context p {font-size:clamp(18px,1.4vw,21px);}
+.verifai-landing .vm-chorus-board {position:relative;border:0;background:none;}
+.verifai-landing .vi-chorus-voices {position:relative;border:0;gap:19px;perspective:1400px;}
+.verifai-landing .vm-chorus-voice {
+  min-height:305px;padding:clamp(27px,3vw,45px);
+  border:1px solid rgba(109,143,99,.4)!important;border-radius:24px!important;
+  background:linear-gradient(145deg,rgba(24,50,31,.65),rgba(7,16,10,.9))!important;
+  backdrop-filter:blur(12px);box-shadow:0 28px 70px rgba(0,0,0,.27),inset 0 1px rgba(255,255,255,.06);
+  transform:translateZ(0);transition:transform .5s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .3s;
+}
+.verifai-landing .vm-chorus-voice:nth-child(2) {transform:translateY(-20px);background:linear-gradient(150deg,rgba(26,66,38,.7),rgba(9,25,14,.93))!important;}
+.verifai-landing .vm-chorus-voice:hover {transform:translateY(-18px) rotateX(3deg);border-color:rgba(57,255,136,.7)!important;box-shadow:0 35px 75px rgba(0,0,0,.4),0 0 55px rgba(57,255,136,.075);}
+.verifai-landing .vm-chorus-voice:nth-child(2):hover {transform:translateY(-36px) rotateX(3deg);}
+.verifai-landing .vi-chorus-voice-top strong {font-size:53px;opacity:.67;}
+.verifai-landing .vi-chorus-voice p {font-size:clamp(19px,1.7vw,25px);line-height:1.45;margin:25px 0 0;}
+.verifai-landing .vi-chorus-connector {height:55px;}
+.verifai-landing .vi-chorus-connector span {width:67%;}
+.verifai-landing .vi-chorus-statement {
+  position:relative;z-index:1;gap:20px;
+  border:1px solid rgba(109,143,99,.45);border-radius:19px;
+  padding:28px clamp(26px,4vw,52px);margin-top:5px;
+  background:rgba(6,22,10,.78);backdrop-filter:blur(12px);
+}
+.verifai-landing .vi-chorus-statement strong {font-size:clamp(40px,4vw,60px);}
+.verifai-landing .vi-chorus-action {border-radius:12px;transition:transform .25s,background .25s;}
+.verifai-landing .vi-chorus-reveal {margin-top:18px;border-radius:20px;}
+.verifai-landing .vi-chorus-reveal-inner {
+  border-radius:20px;border:1px solid rgba(57,255,136,.42);
+  background:radial-gradient(ellipse at 0% 0%,rgba(57,255,136,.15),transparent 62%),#0b2012;
+}
+
+/* APPROACH — open typographic timeline, luminous path instead of solid boxes */
+.verifai-landing .vi-approach {
+  position:relative;overflow:hidden;padding:clamp(115px,11vw,170px) 0;
+  background:radial-gradient(ellipse at 90% 70%,rgba(109,143,99,.14),transparent 44%),#000;
+}
+.verifai-landing .vi-approach-intro {margin-bottom:clamp(65px,7vw,105px);}
+.verifai-landing .vi-approach-intro h2 {font-size:clamp(60px,7vw,105px);line-height:.98;}
+.verifai-landing .vi-approach-layout {gap:clamp(60px,9vw,150px);}
+.verifai-landing .vi-principles {position:relative;border-top:0;}
+.verifai-landing .vi-principles:before {
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(#39FF88,rgba(109,143,99,.38) 65%,transparent);
+  box-shadow:0 0 20px rgba(57,255,136,.18);
+}
+.verifai-landing .vm-principle {
+  position:relative;padding:35px 20px 37px 37px;margin:0;
+  border-bottom:1px solid rgba(109,143,99,.27);
+  background:transparent;transition:background .35s,padding-left .35s;
+}
+.verifai-landing .vm-principle:before {
+  content:"";position:absolute;top:47px;left:-4px;width:10px;height:10px;
+  background:#0a190f;border:2px solid #39FF88;border-radius:50%;
+  box-shadow:0 0 0 5px #000,0 0 23px rgba(57,255,136,.35);
+}
+.verifai-landing .vm-principle:hover {background:linear-gradient(90deg,rgba(57,255,136,.09),transparent 85%);padding-left:48px;}
+.verifai-landing .vi-principle h3 {font-size:clamp(24px,2.1vw,32px);}
+.verifai-landing .vi-principle p {font-size:clamp(17px,1.3vw,19px);max-width:570px;}
+.verifai-landing .vi-principle svg {color:#39FF88;transition:transform .4s;}
+.verifai-landing .vm-principle:hover svg {transform:translate(3px,-4px) rotate(7deg);}
+.verifai-landing .vm-approach-aside {
+  min-height:530px;padding:clamp(37px,4vw,63px);
+  border-radius:32px;border:1px solid rgba(109,143,99,.48);
+  background:radial-gradient(circle at 10% 15%,rgba(57,255,136,.12),transparent 42%),
+  linear-gradient(150deg,rgba(22,46,28,.72),rgba(3,9,5,.95));
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 32px 95px rgba(0,0,0,.3);
+  transform:rotate(2deg);transition:transform .6s cubic-bezier(.16,1,.3,1),border-color .4s;
+}
+.verifai-landing .vm-approach-aside:hover {transform:rotate(0deg) translateY(-8px);border-color:rgba(57,255,136,.62);}
+.verifai-landing .vi-aside-quote {font-size:clamp(39px,3.65vw,57px);line-height:1.25;}
+
+/* CTA footer — expansive atmospheric space, generous type */
+.verifai-landing .vi-footer-expanded {
+  position:relative;overflow:hidden;background:
+  radial-gradient(ellipse at 25% 72%,rgba(57,255,136,.14),transparent 48%),
+  radial-gradient(ellipse at 98% 6%,rgba(109,143,99,.21),transparent 40%),#000;
+  border-top:1px solid rgba(109,143,99,.4);
+}
+.verifai-landing .vi-footer-expanded:before {
+  content:"";pointer-events:none;position:absolute;width:520px;height:520px;
+  border:1px solid rgba(57,255,136,.14);border-radius:50%;right:-230px;top:-240px;
+  box-shadow:0 0 0 70px rgba(109,143,99,.025),0 0 0 160px rgba(109,143,99,.015);
+}
+.verifai-landing .vi-footer-main {position:relative;z-index:1;padding-top:clamp(110px,11vw,165px);padding-bottom:clamp(90px,8vw,120px);}
+.verifai-landing .vi-footer-invite h2 {font-size:clamp(66px,7.3vw,112px)!important;line-height:.96!important;}
+.verifai-landing .vi-footer-invite .vi-button {border-radius:13px;box-shadow:0 0 70px rgba(57,255,136,.12);}
+.verifai-landing .vi-footer-side {border:0;}
+.verifai-landing .vi-footer-links {gap:25px;}
+.verifai-landing .vi-footer-links nav {gap:18px;}
+.verifai-landing .vi-footer-links a {transition:color .2s,transform .2s;display:inline-block;}
+.verifai-landing .vi-footer-links a:hover {transform:translateX(5px);}
+.verifai-landing .vi-footer-brand {display:flex;gap:10px;align-items:center;color:#f2fff5;}
+.verifai-landing .vi-footer-bottom {border-color:rgba(109,143,99,.4);}
+
+/* Tablet and phone — intentional 1-column storytelling and no transform clipping */
+@media(max-width:950px) {
+  .verifai-landing .vm-nav {padding:12px;}
+  .verifai-landing .vm-nav-inner {min-height:67px;grid-template-columns:1fr auto;}
+  .verifai-landing .vm-nav-links,.verifai-landing .vm-nav-actions {display:none;}
+  .verifai-landing .vm-nav-toggle {display:flex;}
+  .verifai-landing .vi-exhibit-intro {grid-template-columns:1fr;}
+  .verifai-landing .vm-exhibit-paper {grid-template-columns:1fr;gap:22px;}
+  .verifai-landing .vi-exhibit-sheet,.verifai-landing .vi-exhibit-analysis {transform:none;}
+  .verifai-landing .vi-exhibit-sheet {min-height:350px;}
+  .verifai-landing .vi-exhibit-analysis {min-height:350px;}
+  .verifai-landing .vm-exhibit-paper:hover .vi-exhibit-sheet,.verifai-landing .vm-exhibit-paper:hover .vi-exhibit-analysis {transform:none;}
+  .verifai-landing .vi-exhibit .vi-example-disclosure {margin-top:32px;}
+  .verifai-landing .vm-chorus-voice:nth-child(2) {transform:none;}
+  .verifai-landing .vm-chorus-voice:hover,.verifai-landing .vm-chorus-voice:nth-child(2):hover {transform:translateY(-4px);}
+  .verifai-landing .vm-approach-aside {transform:none;min-height:350px;}
+  .verifai-landing .vm-approach-aside:hover {transform:translateY(-4px);}
+}
+@media(max-width:640px) {
+  .verifai-landing .vm-nav {padding:10px;}
+  .verifai-landing .vm-nav-inner {border-radius:17px;min-height:64px;padding:0 16px;}
+  .verifai-landing .vm-logo-mark {width:38px;height:38px;border-radius:11px;}
+  .verifai-landing .vm-wordmark-text {font-size:24px;}
+  .verifai-landing .vi-hero {min-height:760px;}
+  .verifai-landing .vi-hero h1 {font-size:clamp(44px,11.2vw,70px);line-height:.95;}
+  .verifai-landing .vm-hero-orbit {right:-50%;top:15%;width:120vw;}
+  .verifai-landing .vi-exhibit,.verifai-landing .vi-chorus,.verifai-landing .vi-approach {padding:95px 0 105px;}
+  .verifai-landing .vi-exhibit-intro h2,.verifai-landing .vi-chorus-heading h2,.verifai-landing .vi-approach-intro h2 {font-size:clamp(48px,11vw,68px);}
+  .verifai-landing .vi-exhibit-intro {margin-bottom:42px;}
+  .verifai-landing .vi-exhibit-sheet {min-height:300px;padding:29px;border-radius:21px;}
+  .verifai-landing .vi-exhibit-sheet:after {inset:13px;border-radius:12px;}
+  .verifai-landing .vi-exhibit-statement blockquote {font-size:clamp(28px,6.9vw,37px);}
+  .verifai-landing .vi-exhibit-analysis {min-height:305px;border-radius:21px;}
+  .verifai-landing .vi-exhibit-index {grid-template-columns:1fr;gap:9px;}
+  .verifai-landing .vm-exhibit-tab {border-radius:12px;padding:18px 22px;}
+  .verifai-landing .vi-chorus-voices {grid-template-columns:1fr;gap:13px;}
+  .verifai-landing .vm-chorus-voice {border-radius:17px!important;min-height:170px;padding:25px;}
+  .verifai-landing .vi-chorus-voice p {font-size:23px;margin:15px 0 0;}
+  .verifai-landing .vi-chorus-statement {border-radius:15px;flex-wrap:wrap;padding:23px;}
+  .verifai-landing .vi-chorus-statement p {width:100%;}
+  .verifai-landing .vi-chorus-action {width:100%;}
+  .verifai-landing .vm-approach-aside {min-height:350px;border-radius:24px;}
+  .verifai-landing .vm-principle {padding:29px 12px 33px 25px;}
+  .verifai-landing .vm-principle:hover {padding-left:30px;}
+  .verifai-landing .vi-aside-quote {font-size:clamp(34px,8vw,46px);}
+  .verifai-landing .vi-footer-invite h2 {font-size:clamp(55px,11.4vw,79px)!important;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing .vi-display-word,.verifai-landing .vm-hero-orbit {animation:none!important;}
+  .verifai-landing .vm-exhibit-tab,.verifai-landing .vm-chorus-voice,.verifai-landing .vm-approach-aside,.verifai-landing .vm-principle {transition:none!important;transform:none!important;}
+}
+
+/* === Navigation refresh / larger, clearer typography === */
+.verifai-landing .vm-nav-inner {
+  width: min(100%, 1350px);
+  min-height: 82px;
+  border-radius: 24px;
+  padding: 0 clamp(18px, 2.3vw, 35px);
+}
+.verifai-landing .vm-wordmark { gap: 12px; }
+.verifai-landing .vm-logo-mark {
+  width: 49px; height: 49px; border-radius: 15px;
+  background: linear-gradient(145deg, rgba(57,255,136,.11),rgba(5,24,12,.45));
+  border: 1px solid rgba(109,143,99,.6);
+  box-shadow: inset 0 1px rgba(255,255,255,.05);
+}
+.verifai-landing .vm-wordmark:hover .vm-logo-mark { transform: scale(1.055); }
+.verifai-landing .vm-wordmark-text {
+  font-family: var(--vi-face-body);
+  font-size: clamp(27px, 2.15vw, 32px);
+  font-weight: 700; line-height: 1;
+  letter-spacing: -.06em;
+}
+.verifai-landing .vm-nav-links { gap: 2px; padding: 5px; }
+.verifai-landing .vm-nav-links a {
+  padding: 14px clamp(12px, 1.25vw, 19px);
+  font-size: clamp(14px, 1.02vw, 16px);
+  font-weight: 600;
+  letter-spacing: -.015em;
+  white-space: nowrap;
+}
+.verifai-landing .vi-nav-signin {
+  font-family:var(--vi-face-body);
+  font-size: 14px; font-weight: 650; letter-spacing: .01em;
+}
+.verifai-landing .vm-nav-cta {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 16px 19px;
+  gap: 12px;
+  white-space: nowrap;
+}
+.verifai-landing .vm-nav-actions { gap: 18px; }
+/* The scroll lands with a breathable gap beneath the new floating navbar. */
+.verifai-landing #difference,
+.verifai-landing #consensus,
+.verifai-landing #approach { scroll-margin-top: 116px; }
+.verifai-landing #top { scroll-margin-top: 0; }
+
+/* Seamless visual edges, without a color reset or an opaque separator card. */
+.verifai-landing .vi-hero::after,
+.verifai-landing .vi-exhibit::after,
+.verifai-landing .vi-chorus::after,
+.verifai-landing .vi-approach::after {
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:130px;
+  pointer-events:none;
+  z-index:1;
+  background:linear-gradient(to bottom,transparent,#000);
+}
+.verifai-landing .vi-exhibit::after,
+.verifai-landing .vi-chorus::after,
+.verifai-landing .vi-approach::after { z-index:0; }
+
+@media (max-width: 1180px) and (min-width: 951px) {
+  .verifai-landing .vm-nav-inner { padding-inline:18px; }
+  .verifai-landing .vm-nav-links a { padding:12px 10px; font-size:14px; }
+  .verifai-landing .vm-nav-cta { padding:13px 13px; font-size:13px; }
+  .verifai-landing .vm-nav-actions { gap:10px; }
+  .verifai-landing .vm-wordmark-text { font-size:25px; }
+  .verifai-landing .vm-logo-mark { width:42px; height:42px; }
+}
+@media (max-width: 950px) {
+  .verifai-landing .vm-nav-inner { min-height:72px; }
+}
+@media (max-width: 640px) {
+  .verifai-landing .vm-nav-inner { min-height:66px; border-radius:17px; }
+  .verifai-landing .vm-logo-mark { width:43px; height:43px; border-radius:12px; }
+  .verifai-landing .vm-logo-mark svg { width:32px; height:32px; }
+  .verifai-landing .vm-wordmark-text { font-size:27px; }
+  .verifai-landing .vm-nav-mobile a { font-size:18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+}
+
+/* Editorial hierarchy after rebalancing the display scale. */
+.verifai-landing .vi-hero-frame {
+  width:min(100% - 80px, 1190px);
+  padding-bottom:clamp(88px, 8vw, 116px);
+}
+.verifai-landing .vi-hero-copy { max-width:950px; }
+.verifai-landing .vi-hero-handwritten { font-size:clamp(34px,3.4vw,51px); margin-top:21px; }
+.verifai-landing .vi-hero-actions { gap:28px; }
+.verifai-landing .vi-exhibit-intro { margin-bottom:clamp(50px,6vw,72px); }
+.verifai-landing .vi-chorus-heading { margin-bottom:34px; }
+.verifai-landing .vi-approach-intro { margin-bottom:clamp(55px,6vw,85px); }
+
+/* Section transitions: a fine engraved seam and a single quiet emerald diamond.
+   No overlay panels, glows, scrolling trace, or inter-section div containers. */
+.verifai-landing .vm-section-seam {
+  position:relative;
+  display:block;
+  width:min(calc(100% - 90px),430px);
+  height:1px;
+  padding:0;
+  border:0;
+  margin:-1px auto 0;
+  z-index:4;
+  background:linear-gradient(90deg,transparent,rgba(109,143,99,.15) 11%,rgba(109,143,99,.5) 50%,rgba(109,143,99,.15) 89%,transparent);
+  overflow:visible;
+}
+.verifai-landing .vm-section-seam::after {
+  content:"";
+  position:absolute;
+  top:-3px;left:calc(50% - 3.5px);
+  width:7px;height:7px;
+  border:1px solid #6D8F63;
+  background:#0b1b0e;
+  transform:rotate(45deg);
+}
+@media (max-width:640px) {
+  .verifai-landing .vi-hero-frame { width:min(calc(100% - 42px),1190px);padding-bottom:72px; }
+  .verifai-landing .vi-hero-handwritten { font-size:clamp(30px,7.5vw,40px);margin-top:16px; }
+  .verifai-landing .vi-hero-copy > p { font-size:16px; }
+  .verifai-landing .vm-section-seam { width:min(calc(100% - 130px),210px); }
+}
+
+/* Keep the entire hero story and primary action visible on typical laptop screens.
+   Vertical centering preserves breathing room without oversizing the hero. */
+@media (min-width: 641px) {
+  .verifai-landing .vi-hero { min-height: 680px; height: 100svh; max-height: 960px; }
+  .verifai-landing .vi-hero-frame {
+    justify-content: flex-end;
+    padding-top: 135px;
+    padding-bottom: clamp(48px, 6vh, 75px);
+  }
+}
+@media (max-width: 640px) {
+  .verifai-landing .vi-hero { min-height: 620px; height: 100svh; }
+  .verifai-landing .vi-hero-frame {
+    justify-content: flex-end;
+    padding-top: 95px;
+    padding-bottom: clamp(24px, 4vh, 45px);
+  }
+}
