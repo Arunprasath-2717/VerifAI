@@ -1,0 +1,45 @@
+/* VerifAI | full-width editorial layout
+ * The hero and footer already span the viewport. The four central sections
+ * previously stopped at 1260/1280px, leaving oversized empty side gutters on
+ * desktop. Keep only a small responsive reading-safe edge space instead.
+ * This is intentionally landing-scoped and easy to revert independently.
+ */
+.verifai-landing.vr-root {
+  --vr-edge-space:clamp(18px,2.1vw,42px);
+}
+.verifai-landing.vr-root .vr-section > .vr-container,
+.verifai-landing.vr-root #benefits.vi-benefits > .vi-container {
+  width:100%;
+  max-width:none;
+  margin-inline:0;
+  padding-inline:var(--vr-edge-space);
+}
+/* With the canvas opened up, the evidence and benefit panels can use the
+ * full row rather than staying in a narrow centered island. */
+.verifai-landing.vr-root .vr-forensic,
+.verifai-landing.vr-root .vr-consensus__lines,
+.verifai-landing.vr-root .vr-approach__layout,
+.verifai-landing.vr-root #benefits .vi-benefits-grid {
+  width:100%;
+  max-width:none;
+}
+/* Preserve density on wide displays without introducing decorative side
+ * containers, while retaining the single-column tablet/mobile breakpoints. */
+@media(min-width:1500px) {
+  .verifai-landing.vr-root #benefits .vi-benefits-grid {
+    gap:clamp(18px,1.5vw,30px);
+  }
+  .verifai-landing.vr-root #benefits .vi-benefit-card {
+    min-height:clamp(640px,36vw,740px);
+  }
+  .verifai-landing.vr-root .vr-forensic__reading blockquote {
+    max-width:1050px;
+  }
+  .verifai-landing.vr-root .vr-forensic__reading p {
+    max-width:940px;
+  }
+}
+@media(max-width:640px) {
+  .verifai-landing.vr-root {--vr-edge-space:18px;}
+  .verifai-landing.vr-root #benefits .vi-benefit-card {min-height:0;}
+}

@@ -27,6 +27,7 @@ import './LandingCreamContrast.css';
 import './LandingNavGlass.css';
 import './LandingForestSilver.css';
 import './LandingLiquidMotion.css';
+import './LandingFullWidth.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
