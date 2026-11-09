@@ -17,6 +17,8 @@ import './LandingLight.css';
 import './LandingAfterDark.css';
 import './LandingMonochromeHero.css';
 import './LandingSectionFlow.css';
+import './LandingMidnight.css';
+import './LandingInk.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
@@ -56,16 +58,6 @@ const voices = [
   { letter: 'C', line: 'Lightning always chooses a different point.' },
 ] as const;
 
-function BrandMark({ size = 42 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 48 48" width={size} height={size} fill="none" aria-hidden="true">
-      <path d="M24 4 42 14v20L24 44 6 34V14L24 4Z" stroke="currentColor" strokeWidth="2" />
-      <path d="m13 24 8 8 14-17" stroke="#39FF88" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M24 4 42 14" stroke="#39FF88" strokeWidth="2" />
-    </svg>
-  );
-}
-
 function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('#top');
@@ -104,7 +96,7 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
     <header className={'vrs-nav' + (scrolled ? ' vrs-nav--scrolled' : '') + (mobileOpen ? ' vrs-nav--open' : '')}>
       <div className="vrs-nav__inner">
         <a className="vrs-nav__logo" href="#top" aria-label="VerifAI home" onClick={() => setMobileOpen(false)}>
-          <img src="/hero-static/assets/logo.webp" width="52" height="52" alt=""/>
+          <img src="/brand/owl-mark.svg" width="52" height="52" alt=""/>
         </a>
         <nav className="vrs-nav__links" aria-label="Primary navigation">
           {items.map(item => <a href={item.href} className={active === item.href ? 'active' : ''} aria-current={active === item.href ? 'page' : undefined} key={item.href}>{item.text}</a>)}
@@ -129,10 +121,10 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
  * Its links open the parent app; the rest of VerifAI remains React. */
 function Hero() {
   return (
-    <section className="vr-hero-static" id="top" aria-label="Intelligence Designed To Evolve">
+    <section className="vr-hero-static" id="top" aria-label="VerifAI — Evidence Before Confidence">
       <iframe
         className="vr-hero-static__frame"
-        title="Intelligence Designed To Evolve"
+        title="VerifAI — Evidence Before Confidence"
         src="/hero-static/index.html?embedded=1"
         loading="eager"
         allow="autoplay"
@@ -271,7 +263,7 @@ function Footer({ isAuthenticated }: LandingPageProps) {
         <div className="vr-finale__directory">
           <div className="vr-finale__identity">
             <a className="vr-finale__logo" href="#top" aria-label="VerifAI home">
-              <span className="vr-finale__logo-mark"><BrandMark size={33}/></span>
+              <span className="vr-finale__logo-mark"><img src="/brand/owl-mark.svg" width="33" height="33" alt=""/></span>
               <span>Verif<span>AI</span></span>
             </a>
             <p>Independent thinking deserves<br/>visible evidence.</p>
@@ -318,7 +310,7 @@ export function LandingPage({ isAuthenticated }: LandingPageProps) {
   const reduced = useReducedMotion();
   useEffect(() => {
     const title = document.title;
-    document.title = 'Intelligence Designed To Evolve';
+    document.title = 'VerifAI — Evidence Before Confidence';
     return () => { document.title = title; };
   }, []);
   useEffect(() => {

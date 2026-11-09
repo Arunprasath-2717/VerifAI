@@ -4,12 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
+  <link rel="icon" type="image/svg+xml" href="../brand/owl-favicon.svg" />
   <script>
     if (new URLSearchParams(location.search).get("embedded") === "1")
       document.documentElement.classList.add("hero-embedded");
   </script>
-  <meta name="description" content="Build applications that reason, adapt and collaborate using a modular AI platform designed for production." />
-  <title>Intelligence Designed To Evolve</title>
+  <meta name="description" content="Compare AI answers, examine individual claims, and trace conclusions to evidence—with uncertainty made visible." />
+  <title>VerifAI — Evidence Before Confidence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://db.onlinewebfonts.com" crossorigin />
@@ -35,13 +36,14 @@
     <header class="header" aria-label="Site header">
       <div class="header-inner">
         <a href="/#top" target="_parent" class="logo" aria-label="VerifAI home">
-          <img src="assets/logo.webp" alt="" width="52" height="52" />
+          <img src="../brand/owl-mark.svg" alt="" width="52" height="52" />
         </a>
         <nav class="nav-pill" aria-label="Primary navigation">
           <a class="active" aria-current="page" href="/#top" target="_parent">Home</a>
-          <a href="/#benefits" target="_parent">Product</a>
-          <a href="/#difference" target="_parent">Case Studies</a>
-          <a href="/#footer" target="_parent">Contact</a>
+          <a href="/#difference" target="_parent">Difference</a>
+          <a href="/#benefits" target="_parent">Key Benefits</a>
+          <a href="/#consensus" target="_parent">Consensus</a>
+          <a href="/#approach" target="_parent">Approach</a>
         </nav>
         <a class="sign-in" href="/login" target="_parent">Sign in</a>
       </div>
@@ -54,54 +56,55 @@
       <div class="hero-inner">
         <div class="trust anim" style="--d:0.05s">
           <div class="trust-avatars" aria-hidden="true">
-            <span class="avatar a1"><span class="avatar-inner" data-fallback="M"><i class="fa-brands fa-microsoft"></i></span></span>
-            <span class="avatar a2"><span class="avatar-inner" data-fallback="a"><i class="fa-brands fa-amazon"></i></span></span>
-            <span class="avatar a3"><span class="avatar-inner" data-fallback="G"><i class="fa-brands fa-google"></i></span></span>
+            <span class="avatar a1" title="Supported"><span class="avatar-inner">✓</span></span>
+            <span class="avatar a2" title="Contradicted"><span class="avatar-inner">×</span></span>
+            <span class="avatar a3" title="Unresolved"><span class="avatar-inner">?</span></span>
           </div>
-          <span class="trust-pill">Trusted by 2000+ Enterprises</span>
+          <span class="trust-pill">Evidence before confidence</span>
         </div>
         <h1 class="headline" id="hero-title">
-          <span>Intelligence</span>
-          <span>Designed To Evolve</span>
+          <span>Don't Just Trust.</span>
+          <span>Verify the Answer.</span>
         </h1>
         <p class="subhead anim" style="--d:0.28s">
-          Build applications that reason, adapt and collaborate using a modular
-          AI platform designed for production.
+          Compare AI-generated answers, check individual claims against sources,
+          and see what is supported, contradicted, or still uncertain.
         </p>
-        <a class="cta anim" style="--d:0.4s" href="/login" target="_parent">Get Started</a>
+        <a class="cta anim" style="--d:0.4s" href="/login" target="_parent">Start Verifying</a>
       </div>
     </main>
 
-    <footer class="stats" aria-label="Platform metrics">
+    <footer class="stats" aria-label="VerifAI capabilities">
       <div class="stat anim" style="--d:0.5s">
         <span class="stat-symbol" aria-hidden="true">&lt;</span>
-        <strong class="stat-value" data-target="120" data-decimals="0" data-suffix="ms">0ms</strong>
-        <span class="stat-label">Inference Time</span>
+        <strong class="stat-value" data-target="3" data-decimals="0" data-pad="2">03</strong>
+        <span class="stat-label">Verdict States</span>
       </div>
       <div class="stat anim" style="--d:0.58s">
         <span class="stat-symbol" aria-hidden="true">%</span>
-        <strong class="stat-value" data-target="99.99" data-decimals="2" data-suffix="%">0.00%</strong>
-        <span class="stat-label">Platform Uptime</span>
+        <strong class="stat-value" data-target="3" data-decimals="0" data-pad="2">03</strong>
+        <span class="stat-label">Evidence Review Steps</span>
       </div>
       <div class="stat anim" style="--d:0.66s">
         <span class="stat-symbol" aria-hidden="true">*</span>
-        <strong class="stat-value" data-target="24" data-decimals="0" data-suffix="/7">0/7</strong>
-        <span class="stat-label">Autonomous Runtime</span>
+        <strong class="stat-value">MULTI</strong>
+        <span class="stat-label">Model Comparison</span>
       </div>
       <div class="stat anim" style="--d:0.74s">
         <span class="stat-symbol" aria-hidden="true">#</span>
-        <strong class="stat-value" data-target="2.4" data-decimals="1" data-suffix="M">0.0M</strong>
-        <span class="stat-label">Context Windows</span>
+        <strong class="stat-value">TRACE</strong>
+        <span class="stat-label">Evidence Sources</span>
       </div>
     </footer>
 
     <div class="menu-overlay" hidden></div>
     <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation" hidden>
       <a class="active" aria-current="page" style="--i:0" href="/#top" target="_parent">Home</a>
-      <a style="--i:1" href="/#benefits" target="_parent">Product</a>
-      <a style="--i:2" href="/#difference" target="_parent">Case Studies</a>
-      <a style="--i:3" href="/#footer" target="_parent">Contact</a>
-      <a class="mobile-sign-in" style="--i:4" href="/login" target="_parent">Sign in</a>
+      <a style="--i:1" href="/#difference" target="_parent">Difference</a>
+      <a style="--i:2" href="/#benefits" target="_parent">Key Benefits</a>
+      <a style="--i:3" href="/#consensus" target="_parent">Consensus</a>
+      <a style="--i:4" href="/#approach" target="_parent">Approach</a>
+      <a class="mobile-sign-in" style="--i:5" href="/login" target="_parent">Sign in</a>
     </nav>
   </div>
 </body>

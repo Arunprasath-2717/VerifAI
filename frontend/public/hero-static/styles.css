@@ -328,3 +328,212 @@ html.hero-embedded .stats {z-index:1;}
   html.hero-embedded .page {padding-top:65px;}
   html.hero-embedded .trust {margin-bottom:9px;}
 }
+
+
+/* VerifAI-specific hero content, without borrowed enterprise endorsements. */
+.trust .avatar-inner {
+  font:600 calc(var(--trust-size) * .43)/1 var(--font-sans);
+  color:#161616;
+}
+.trust-pill {letter-spacing:-.015em;}
+.headline {font-size:clamp(29px,6.2vw,80px);}
+.subhead {max-width:min(615px,94%);}
+@media(max-width:720px) {
+ .headline {font-size:clamp(27px,6.65vw,51px);}
+ .subhead {max-width:96%;}
+}
+@media(max-width:420px) {
+ .headline {font-size:clamp(23px,6.5vw,30px);}
+ .stat-label {font-size:clamp(10px,2.85vw,12px);}
+}
+
+
+/* Brand/owl and hero rhythm — restores an uncluttered, centred composition.
+   The original full-bleed video, dot-matrix type and metrics grid remain. */
+.trust { margin-bottom:clamp(21px,3.2vh,32px); }
+.trust .avatar + .avatar {margin-left:calc(var(--trust-size) * -.28);}
+.trust .trust-pill {
+  margin-left:11px;
+  padding-left:clamp(18px,1.8vw,24px);
+  padding-right:clamp(19px,2.1vw,27px);
+}
+.headline {
+  font-size:clamp(29px,5.75vw,74px);
+  line-height:1.16;
+  letter-spacing:-.045em;
+}
+.subhead {
+  max-width:min(600px,92%);
+  margin-top:clamp(18px,2.9vh,27px);
+  line-height:1.55;
+}
+.cta {margin-top:clamp(21px,3.5vh,33px);}
+.page {padding-bottom:clamp(30px,5.3vh,53px);}
+.stats {width:min(100%,940px);column-gap:clamp(14px,2.8vw,29px);}
+.stat {align-items:center;justify-content:flex-start;}
+.stat-symbol {margin-bottom:clamp(8px,1.1vh,11px);}
+.stat-label {margin-top:5px;letter-spacing:.005em;}
+html.hero-embedded .page {padding-bottom:clamp(30px,5.3vh,53px);}
+@media(max-width:720px){
+  .page,html.hero-embedded .page {padding-bottom:clamp(14px,3.1vh,28px);}
+  .trust {margin-bottom:clamp(14px,2.3vh,21px);}
+  .trust .trust-pill {margin-left:7px;padding-left:13px;padding-right:16px;}
+  .headline {font-size:clamp(26px,6.3vw,48px);line-height:1.1;}
+  .subhead {margin-top:clamp(12px,2vh,18px);}
+  .stats {column-gap:20px;}
+}
+@media(max-width:420px){
+  .headline {font-size:clamp(23px,6.2vw,27px);}
+  .trust .avatar + .avatar {margin-left:-8px;}
+  .trust .trust-pill {padding-left:12px;padding-right:13px;}
+}
+@media(max-height:690px){
+  .page,html.hero-embedded .page {padding-bottom:clamp(12px,2vh,21px);}
+  .trust {margin-bottom:13px;}
+  .subhead {margin-top:12px;}
+}
+
+
+/* Same logo centering for the standalone, non-embedded hero. */
+.logo { overflow:hidden; isolation:isolate; padding:0; line-height:0; }
+.logo img { display:block; width:84%; height:84%; max-width:84%; max-height:84%; object-fit:contain; object-position:center; transform:translateY(-1px); }
+
+
+/* Midnight Navy — the exact full-screen video remains, now visually graded.
+   Lightweight CSS-only constellations and radar/orbital traces live behind UI. */
+:root {
+  --bg:#080D17;
+  --muted:#AFC0DA;
+  --pill-dark:#151D2D;
+}
+html,body {background:#080D17;}
+.page,html.hero-embedded .page {background:#080D17;}
+.bg {background:#080D17;isolation:isolate;}
+.bg-video {filter:hue-rotate(-55deg) saturate(.50) contrast(1.10) brightness(.88);}
+.bg::after {
+  content:"";
+  position:absolute;
+  z-index:1;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 66% 72% at 49% 50%,rgba(5,16,37,.14),rgba(3,7,17,.43) 83%),
+    linear-gradient(168deg,rgba(5,10,21,.46) 0%,rgba(13,27,55,.22) 44%,rgba(3,8,17,.72) 100%);
+}
+.bg::before {
+  content:"";
+  position:absolute;
+  z-index:2;
+  inset:0;
+  pointer-events:none;
+  opacity:.65;
+  background:
+    radial-gradient(circle at 14% 29%,rgba(192,216,255,.45) 0 1px,transparent 2px),
+    radial-gradient(circle at 82% 22%,rgba(167,203,254,.53) 0 1px,transparent 2px),
+    radial-gradient(circle at 91% 67%,rgba(173,211,255,.34) 0 1px,transparent 2px),
+    radial-gradient(circle at 12% 72%,rgba(168,202,255,.35) 0 1px,transparent 2px),
+    radial-gradient(circle at 68% 81%,rgba(169,200,246,.45) 0 1px,transparent 2px),
+    repeating-radial-gradient(circle at 82% 53%,transparent 0 155px,rgba(170,204,255,.075) 156px,transparent 157px,transparent 224px),
+    linear-gradient(90deg,transparent 0%,rgba(145,174,223,.037) 50%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 4%,black 20%,black 86%,transparent);
+  animation:vr-midnight-starmap 14s ease-in-out infinite alternate;
+}
+@keyframes vr-midnight-starmap {
+  from {opacity:.40;transform:scale(1);}
+  to {opacity:.68;transform:scale(1.025);}
+}
+.trust-pill,.avatar {background:#151D2D;border-color:rgba(174,199,234,.39);}
+.trust-pill {color:#DBE7F7;}
+.subhead {color:#D3DDED;}
+.stat-label {color:#B1C3E0;}
+.stat-value,.stat-symbol {color:#F4F8FF;}
+.cta {background:#EDF4FF;color:#0D1A2C;}
+.cta:hover {background:#fff;}
+.sign-in {background:#151D2D;color:#E5EDFA;}
+.sign-in:hover {background:#213351;color:#fff;}
+@media(prefers-reduced-motion:reduce) {
+  .bg::before {animation:none;transform:none;}
+}
+
+/* Designed dark-navy fallback when the remote motion-video is still loading. */
+.bg {
+  background:
+    radial-gradient(ellipse 58% 64% at 77% 37%,rgba(42,79,148,.42),transparent 80%),
+    radial-gradient(ellipse 48% 49% at 12% 72%,rgba(36,64,118,.24),transparent 77%),
+    linear-gradient(142deg,#070B13 0%,#0E1D35 48%,#080D18 100%);
+}
+.bg::after {
+  background:
+    radial-gradient(ellipse 52% 64% at 76% 39%,rgba(73,116,188,.13),transparent 74%),
+    radial-gradient(ellipse 66% 72% at 49% 50%,rgba(5,16,37,.14),rgba(3,7,17,.43) 83%),
+    linear-gradient(168deg,rgba(5,10,21,.46) 0%,rgba(13,27,55,.22) 44%,rgba(3,8,17,.72) 100%);
+}
+
+
+/*
+ * VerifAI Ink — cinematic monochrome without purple, neon, or glow.
+ * Video remains full-viewport. Only its colour is reduced to near B&W.
+ */
+:root {
+  --bg:#0E0F0F;
+  --text:#F3F0E9;
+  --muted:#AEA9A0;
+  --nav-text:#232421;
+  --pill-dark:#292B29;
+  --sign-in-text:#EAE6DB;
+  --trust-bg:#252624;
+  --trust-border:rgba(224,220,209,.29);
+  --trust-text:#D1CDC4;
+}
+html,body,.page,html.hero-embedded .page {background:#0E0F0F;}
+.bg {
+  isolation:isolate;
+  background:#0E0F0F;
+}
+.bg-video {
+  filter:grayscale(1) contrast(1.12) brightness(.79) sepia(.07);
+}
+.bg::after {
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(12,13,12,.48) 0%,rgba(12,13,12,.17) 34%,rgba(12,13,12,.43) 73%,rgba(12,13,12,.89) 100%);
+}
+.bg::before {
+  content:none!important;animation:none!important;
+}
+.headline span,.headline span:first-child,.headline span:last-child {
+  color:#F3F0E9;text-shadow:0 3px 26px rgba(0,0,0,.35);
+}
+.subhead {color:#C4C0B7;opacity:1;}
+.trust-pill,.avatar {
+  background:rgba(25,27,25,.9);
+  border-color:rgba(225,219,206,.33);
+}
+.trust-pill {color:#D0CBC1;}
+.avatar-inner,.avatar.a2 .avatar-inner,.avatar.a3 .avatar-inner {
+  background:#F0ECE2;color:#141513;
+}
+.stat-symbol {color:#BCA782;}
+.stat-value {color:#F1EEE5;}
+.stat-label {color:#ADA9A0;}
+.cta {
+  background:#EAE5DA;
+  color:#181917;
+  box-shadow:0 4px 18px rgba(0,0,0,.21);
+  border:1px solid rgba(255,255,255,.22);
+}
+.cta:hover {
+  background:#FFFFFF;color:#141512;
+  box-shadow:0 7px 24px rgba(0,0,0,.26);
+}
+.logo {background:#F0EEE8;}
+.nav-pill {background:#EFEEE8;box-shadow:0 4px 14px rgba(0,0,0,.16);}
+.nav-pill a {color:#292A27;opacity:1;}
+.nav-pill a:hover {color:#111210;background:#DEDDD7;}
+.nav-pill a.active {color:#111210;background:#DCDAD3;}
+.nav-pill a.active::after {background:#282927;box-shadow:-5px 0 #282927,5px 0 #282927;}
+.sign-in {background:#292B29;color:#ECE8DF;}
+.sign-in:hover {background:#EEEAE0;color:#161714;}
+.burger {background:#2A2C29;color:#F0EBE1;}
+@media(prefers-reduced-motion:reduce) {
+  .bg::before {animation:none;}
+}

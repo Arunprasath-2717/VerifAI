@@ -93,7 +93,9 @@ function revealNumbers() {
     const target = Number(element.dataset.target);
     const decimals = Number(element.dataset.decimals) || 0;
     const suffix = element.dataset.suffix || "";
-    const finalValue = target.toFixed(decimals) + suffix;
+    const width = Number(element.dataset.pad) || 0;
+    const format = amount => amount.toFixed(decimals).padStart(width, "0") + suffix;
+    const finalValue = format(target);
 
     if (reducedMotion.matches) {
       element.textContent = finalValue;
@@ -106,7 +108,7 @@ function revealNumbers() {
       const draw = now => {
         if (start === undefined) start = now;
         const amount = Math.min(1, (now - start) / duration);
-        element.textContent = (target * easeOutCubic(amount)).toFixed(decimals) + suffix;
+        element.textContent = format(target * easeOutCubic(amount));
         if (amount < 1) requestAnimationFrame(draw);
         else element.textContent = finalValue;
       };
