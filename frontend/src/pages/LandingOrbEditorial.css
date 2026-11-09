@@ -1,7 +1,6 @@
 /* Benefits / editorial evidence study.
-   Grading is applied to the video and poster together. The original film
-   stays intact, animate-on-scroll cards stay unchanged, and the centre card
-   blends into the same warm graphite material as its neighbours. */
+   One full-bleed media surface: video or its poster, never two layers.
+   Preserve the card copy and the original subtle orb motion. */
 .verifai-landing.vr-root #benefits .vi-benefit-card-center {
   background:#1A1B1A;
   border-color:#393B37;
@@ -17,13 +16,13 @@
   width:100%;
   height:100%;
   display:block;
-  object-fit:contain;
+  object-fit:cover;
   object-position:center center;
   /* Silver, pale-ivory reflections instead of the stock violet/orange orb. */
   filter:grayscale(1) sepia(.12) saturate(.40) contrast(1.10) brightness(1.16) !important;
   mix-blend-mode:normal !important;
-  transform:scale(.965);
-  transform-origin:50% 48%;
+  transform:none;
+  transform-origin:center;
   will-change:auto;
 }
 .verifai-landing.vr-root #benefits .vi-benefit-video-fade {
@@ -52,9 +51,6 @@
 @media(max-width:640px) {
   .verifai-landing.vr-root #benefits .vi-benefit-video-wrap {
     height:clamp(255px,80vw,310px);
-  }
-  .verifai-landing.vr-root #benefits .vi-benefit-video {
-    transform:scale(.95);
   }
 }
 @media(prefers-reduced-motion:reduce) {
