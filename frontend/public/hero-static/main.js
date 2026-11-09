@@ -26,7 +26,6 @@ if (document.documentElement.classList.contains("hero-embedded")) {
 const burger = document.querySelector(".burger");
 const menu = document.querySelector(".mobile-menu");
 const overlay = document.querySelector(".menu-overlay");
-const video = document.querySelector(".bg-video");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 function setMenu(open) {
@@ -51,36 +50,6 @@ document.addEventListener("keydown", event => {
 window.addEventListener("resize", () => {
   if (window.innerWidth > 720) setMenu(false);
 }, { passive: true });
-
-// Autoplay is muted and has no controls; gracefully leave the background black if media is unavailable.
-function showLiveVideo() {
-  if (video?.readyState >= 2) document.querySelector(".bg")?.classList.add("is-ready");
-}
-video?.addEventListener("loadeddata", showLiveVideo);
-showLiveVideo();
-video?.play().catch(() => {});
-
-// The CDN is authoritative; only show neutral character fallbacks if it fails.
-const brandFont = "Font Awesome 6 Brands";
-function updateBrandFallback() {
-  const iconsLoaded = [...document.fonts].some(face =>
-    face.family.replaceAll('"', '') === brandFont && face.status === 'loaded'
-  );
-  document.documentElement.classList.toggle('brands-fallback', !iconsLoaded);
-}
-document.fonts.ready.then(updateBrandFallback);
-window.setTimeout(updateBrandFallback, 2600);
-
-// If the specified CDN display font is slow, use the requested local Geist fallback.
-function updateDisplayFont() {
-  const loaded = [...document.fonts].some(
-    face => face.family.replaceAll('"', "") === "BubbledotICG-FinePos" && face.status === "loaded"
-  );
-  document.documentElement.classList.toggle("pixel-fallback", !loaded);
-}
-window.setTimeout(updateDisplayFont, 1350);
-document.fonts.addEventListener("loadingdone", updateDisplayFont);
-document.fonts.ready.then(updateDisplayFont);
 
 const counters = [...document.querySelectorAll(".stat-value[data-target]")];
 const easeOutCubic = t => 1 - Math.pow(1 - t, 3);

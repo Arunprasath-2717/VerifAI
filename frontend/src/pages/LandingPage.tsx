@@ -25,6 +25,7 @@ import './LandingOrbEditorial.css';
 import './LandingPaper.css';
 import './LandingCreamContrast.css';
 import './LandingNavGlass.css';
+import './LandingForestSilver.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
