@@ -1,0 +1,13 @@
+/* Scroll Bits: visually integrated with VerifAI's existing type system. */
+.vr-scroll-float { display:inline; }
+.vr-scroll-bit-word,
+.vr-scroll-bit-char,
+.vr-scroll-reveal-word { display:inline-block; white-space:nowrap; }
+.vr-scroll-bit-space { white-space:pre-wrap; }
+.vr-scroll-reveal { display:inline; }
+.vr-scroll-reveal-content { display:inline; }
+@media (prefers-reduced-motion: reduce) {
+  .vr-scroll-bit-word,.vr-scroll-bit-char,.vr-scroll-reveal-word {
+    opacity:1!important; transform:none!important; filter:none!important;
+  }
+}

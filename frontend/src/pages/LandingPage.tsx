@@ -5,6 +5,8 @@ import {
   ArrowUpRight, Check, CheckCircle2, CircleHelp, SearchCheck, XCircle, Menu, X,
 } from 'lucide-react';
 import { BenefitsSection } from '../components/landing/BenefitsSection';
+import { ScrollFloat } from '../components/landing/ScrollFloat';
+import { ScrollReveal } from '../components/landing/ScrollReveal';
 import './LandingPage.css';
 import './LandingDisplay.css';
 import './LandingEditorial.css';
@@ -19,6 +21,10 @@ import './LandingMonochromeHero.css';
 import './LandingSectionFlow.css';
 import './LandingMidnight.css';
 import './LandingInk.css';
+import './LandingOrbEditorial.css';
+import './LandingPaper.css';
+import './LandingCreamContrast.css';
+import './LandingNavGlass.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
@@ -60,6 +66,7 @@ const voices = [
 
 function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [overHero, setOverHero] = useState(true);
   const [active, setActive] = useState('#top');
   const [mobileOpen, setMobileOpen] = useState(false);
   const launch = isAuthenticated ? '/dashboard' : '/login';
@@ -73,6 +80,8 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
   useEffect(() => {
     const update = () => {
       setScrolled(window.scrollY > 38);
+      const hero = document.querySelector('#top');
+      setOverHero(Boolean(hero && hero.getBoundingClientRect().bottom > 118));
       let current = '#top';
       for (const id of ['#difference', '#benefits', '#consensus', '#approach', '#footer']) {
         const el = document.querySelector(id);
@@ -93,7 +102,7 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
     };
   }, []);
   return (
-    <header className={'vrs-nav' + (scrolled ? ' vrs-nav--scrolled' : '') + (mobileOpen ? ' vrs-nav--open' : '')}>
+    <header className={'vrs-nav' + (scrolled ? ' vrs-nav--scrolled' : '') + (mobileOpen ? ' vrs-nav--open' : '') + (overHero ? ' vrs-nav--over-hero' : '')}>
       <div className="vrs-nav__inner">
         <a className="vrs-nav__logo" href="#top" aria-label="VerifAI home" onClick={() => setMobileOpen(false)}>
           <img src="/brand/owl-mark.svg" width="52" height="52" alt=""/>
@@ -143,7 +152,7 @@ function Difference() {
       <div className="vr-container">
         <div className="vr-section__heading vr-difference__heading">
           <motion.div initial={reduced ? false : { opacity: 0, y: 35 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .22 }} transition={{ duration: .8 }}>
-            <h2 id="vr-difference-heading">A claim is not <em>a conclusion.</em></h2>
+            <h2 id="vr-difference-heading"><ScrollFloat>A claim is not</ScrollFloat> <em>a conclusion.</em></h2>
           </motion.div>
           <p>Look beyond how an answer sounds. The difference is knowing what can actually be demonstrated.</p>
         </div>
@@ -184,7 +193,7 @@ function Consensus() {
           <motion.h2 id="vr-consensus-heading" initial={reduced ? false : { opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .75 }}>
             AGREEMENT <em>ISN'T PROOF.</em>
           </motion.h2>
-          <p>Three models can repeat the same mistake. An independent source matters more than an agreement count.</p>
+          <p><ScrollReveal>Three models can repeat the same mistake. An independent source matters more than an agreement count.</ScrollReveal></p>
         </div>
         <div className="vr-consensus__lines" aria-label="Three hypothetical model answers">
           {voices.map((voice, i) => <motion.div key={voice.letter} className="vr-consensus__voice" initial={reduced ? false : { opacity: 0, x: i % 2 ? 24 : -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .63, delay: i * .08 }}>

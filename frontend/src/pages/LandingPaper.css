@@ -1,0 +1,258 @@
+/* VerifAI / Paper & Ink — light editorial design.
+ * One final cascade layer, keeping the original layout, owl, scroll motion
+ * and content. A quiet deep green is used only for actions and status.
+ */
+.verifai-landing.vr-root {
+  --vr-black:#161C19;
+  --vr-green:#236748;
+  --vr-moss:#52685B;
+  --vr-white:#171E1A;
+  --vr-mute:#4E5851;
+  --vr-hairline:rgba(24,49,35,.16);
+  --vr-flow-base:#FBFBF8;
+  background:#FBFBF8;
+  color:#171D19;
+}
+.verifai-landing.vr-root main {background:#FBFBF8;}
+.verifai-landing.vr-root ::selection {background:#CDE9D8;color:#10261A;}
+.verifai-landing.vr-root :focus-visible {outline:2px solid #236748;outline-offset:3px;}
+
+/* No hard horizontal section bars. Adjacent surfaces share edge colours. */
+.verifai-landing.vr-root .vr-difference {
+  background:
+    radial-gradient(ellipse 52% 58% at 90% 45%,rgba(86,128,102,.055),transparent 79%),
+    linear-gradient(180deg,#FBFBF8 0%,#F8F9F5 45%,#F4F6F1 75%,#F8F9F5 100%);
+  border:0;
+}
+.verifai-landing.vr-root #benefits.vi-benefits {
+  background:
+    radial-gradient(ellipse 49% 50% at 12% 54%,rgba(109,137,112,.06),transparent 82%),
+    linear-gradient(180deg,#F8F9F5 0%,#F3F5F0 48%,#F7F8F4 100%);
+  color:#1C231E;border:0;
+}
+.verifai-landing.vr-root .vr-consensus {
+  background:linear-gradient(180deg,#F7F8F4 0%,#F8FAF6 47%,#F4F6F2 100%);
+  border:0;
+}
+.verifai-landing.vr-root .vr-approach {
+  background:
+    radial-gradient(ellipse 52% 52% at 95% 44%,rgba(105,143,117,.055),transparent 78%),
+    linear-gradient(180deg,#F4F6F2 0%,#FAFAF7 52%,#F7F8F4 100%);
+  border:0;
+}
+.verifai-landing.vr-root > .vr-finale,
+.verifai-landing.vr-root .vr-finale {
+  background:
+    radial-gradient(ellipse 54% 62% at 88% 23%,rgba(110,143,114,.075),transparent 78%),
+    linear-gradient(180deg,#F7F8F4 0%,#F2F4EE 56%,#EAEEE6 100%);
+  border:0;
+  color:#1B221D;
+}
+.verifai-landing.vr-root .vr-difference::before {opacity:.09;filter:grayscale(1);}
+.verifai-landing.vr-root .vr-consensus::before {content:none;display:none;}
+.verifai-landing.vr-root .vr-section::after {opacity:.025;mix-blend-mode:multiply;}
+.verifai-landing.vr-root .vr-finale__grain {opacity:.035;mix-blend-mode:multiply;}
+
+/* Readable typography and a single signature accent. */
+.verifai-landing.vr-root .vr-section__heading h2,
+.verifai-landing.vr-root #benefits.vi-benefits h2,
+.verifai-landing.vr-root .vr-finale__lead-title h2 {color:#121915;}
+.verifai-landing.vr-root .vr-section__heading h2 em,
+.verifai-landing.vr-root #benefits.vi-benefits h2 em,
+.verifai-landing.vr-root .vr-finale__lead-title h2 em {color:#236748;}
+.verifai-landing.vr-root .vr-section__heading > p,
+.verifai-landing.vr-root #benefits.vi-benefits .vi-benefits-intro,
+.verifai-landing.vr-root .vr-finale__lead-action > p {color:#454D47;}
+.verifai-landing.vr-root .vr-disclaimer {color:#68716A;}
+
+/* Forensic research panel — paper on paper, clear line hierarchy. */
+.verifai-landing.vr-root .vr-forensic {
+  background:#FFFFFF;
+  border:1px solid #DDE3DB;
+  box-shadow:0 22px 55px rgba(28,45,32,.06);
+}
+.verifai-landing.vr-root .vr-forensic__index {
+  background:#F2F5EF;
+  border-color:#DDE4DA;
+}
+.verifai-landing.vr-root .vr-forensic__index button {
+  color:#3C4940;
+  border-color:#DCE4DA;
+}
+.verifai-landing.vr-root .vr-forensic__index button:hover,
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  background:#E4EEE5;
+  color:#14291C;
+}
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  box-shadow:inset 3px 0 0 #28774D;
+}
+.verifai-landing.vr-root .vr-forensic__index button.selected svg {color:#236748;}
+.verifai-landing.vr-root .vr-forensic__reading {
+  background:#FFFFFF;
+}
+.verifai-landing.vr-root .vr-forensic__reading blockquote {color:#1A211C;}
+.verifai-landing.vr-root .vr-forensic__reading p {color:#46544A;}
+.verifai-landing.vr-root .vr-forensic__verdict {color:#236748;}
+.verifai-landing.vr-root .vr-forensic__reading .vr-forensic__insight {
+  color:#2E4B38;border-color:#39835A;
+}
+
+/* Benefits: white editorial cards with a deliberate charcoal media plate. */
+.verifai-landing.vr-root #benefits .vi-benefit-card,
+.verifai-landing.vr-root #benefits .vi-benefit-card-left,
+.verifai-landing.vr-root #benefits .vi-benefit-card-right,
+.verifai-landing.vr-root #benefits .vi-benefit-card-center {
+  background:#FFFFFF;
+  color:#19231C;
+  border:1px solid #DFE5DC;
+  box-shadow:0 9px 30px rgba(32,51,36,.035);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card:hover {
+  border-color:#A5BFAE;
+  box-shadow:0 16px 38px rgba(32,51,36,.08);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card-left::before,
+.verifai-landing.vr-root #benefits .vi-benefit-card-right::before {
+  content:none;display:none;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card h3 {color:#18211B;}
+.verifai-landing.vr-root #benefits .vi-benefit-card p {color:#505A52;}
+.verifai-landing.vr-root #benefits .vi-benefit-card .vi-benefit-topline,
+.verifai-landing.vr-root #benefits .vi-benefit-card .vi-benefit-bottomline,
+.verifai-landing.vr-root #benefits .vi-benefit-card .vi-benefit-panel-label,
+.verifai-landing.vr-root #benefits .vi-benefit-card .vi-benefit-video-kicker {color:#236748;}
+.verifai-landing.vr-root #benefits .vi-benefit-panel {
+  background:#F5F7F2;border-color:#DCE3D9;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-panel strong {color:#28352B;}
+.verifai-landing.vr-root #benefits .vi-benefit-panel-lines span {background:#D4DED3;}
+.verifai-landing.vr-root #benefits .vi-benefit-panel-lines span:nth-child(3) {background:#4F9467;}
+.verifai-landing.vr-root #benefits .vi-benefit-bottomline,
+.verifai-landing.vr-root #benefits .vi-benefit-center-note,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes > div {border-color:#DEE5DC;}
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes span {color:#223027;}
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes small,
+.verifai-landing.vr-root #benefits .vi-benefit-center-note small {color:#68736A;}
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes svg,
+.verifai-landing.vr-root #benefits .vi-benefit-center-note span {color:#247148;}
+.verifai-landing.vr-root #benefits .vi-benefit-video-wrap {background:#1B201C;}
+.verifai-landing.vr-root #benefits .vi-benefit-video-fade {
+  background:linear-gradient(180deg,transparent 0%,rgba(27,32,28,.36) 62%,#1B201C 100%);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy {
+  background:#FFFFFF;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy h3 {color:#18211B;}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy p {color:#505A52;}
+
+/* Consensus: interaction remains clear without a decorative circle. */
+.verifai-landing.vr-root .vr-consensus__lines,
+.verifai-landing.vr-root .vr-consensus__voice {border-color:#DCE4DC;}
+.verifai-landing.vr-root .vr-consensus__voice:hover {background:rgba(33,112,67,.035);}
+.verifai-landing.vr-root .vr-consensus__voice > span {color:#486B54;}
+.verifai-landing.vr-root .vr-consensus__voice blockquote {color:#1B241E;}
+.verifai-landing.vr-root .vr-consensus__voice svg {color:#36744F;}
+.verifai-landing.vr-root .vr-consensus__decision strong {color:#236748;}
+.verifai-landing.vr-root .vr-consensus__decision p {color:#48534A;}
+.verifai-landing.vr-root .vr-consensus__evidence {
+  background:#FFFFFF;border:1px solid #CADACC;
+}
+.verifai-landing.vr-root .vr-consensus__evidence-inner {background:#F3F7F1;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner > svg {color:#236748;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner strong {color:#1A261E;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner p {color:#4D5C51;}
+
+/* Approach: simple paper timeline, darker supporting statement. */
+.verifai-landing.vr-root .vr-approach__steps,
+.verifai-landing.vr-root .vr-approach__steps article {border-color:#DBE3DA;}
+.verifai-landing.vr-root .vr-approach__steps article:hover {background:#EFF5EF;}
+.verifai-landing.vr-root .vr-approach__steps article > span,
+.verifai-landing.vr-root .vr-approach__steps svg {color:#276D48;}
+.verifai-landing.vr-root .vr-approach__steps h3 {color:#172119;}
+.verifai-landing.vr-root .vr-approach__steps p {color:#4F5B51;}
+.verifai-landing.vr-root .vr-approach__statement {
+  background:#22372B;
+  border:1px solid #31503C;
+  box-shadow:none;
+}
+.verifai-landing.vr-root .vr-approach__statement > svg {color:#B0D5B7;}
+.verifai-landing.vr-root .vr-approach__statement p {color:#F7F9F4;}
+.verifai-landing.vr-root .vr-approach__statement em {color:#C6E2C8;}
+.verifai-landing.vr-root .vr-approach__rule {
+  background:linear-gradient(90deg,#98C4A5,transparent);
+}
+
+/* Navigation: white material with dark labels and small green active cue. */
+.verifai-landing.vr-root .vrs-nav__links,
+.verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links {
+  background:rgba(255,255,255,.96);
+  border:1px solid #E0E6DC;
+  box-shadow:0 6px 18px rgba(30,53,35,.085);
+}
+.verifai-landing.vr-root .vrs-nav__links a {color:#27332B;opacity:1;}
+.verifai-landing.vr-root .vrs-nav__links a:hover {background:#EEF4EB;color:#1B3A28;}
+.verifai-landing.vr-root .vrs-nav__links a.active {background:#E5F0E5;color:#1E5032;}
+.verifai-landing.vr-root .vrs-nav__links a.active::after {
+  background:#236748;box-shadow:-5px 0 #236748,5px 0 #236748;
+}
+.verifai-landing.vr-root .vrs-nav__logo {background:#FFFFFF;border-color:#E0E7DE;}
+.verifai-landing.vr-root .vrs-nav__sign-in,
+.verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {
+  background:#183D2A;color:#FFFFFF;border:1px solid #183D2A;
+}
+.verifai-landing.vr-root .vrs-nav__sign-in:hover {background:#2C6445;color:#FFFFFF;}
+.verifai-landing.vr-root .vrs-nav__burger {background:#FFFFFF;color:#1B3A29;border:1px solid #D9E4D7;}
+.verifai-landing.vr-root .vrs-nav--open .vrs-nav__burger {background:#1C4E32;color:#FFFFFF;}
+.verifai-landing.vr-root .vrs-nav__mobile {background:#FFFFFF;border:1px solid #DEE6DD;}
+.verifai-landing.vr-root .vrs-nav__mobile a {color:#1B2E20;border-color:#E6EBE3;}
+.verifai-landing.vr-root .vrs-nav__mobile a:hover {background:#EEF4EF;color:#164329;}
+.verifai-landing.vr-root .vrs-nav__mobile-action {background:#1F5839;color:#FFFFFF!important;}
+
+/* Controls: green as an accent, not a foreground flood. */
+.verifai-landing.vr-root .vr-button--primary,
+.verifai-landing.vr-root .vr-finale__cta {
+  background:#216443;border:1px solid #216443;color:#FFFFFF!important;
+  box-shadow:none;
+}
+.verifai-landing.vr-root .vr-button--primary:hover,
+.verifai-landing.vr-root .vr-finale__cta:hover {background:#317A55;border-color:#317A55;}
+.verifai-landing.vr-root .vr-button--outline {
+  background:#FFFFFF;color:#254531!important;border-color:#9BB9A3;
+}
+.verifai-landing.vr-root .vr-button--outline:hover {background:#EAF3E9;border-color:#4D9068;}
+
+/* Footer: retain oversized signature but keep it readable on light paper. */
+.verifai-landing.vr-root .vr-finale__atmosphere {
+  background:radial-gradient(ellipse 52% 42% at 77% 25%,rgba(72,133,84,.05),transparent 80%);
+}
+.verifai-landing.vr-root .vr-finale__light {background:#2A7650;box-shadow:none;}
+.verifai-landing.vr-root .vr-finale__overline {color:#416C4E;}
+.verifai-landing.vr-root .vr-finale__lead-title h2 {color:#111D15;}
+.verifai-landing.vr-root .vr-finale__lead-title h2 em {color:#286748;}
+.verifai-landing.vr-root .vr-finale__lead-action > p {color:#465248;}
+.verifai-landing.vr-root .vr-finale__directory,
+.verifai-landing.vr-root .vr-finale__closing {border-color:#D4DDD2;}
+.verifai-landing.vr-root .vr-finale__logo {color:#18251B!important;}
+.verifai-landing.vr-root .vr-finale__logo span:last-child > span {color:#286748;}
+.verifai-landing.vr-root .vr-finale__column h3 {color:#202D22!important;}
+.verifai-landing.vr-root .vr-finale__identity > p,
+.verifai-landing.vr-root .vr-finale__column a,
+.verifai-landing.vr-root .vr-finale__closing {color:#536155;}
+.verifai-landing.vr-root .vr-finale__column a:hover {color:#1D6940;}
+.verifai-landing.vr-root .vr-finale__signature {color:#CFD6CB;opacity:1;}
+.verifai-landing.vr-root .vr-finale__signature span {color:#7F9B83;}
+.verifai-landing.vr-root .vr-finale__motto > span {background:#27704B;}
+.verifai-landing.vr-root .vr-finale__closing a {color:#224F36!important;}
+.verifai-landing.vr-root .vr-finale__logo-mark {background:#FFFFFF;border:1px solid #D8E2D8;}
+
+@media(max-width:640px) {
+  .verifai-landing.vr-root #benefits.vi-benefits .vi-benefits-intro {
+    border:0;padding-top:0;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vr-section::after,
+  .verifai-landing.vr-root .vr-finale__grain {animation:none;}
+}

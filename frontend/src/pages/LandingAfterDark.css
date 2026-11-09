@@ -644,3 +644,15 @@
 @media(min-width:881px) and (max-width:1280px) {
   .verifai-landing.vr-root .vr-finale__signature {font-size:29.2vw;}
 }
+
+
+/* Brand consistency: the same monochrome owl appears in the footer. */
+.verifai-landing.vr-root .vr-finale__logo-mark {
+  background:#F8F8F5;
+  border-color:rgba(255,255,255,.84);
+}
+.verifai-landing.vr-root .vr-finale__logo-mark img {
+  display:block;
+  width:31px;height:31px;
+  object-fit:contain;
+}

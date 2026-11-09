@@ -42,7 +42,20 @@ export function BenefitsSection() {
                 className="vi-benefit-video"
                 src="/cinema/benefits-orb.mp4"
                 poster="/cinema/benefits-orb-poster.jpg"
-                autoPlay loop muted playsInline preload="metadata"
+                autoPlay={!reduceMotion} loop={!reduceMotion} muted playsInline preload="auto"
+                onCanPlay={event => {
+                  // Some deployed browsers need an explicit play call after data
+                  // arrives, despite the muted autoplay attribute.
+                  if (!reduceMotion && event.currentTarget.paused) {
+                    void event.currentTarget.play().catch(() => {
+                      // Browser policy may still block playback; the poster remains visible.
+                    });
+                  }
+                }}
+                onError={event => {
+                  // Keep the matching poster visible if a CDN/proxy blocks MP4 streaming.
+                  event.currentTarget.style.opacity = '0';
+                }}
                 aria-label="Abstract animated evidence visual"
               />
               <div className="vi-benefit-video-fade" aria-hidden="true" />

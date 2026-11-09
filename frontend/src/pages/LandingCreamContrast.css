@@ -1,0 +1,239 @@
+/*
+ * VerifAI — Warm Paper / Contrast Pass
+ * Final landing-only layer: cream instead of bright white, legible near-black
+ * ink, visible graphite/olive borders, restrained pine-green interactions.
+ * Preserve all geometry, scroll animations, media and section continuity.
+ */
+.verifai-landing.vr-root {
+  --vr-black:#1E2520;
+  --vr-green:#22583A;
+  --vr-moss:#47594B;
+  --vr-white:#202721;
+  --vr-mute:#3F4941;
+  --vr-hairline:rgba(45,56,46,.34);
+  --vr-flow-base:#F5F1E8;
+  background:#F5F1E8;
+  color:#202721;
+}
+.verifai-landing.vr-root main {background:#F5F1E8;}
+.verifai-landing.vr-root .vr-section,
+.verifai-landing.vr-root #benefits.vi-benefits,
+.verifai-landing.vr-root .vr-finale {color:#202721;}
+.verifai-landing.vr-root .vr-difference {
+  background:linear-gradient(180deg,#F5F1E8 0%,#F4F0E7 55%,#F1EEE5 100%);
+}
+.verifai-landing.vr-root #benefits.vi-benefits {
+  background:linear-gradient(180deg,#F1EEE5 0%,#F3EFE6 56%,#F5F1E8 100%);
+}
+.verifai-landing.vr-root .vr-consensus {
+  background:linear-gradient(180deg,#F5F1E8 0%,#F5F2E9 52%,#F2EEE5 100%);
+}
+.verifai-landing.vr-root .vr-approach {
+  background:linear-gradient(180deg,#F2EEE5 0%,#F4F0E6 52%,#F3EFE6 100%);
+}
+.verifai-landing.vr-root > .vr-finale,
+.verifai-landing.vr-root .vr-finale {
+  background:linear-gradient(180deg,#F3EFE6 0%,#EEEAE0 65%,#E8E5DA 100%);
+}
+/* Type: more ink, less washed-out grey. */
+.verifai-landing.vr-root .vr-section__heading h2,
+.verifai-landing.vr-root #benefits.vi-benefits h2,
+.verifai-landing.vr-root .vr-finale__lead-title h2 {color:#151B16;}
+.verifai-landing.vr-root .vr-section__heading h2 em,
+.verifai-landing.vr-root #benefits.vi-benefits h2 em,
+.verifai-landing.vr-root .vr-finale__lead-title h2 em {color:#22583A;}
+.verifai-landing.vr-root .vr-section__heading > p,
+.verifai-landing.vr-root #benefits.vi-benefits .vi-benefits-intro,
+.verifai-landing.vr-root .vr-finale__lead-action > p {color:#343D36;}
+.verifai-landing.vr-root .vr-disclaimer {color:#455047;}
+
+/* Research panel: definite 1px borders and separate tonal surfaces. */
+.verifai-landing.vr-root .vr-forensic {
+  background:#F9F6EF;
+  border:1px solid #82927F;
+  box-shadow:0 16px 38px rgba(29,38,30,.07);
+}
+.verifai-landing.vr-root .vr-forensic__index {
+  background:#EEECE2;
+  border-color:#A8B2A5;
+}
+.verifai-landing.vr-root .vr-forensic__index button {
+  color:#29342C;
+  border-color:#BBC2B6;
+}
+.verifai-landing.vr-root .vr-forensic__index button:hover,
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  background:#DEE8D9;color:#1A3424;
+}
+.verifai-landing.vr-root .vr-forensic__reading {
+  background:#F9F6EF;
+}
+.verifai-landing.vr-root .vr-forensic__reading blockquote {color:#19221B;}
+.verifai-landing.vr-root .vr-forensic__reading p {color:#343E36;}
+.verifai-landing.vr-root .vr-forensic__verdict {color:#22583A;}
+.verifai-landing.vr-root .vr-forensic__reading .vr-forensic__insight {color:#284A34;}
+
+/* Benefits: distinct cream cards, graphite outlines and dark detail text. */
+.verifai-landing.vr-root #benefits .vi-benefit-card,
+.verifai-landing.vr-root #benefits .vi-benefit-card-left,
+.verifai-landing.vr-root #benefits .vi-benefit-card-right,
+.verifai-landing.vr-root #benefits .vi-benefit-card-center {
+  background:#FAF7F0;
+  color:#1D2720;
+  border:1px solid #82927F;
+  box-shadow:0 10px 27px rgba(30,43,32,.07);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card:hover {
+  border-color:#677D69;
+  box-shadow:0 16px 34px rgba(30,43,32,.11);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card h3,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes span,
+.verifai-landing.vr-root #benefits .vi-benefit-panel strong {color:#1F2B22;}
+.verifai-landing.vr-root #benefits .vi-benefit-card p,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes small,
+.verifai-landing.vr-root #benefits .vi-benefit-center-note small {color:#39443B;}
+.verifai-landing.vr-root #benefits .vi-benefit-panel {
+  background:#EDEDE2;border:1px solid #B4BDAF;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-panel-lines span {background:#A8B4A5;}
+.verifai-landing.vr-root #benefits .vi-benefit-bottomline,
+.verifai-landing.vr-root #benefits .vi-benefit-center-note,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes > div {border-color:#B5BEB1;}
+/* Preserve the dark monochrome orb as intentional photo-like contrast. */
+.verifai-landing.vr-root #benefits .vi-benefit-video-wrap {background:#1B201C;}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy {background:#FAF7F0;}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy h3 {color:#1E2821;}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy p {color:#39443B;}
+
+/* Consensus: stronger row dividers, legible comparison quotes and evidence. */
+.verifai-landing.vr-root .vr-consensus__lines,
+.verifai-landing.vr-root .vr-consensus__voice {border-color:#AAB6A8;}
+.verifai-landing.vr-root .vr-consensus__voice > span {color:#375440;}
+.verifai-landing.vr-root .vr-consensus__voice blockquote {color:#1A221C;}
+.verifai-landing.vr-root .vr-consensus__decision strong {color:#245D3E;}
+.verifai-landing.vr-root .vr-consensus__decision p {color:#343E36;}
+.verifai-landing.vr-root .vr-consensus__evidence {
+  background:#F9F6EF;border:1px solid #82927F;
+}
+.verifai-landing.vr-root .vr-consensus__evidence-inner {background:#EEEFE5;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner strong {color:#1B281E;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner p {color:#36433A;}
+
+/* Approach: stronger timeline rules and text. */
+.verifai-landing.vr-root .vr-approach__steps,
+.verifai-landing.vr-root .vr-approach__steps article {border-color:#AAB5A9;}
+.verifai-landing.vr-root .vr-approach__steps h3 {color:#19231C;}
+.verifai-landing.vr-root .vr-approach__steps p {color:#364139;}
+.verifai-landing.vr-root .vr-approach__statement {border-color:#667967;}
+
+/* Navbar: cream material on cream canvas; visible outer stroke. */
+.verifai-landing.vr-root .vrs-nav__links,
+.verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links {
+  background:rgba(250,247,240,.97);
+  border:1px solid #82927F;
+  box-shadow:0 5px 19px rgba(33,43,34,.1);
+}
+.verifai-landing.vr-root .vrs-nav__links a {color:#1E2921;}
+.verifai-landing.vr-root .vrs-nav__links a:hover {background:#E8EDE1;}
+.verifai-landing.vr-root .vrs-nav__links a.active {background:#DDE7D9;color:#17462D;}
+.verifai-landing.vr-root .vrs-nav__logo {
+  background:#FAF7F0;border:1px solid #82927F;
+}
+.verifai-landing.vr-root .vrs-nav__burger {
+  background:#FAF7F0;border-color:#82927F;color:#1E3526;
+}
+.verifai-landing.vr-root .vrs-nav__mobile {
+  background:#FAF7F0;border-color:#9CA99C;
+}
+.verifai-landing.vr-root .vrs-nav__mobile a {color:#1C291F;border-color:#BEC6BA;}
+.verifai-landing.vr-root .vr-button--outline {
+  background:#FAF7F0;border-color:#7E9A84;color:#1D4B30!important;
+}
+
+/* Footer signature and fineprint, now distinguishable from background. */
+.verifai-landing.vr-root .vr-finale__overline {color:#315F42;}
+.verifai-landing.vr-root .vr-finale__identity > p,
+.verifai-landing.vr-root .vr-finale__column a,
+.verifai-landing.vr-root .vr-finale__closing {color:#3D493F;}
+.verifai-landing.vr-root .vr-finale__column h3 {color:#1A251D!important;}
+.verifai-landing.vr-root .vr-finale__directory,
+.verifai-landing.vr-root .vr-finale__closing {border-color:#B4BEB1;}
+.verifai-landing.vr-root .vr-finale__signature {color:#B2BFB0;opacity:1;}
+.verifai-landing.vr-root .vr-finale__signature span {color:#62876C;}
+.verifai-landing.vr-root .vr-finale__logo-mark {
+  background:#FAF7F0;border:1px solid #AAB5A9;
+}
+
+
+/* Final contrast refinement: slightly heavier outlines and deeper ink.
+   Scope these rules to real landing components, not generic app cards. */
+.verifai-landing.vr-root {
+  --vr-card-stroke: #68796B;
+  --vr-card-stroke-active: #435F49;
+  --vr-card-ink: #162019;
+  --vr-card-muted: #2E3931;
+}
+.verifai-landing.vr-root .vr-forensic,
+.verifai-landing.vr-root .vr-consensus__evidence,
+.verifai-landing.vr-root #benefits .vi-benefit-card,
+.verifai-landing.vr-root #benefits .vi-benefit-card-left,
+.verifai-landing.vr-root #benefits .vi-benefit-card-center,
+.verifai-landing.vr-root #benefits .vi-benefit-card-right {
+  border: 1.5px solid var(--vr-card-stroke);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card:hover,
+.verifai-landing.vr-root .vr-forensic:hover,
+.verifai-landing.vr-root .vr-consensus__evidence:hover {
+  border-color: var(--vr-card-stroke-active);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-panel,
+.verifai-landing.vr-root .vr-approach__statement {
+  border-width: 1.5px;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-panel {border-color:#859486;}
+.verifai-landing.vr-root .vr-approach__statement {border-color:#4A6850;}
+.verifai-landing.vr-root .vr-forensic__reading blockquote,
+.verifai-landing.vr-root .vr-consensus__voice blockquote,
+.verifai-landing.vr-root .vr-approach__steps h3,
+.verifai-landing.vr-root #benefits .vi-benefit-card h3,
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy h3,
+.verifai-landing.vr-root #benefits .vi-benefit-panel strong,
+.verifai-landing.vr-root .vr-consensus__evidence-inner strong {
+  color: var(--vr-card-ink);
+}
+.verifai-landing.vr-root .vr-forensic__reading p,
+.verifai-landing.vr-root .vr-consensus__decision p,
+.verifai-landing.vr-root .vr-consensus__evidence-inner p,
+.verifai-landing.vr-root .vr-approach__steps p,
+.verifai-landing.vr-root #benefits .vi-benefit-card p,
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy p,
+.verifai-landing.vr-root #benefits .vi-benefit-outcomes small,
+.verifai-landing.vr-root #benefits .vi-benefit-center-note small {
+  color: var(--vr-card-muted);
+}
+.verifai-landing.vr-root .vr-forensic__index button {color:#243129;}
+.verifai-landing.vr-root .vr-consensus__voice > span {color:#284933;}
+
+/* Slightly reduce distances between desktop navbar labels; retain centre alignment. */
+@media (min-width: 721px) {
+  .verifai-landing.vr-root .vrs-nav__links {
+    width: 93%;
+    justify-self: center;
+  }
+  .verifai-landing.vr-root .vrs-nav__links a {
+    letter-spacing: -0.025em;
+    padding-inline: 2px;
+  }
+}
+
+
+/* Deployment fallback: keep the matching orb still even on slow or failed MP4 requests. */
+.verifai-landing.vr-root #benefits .vi-benefit-video-wrap {
+  background-color:#1B201C;
+  background-image:url('/cinema/benefits-orb-poster.jpg');
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-position:center;
+}

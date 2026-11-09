@@ -1,0 +1,245 @@
+/*
+ * VerifAI — Reversible liquid-glass navbar experiment.
+ * Remove only the LandingNavGlass.css import to restore the previous navbar.
+ * Calm refracted cream glass; no rainbow gloss or perpetual animation.
+ */
+@media (min-width: 721px) {
+  .verifai-landing.vr-root .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links {
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    background:
+      linear-gradient(127deg,rgba(255,255,255,.89) 0%,rgba(255,255,255,.67) 36%,rgba(246,249,240,.81) 72%,rgba(255,255,255,.77) 100%);
+    border:1px solid rgba(238,245,235,.85);
+    outline:1px solid rgba(59,80,64,.34);
+    outline-offset:-1px;
+    box-shadow:
+      0 9px 27px rgba(18,32,24,.13),
+      0 2px 6px rgba(25,37,29,.09),
+      inset 0 1px 1px rgba(255,255,255,.99),
+      inset 0 -1px 2px rgba(67,83,65,.13);
+    backdrop-filter:blur(22px) saturate(145%);
+    -webkit-backdrop-filter:blur(22px) saturate(145%);
+    transition:background .42s ease,box-shadow .42s ease,border-color .42s ease;
+  }
+  /* Refraction band is paint-only; never intercepts links or focus. */
+  .verifai-landing.vr-root .vrs-nav__links::before {
+    content:"";
+    position:absolute;
+    z-index:0;
+    inset:0;
+    border-radius:inherit;
+    background:
+      radial-gradient(ellipse 40% 120% at 10% -15%,rgba(255,255,255,.80),transparent 82%),
+      linear-gradient(176deg,rgba(255,255,255,.72) 0%,rgba(255,255,255,.12) 26%,transparent 65%,rgba(255,255,255,.17) 100%);
+    pointer-events:none;
+    opacity:.9;
+  }
+  .verifai-landing.vr-root .vrs-nav__links::after {
+    content:"";
+    position:absolute;
+    z-index:0;
+    left:12%;
+    top:-130%;
+    width:23%;
+    height:350%;
+    border-radius:50%;
+    transform:rotate(18deg);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.27),transparent);
+    pointer-events:none;
+    transition:transform .9s cubic-bezier(.22,1,.36,1),left .9s cubic-bezier(.22,1,.36,1);
+  }
+  .verifai-landing.vr-root .vrs-nav__links:hover::after {
+    left:77%;
+    transform:rotate(18deg) translateY(4%);
+  }
+  .verifai-landing.vr-root .vrs-nav__links a {
+    z-index:1;
+    letter-spacing:-.025em;
+    color:#1C2D22;
+    font-weight:600;
+    opacity:1;
+    transition:background .34s cubic-bezier(.22,1,.36,1),color .25s ease,transform .38s cubic-bezier(.22,1,.36,1),box-shadow .34s ease;
+  }
+  .verifai-landing.vr-root .vrs-nav__links a:hover {
+    color:#163623;
+    background:rgba(226,236,222,.76);
+    box-shadow:inset 0 1px rgba(255,255,255,.77),0 2px 9px rgba(35,56,40,.07);
+    transform:translateY(-1px);
+  }
+  .verifai-landing.vr-root .vrs-nav__links a.active {
+    background:linear-gradient(165deg,rgba(227,237,221,.94),rgba(209,226,204,.79));
+    color:#17482B;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 2px 9px rgba(33,63,39,.10);
+    transform:none;
+  }
+  .verifai-landing.vr-root .vrs-nav__logo,
+  .verifai-landing.vr-root .vrs-nav__sign-in,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {
+    backdrop-filter:blur(18px) saturate(125%);
+    -webkit-backdrop-filter:blur(18px) saturate(125%);
+    box-shadow:0 6px 18px rgba(20,35,24,.13),inset 0 1px 1px rgba(255,255,255,.44);
+  }
+  .verifai-landing.vr-root .vrs-nav__logo {
+    border-color:rgba(75,99,77,.42);
+    background:rgba(252,251,246,.85);
+  }
+  .verifai-landing.vr-root .vrs-nav__sign-in,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {
+    background:rgba(24,70,43,.90);
+    border-color:rgba(19,57,35,.55);
+    color:#FFFFFF;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav__links::after,
+  .verifai-landing.vr-root .vrs-nav__links a {
+    transition:none!important;
+    transform:none!important;
+  }
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .verifai-landing.vr-root .vrs-nav__links {
+    background:#F7F4EC;
+  }
+}
+
+/* iPhone-style fluid glass v2
+   More transparent glass with distinct warm/dark adaptive contrast.
+   Hero detection uses the existing navbar scroll handler, not animation RAF.
+   No WebGL or continuous animation. */
+@media (min-width:721px) {
+  .verifai-landing.vr-root .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links {
+    width:93%;
+    justify-self:center;
+    background:linear-gradient(125deg,
+      rgba(255,255,255,.27) 0%,
+      rgba(255,255,255,.12) 34%,
+      rgba(239,246,238,.19) 72%,
+      rgba(255,255,255,.29) 100%);
+    border:1px solid rgba(255,255,255,.52);
+    outline:1px solid rgba(59,80,64,.20);
+    outline-offset:-2px;
+    box-shadow:
+      0 12px 36px rgba(20,29,21,.15),
+      inset 0 1.5px 1px rgba(255,255,255,.76),
+      inset 0 -1px 1px rgba(38,60,45,.12);
+    backdrop-filter:blur(28px) saturate(162%) contrast(105%);
+    -webkit-backdrop-filter:blur(28px) saturate(162%) contrast(105%);
+  }
+  .verifai-landing.vr-root .vrs-nav__links::before {
+    opacity:.68;
+    background:
+      radial-gradient(ellipse 43% 135% at 7% -22%,rgba(255,255,255,.43),transparent 74%),
+      linear-gradient(179deg,rgba(255,255,255,.41),transparent 34%,rgba(255,255,255,.10) 100%);
+  }
+  .verifai-landing.vr-root .vrs-nav__links::after {
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  }
+  .verifai-landing.vr-root .vrs-nav__links a {
+    color:#17261C;
+    font-weight:600;
+    text-shadow:0 1px 4px rgba(255,255,255,.35);
+  }
+  .verifai-landing.vr-root .vrs-nav__links a:hover {
+    color:#132C1D;
+    background:rgba(238,248,234,.22);
+    box-shadow:inset 0 1px rgba(255,255,255,.29),0 2px 9px rgba(35,56,40,.07);
+  }
+  .verifai-landing.vr-root .vrs-nav__links a.active {
+    color:#12452A;
+    background:rgba(236,248,231,.29);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.49),0 1px 9px rgba(24,57,30,.09);
+  }
+  .verifai-landing.vr-root .vrs-nav__logo {
+    background:rgba(255,255,255,.56);
+    border:1px solid rgba(255,255,255,.78);
+    box-shadow:0 9px 25px rgba(18,30,22,.17),inset 0 1px 1px rgba(255,255,255,.72);
+    backdrop-filter:blur(24px) saturate(145%);
+    -webkit-backdrop-filter:blur(24px) saturate(145%);
+  }
+  .verifai-landing.vr-root .vrs-nav__sign-in,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {
+    background:rgba(28,69,43,.72);
+    border:1px solid rgba(239,250,236,.48);
+    box-shadow:0 9px 26px rgba(12,35,20,.16),inset 0 1px rgba(255,255,255,.19);
+    backdrop-filter:blur(24px) saturate(145%);
+    -webkit-backdrop-filter:blur(24px) saturate(145%);
+  }
+  /* Monochrome video is darker than the cream sections. Adapt contrast
+     until the end of the hero scrolls behind the fixed header. */
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links {
+    background:linear-gradient(125deg,
+      rgba(20,25,22,.41) 0%,
+      rgba(29,33,29,.22) 32%,
+      rgba(22,28,24,.34) 72%,
+      rgba(54,58,53,.24) 100%);
+    border-color:rgba(255,255,255,.43);
+    outline-color:rgba(255,255,255,.18);
+    box-shadow:
+      0 9px 28px rgba(0,0,0,.19),
+      inset 0 1px 1px rgba(255,255,255,.42),
+      inset 0 -1px 1px rgba(0,0,0,.08);
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a {
+    color:#F6F5F0;
+    text-shadow:0 1px 5px rgba(0,0,0,.5);
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a:hover,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active {
+    color:#FFFFFF;
+    background:rgba(255,255,255,.16);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.23);
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active::after {
+    background:#F2F6EF;
+    box-shadow:-5px 0 #F2F6EF,5px 0 #F2F6EF;
+  }
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  @media(min-width:721px) {
+    .verifai-landing.vr-root .vrs-nav__links {background:rgba(247,244,237,.96);}
+    .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links {background:rgba(25,28,25,.95);}
+  }
+}
+
+
+/* Consistent optical owl alignment across Chrome/Safari and deployed builds. */
+.verifai-landing.vr-root .vrs-nav__logo {
+  display:grid;
+  place-items:center;
+  justify-self:start;
+  flex-shrink:0;
+  padding:0;
+  aspect-ratio:1 / 1;
+  line-height:0;
+}
+.verifai-landing.vr-root .vrs-nav__logo img {
+  display:block;
+  width:84%;
+  height:84%;
+  max-width:84%;
+  max-height:84%;
+  object-fit:contain;
+  object-position:center;
+  margin:auto;
+  transform:translateY(-1px);
+}
+.verifai-landing.vr-root .vr-finale__logo-mark {
+  display:grid;
+  place-items:center;
+  padding:0;
+  overflow:hidden;
+  flex:0 0 auto;
+}
+.verifai-landing.vr-root .vr-finale__logo-mark img {
+  display:block;
+  width:70%;
+  height:70%;
+  object-fit:contain;
+  object-position:center;
+  margin:auto;
+}

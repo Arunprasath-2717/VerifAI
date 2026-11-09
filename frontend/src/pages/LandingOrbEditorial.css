@@ -1,0 +1,64 @@
+/* Benefits / editorial evidence study.
+   Grading is applied to the video and poster together. The original film
+   stays intact, animate-on-scroll cards stay unchanged, and the centre card
+   blends into the same warm graphite material as its neighbours. */
+.verifai-landing.vr-root #benefits .vi-benefit-card-center {
+  background:#1A1B1A;
+  border-color:#393B37;
+  isolation:isolate;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-wrap {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:#1A1B1A;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video {
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  object-position:center center;
+  /* Silver, pale-ivory reflections instead of the stock violet/orange orb. */
+  filter:grayscale(1) sepia(.12) saturate(.40) contrast(1.17) brightness(.92) !important;
+  mix-blend-mode:screen !important;
+  transform:scale(.965);
+  transform-origin:50% 48%;
+  will-change:auto;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-fade {
+  inset:auto 0 0;
+  height:clamp(75px,8vw,112px);
+  background:linear-gradient(180deg,rgba(26,27,26,0),rgba(26,27,26,.70) 62%,#1A1B1A 100%);
+  pointer-events:none;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy {
+  position:relative;
+  z-index:1;
+  background:#1A1B1A;
+  padding-top:clamp(18px,2vw,27px);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy h3 {
+  color:#F0EDE6;
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video-copy p {
+  color:#BBB8B1;
+}
+@media(max-width:860px) {
+  .verifai-landing.vr-root #benefits .vi-benefit-video-wrap {
+    height:clamp(270px,46vw,360px);
+  }
+}
+@media(max-width:640px) {
+  .verifai-landing.vr-root #benefits .vi-benefit-video-wrap {
+    height:clamp(255px,80vw,310px);
+  }
+  .verifai-landing.vr-root #benefits .vi-benefit-video {
+    transform:scale(.95);
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root #benefits .vi-benefit-video {
+    transform:none;
+  }
+}

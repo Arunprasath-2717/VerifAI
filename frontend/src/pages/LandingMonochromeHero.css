@@ -237,3 +237,27 @@
 @media(prefers-reduced-motion:reduce) {
   .verifai-landing.vr-root .vrs-nav__links a {transition:none;}
 }
+
+
+/* Keep the tall owl silhouette optically centered INSIDE the circular brand mark. */
+.verifai-landing.vr-root .vrs-nav__logo {
+  position:relative;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  isolation:isolate;
+  padding:0;
+  line-height:0;
+  aspect-ratio:1;
+}
+.verifai-landing.vr-root .vrs-nav__logo img {
+  display:block;
+  width:84%;
+  height:84%;
+  max-width:84%;
+  max-height:84%;
+  object-fit:contain;
+  object-position:center;
+  transform:translateY(-1px);
+  flex:none;
+}
