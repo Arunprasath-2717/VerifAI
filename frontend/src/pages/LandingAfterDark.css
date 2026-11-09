@@ -1,0 +1,646 @@
+/*
+ * VerifAI — After Dark, 2026-11-09
+ * Rich forest/charcoal editorial design, low-contrast moving film grain.
+ * Loaded only on the public landing page after all earlier landing styles.
+ * BenefitsSection markup, card dimensions, orb media and color are untouched.
+ */
+.verifai-landing.vr-root {
+  --vr-black:#121b17;
+  --vr-green:#76D69B;
+  --vr-moss:#719C7B;
+  --vr-white:#F4F1E7;
+  --vr-mute:#B5C7B7;
+  --vr-hairline:rgba(199,222,201,.20);
+  background:#121b17;
+  color:#F4F1E7;
+  overflow:clip;
+}
+.verifai-landing.vr-root ::selection {background:#9ADCB0;color:#11291B;}
+.verifai-landing.vr-root :focus-visible {outline:2px solid #A6F4C2;}
+.verifai-landing.vr-root .vr-section {position:relative;isolation:isolate;scroll-margin-top:90px;}
+.verifai-landing.vr-root .vr-section > .vr-container {position:relative;z-index:2;}
+.verifai-landing.vr-root .vr-section::after {
+  display:block;
+  content:"";
+  position:absolute;
+  z-index:1;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:.11;
+  background:url("/cinema/verifai-grain.svg") 0 0/280px 280px repeat;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+  animation:vr-grain-drift 8s steps(8,end) infinite;
+}
+@keyframes vr-grain-drift {
+  0% { background-position:0 0; }
+  25% { background-position:38px -28px; }
+  50% { background-position:-54px 44px; }
+  75% { background-position:28px 56px; }
+  100% { background-position:0 0; }
+}
+.verifai-landing.vr-root .vr-section__heading h2 {
+  color:#F5F3EA;
+  line-height:1.02;
+}
+.verifai-landing.vr-root .vr-section__heading h2 em {color:#A4CFAD;}
+.verifai-landing.vr-root .vr-section__heading > p {
+  color:#BCCFC0;
+  font-size:clamp(18px,1.4vw,21px);
+  line-height:1.6;
+}
+.verifai-landing.vr-root .vr-disclaimer {color:#A4BAA9;font-size:14px;}
+.verifai-landing.vr-root .vr-button--outline {
+  background:rgba(228,241,226,.055);
+  border-color:rgba(188,223,193,.42);
+  color:#F4F3EA!important;
+  box-shadow:none;
+}
+.verifai-landing.vr-root .vr-button--outline:hover {
+  background:rgba(139,211,157,.12);
+  border-color:#91CC9F;
+}
+.verifai-landing.vr-root .vr-button--primary {
+  background:#C9EAD0;
+  border-color:#C9EAD0;
+  color:#14271B!important;
+  box-shadow:none;
+}
+/* NAV — warm dark glass, without an extra container frame */
+.verifai-landing.vr-root .vrs-nav__links {
+  background:rgba(18,32,23,.89);
+  border:1px solid rgba(190,214,185,.29);
+  box-shadow:0 9px 30px rgba(0,0,0,.14);
+}
+.verifai-landing.vr-root .vrs-nav__links a {color:#C5D7C9;opacity:1;}
+.verifai-landing.vr-root .vrs-nav__links a:hover,
+.verifai-landing.vr-root .vrs-nav__links a.active {color:#FFFFFF;}
+.verifai-landing.vr-root .vrs-nav__links a:hover {background:rgba(178,223,184,.08);}
+.verifai-landing.vr-root .vrs-nav__links a.active::after {
+  background:#A5D9B3;box-shadow:-5px 0 #A5D9B3,5px 0 #A5D9B3;
+}
+.verifai-landing.vr-root .vrs-nav__sign-in {
+  background:#D7EDDA;
+  border-color:#D7EDDA;
+  color:#1A3B28;
+  font-weight:650;
+  box-shadow:0 8px 24px rgba(0,0,0,.13);
+}
+.verifai-landing.vr-root .vrs-nav__sign-in:hover {background:#F4FAEF;color:#183D27;}
+.verifai-landing.vr-root .vrs-nav__logo {background:#F6F6EC;border-color:#B9D7BE;}
+.verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links {background:rgba(18,30,23,.96);}
+.verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {background:#D7EDDA;color:#1B412B;}
+.verifai-landing.vr-root .vrs-nav__burger {background:#1B3023;color:#F0F7EF;border:1px solid #5F8068;}
+.verifai-landing.vr-root .vrs-nav__mobile {
+  background:rgba(18,30,23,.985);
+  border-color:#4B7255;
+}
+.verifai-landing.vr-root .vrs-nav__mobile a {
+  color:#F1F6EE;border-color:rgba(192,221,196,.17);
+}
+.verifai-landing.vr-root .vrs-nav__mobile-action {color:#A7E9BC!important;}
+
+/* DIVERSE SECTION MATERIALS — no black blank panels or white wash */
+.verifai-landing.vr-root .vr-difference {
+  background:
+    radial-gradient(ellipse 68% 65% at 98% 42%,rgba(71,116,80,.35),transparent 80%),
+    radial-gradient(ellipse 45% 65% at 3% 100%,rgba(92,105,74,.20),transparent 75%),
+    linear-gradient(145deg,#15251D 0%,#1C3025 57%,#14231D 100%);
+  border-top:1px solid rgba(209,234,205,.09);
+}
+.verifai-landing.vr-root .vr-difference::before {
+  background-image:
+    linear-gradient(rgba(183,213,179,.085) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(183,213,179,.085) 1px,transparent 1px);
+  background-size:76px 76px;
+  opacity:.26;
+  mask-image:linear-gradient(transparent,#000 12%,#000 80%,transparent);
+}
+.verifai-landing.vr-root .vr-forensic {
+  background:rgba(11,26,18,.52);
+  border:1px solid rgba(195,221,190,.2);
+  border-radius:16px;
+  overflow:hidden;
+  backdrop-filter:blur(13px);
+  box-shadow:0 28px 65px rgba(0,0,0,.13);
+}
+.verifai-landing.vr-root .vr-forensic__index {
+  background:rgba(30,54,36,.7);
+  border-color:rgba(200,222,199,.21);
+}
+.verifai-landing.vr-root .vr-forensic__index button {
+  color:#C3D1C1;
+  border-color:rgba(195,220,190,.16);
+  font-size:clamp(17px,1.24vw,20px);
+}
+.verifai-landing.vr-root .vr-forensic__index button:hover,
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  background:rgba(147,201,151,.13);
+  color:#FFFDF3;
+}
+.verifai-landing.vr-root .vr-forensic__index button.selected {
+  box-shadow:inset 3px 0 0 #B1DEB6;
+}
+.verifai-landing.vr-root .vr-forensic__index button.selected svg {color:#B2DEBA;}
+.verifai-landing.vr-root .vr-forensic__reading {
+  background:linear-gradient(115deg,rgba(25,47,32,.86),rgba(20,39,31,.83));
+}
+.verifai-landing.vr-root .vr-forensic__reading blockquote {color:#F3F1E8;}
+.verifai-landing.vr-root .vr-forensic__verdict {color:#A7E0B7;}
+.verifai-landing.vr-root .vr-forensic__reading p {color:#C3D5C6;}
+.verifai-landing.vr-root .vr-forensic__reading .vr-forensic__insight {
+  border-color:#A3CEA7;color:#E8F1E6;
+}
+
+/* Three original benefit cards and blue/violet/amber orb preserved.
+   Only the exterior backdrop switches to a richer green, never the media. */
+.verifai-landing.vr-root #benefits.vi-benefits {
+  background:
+    radial-gradient(ellipse 45% 50% at 3% 14%,rgba(95,131,89,.24),transparent 85%),
+    radial-gradient(ellipse 45% 55% at 96% 85%,rgba(51,113,73,.20),transparent 78%),
+    linear-gradient(155deg,#1C3024,#1D2D24 43%,#17261F 100%);
+  color:#F4F1E9;
+  border-top:1px solid rgba(209,233,208,.13);
+  border-bottom:1px solid rgba(209,233,208,.13);
+}
+.verifai-landing.vr-root #benefits.vi-benefits h2 {color:#F4F1E9;}
+.verifai-landing.vr-root #benefits.vi-benefits h2 em {color:#DCC1A7;}
+.verifai-landing.vr-root #benefits.vi-benefits .vi-benefits-intro {color:#D2DACD;border-color:#8CAF8D;}
+.verifai-landing.vr-root #benefits .vi-benefits-head {border-color:rgba(206,224,196,.28);}
+.verifai-landing.vr-root #benefits .vi-benefit-card {
+  border:1px solid rgba(204,214,196,.29);
+  box-shadow:0 24px 44px rgba(0,0,0,.18);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-card:hover {
+  transform:translateY(-5px);
+  border-color:rgba(199,228,194,.58);
+  box-shadow:0 28px 65px rgba(0,0,0,.23);
+}
+.verifai-landing.vr-root #benefits .vi-benefit-video {filter:none!important;mix-blend-mode:normal!important;}
+.verifai-landing.vr-root #benefits .vi-benefit-card-center {background:#121212;}
+
+/* CONSENSUS — text-forward editorial evidence lanes on warm graphite */
+.verifai-landing.vr-root .vr-consensus {
+  background:
+    radial-gradient(ellipse 58% 62% at 7% 80%,rgba(67,99,72,.29),transparent 75%),
+    radial-gradient(ellipse 55% 55% at 92% 0%,rgba(113,128,94,.16),transparent 75%),
+    linear-gradient(132deg,#1A2821,#1E2D27 56%,#1C2922);
+  border-top:1px solid rgba(207,229,203,.14);
+}
+.verifai-landing.vr-root .vr-consensus::before {
+  border-color:rgba(151,196,153,.16);
+  box-shadow:0 0 0 75px rgba(110,143,103,.028),0 0 0 145px rgba(110,143,103,.02);
+}
+.verifai-landing.vr-root .vr-consensus__lines {border-color:rgba(194,214,194,.22);}
+.verifai-landing.vr-root .vr-consensus__voice {border-color:rgba(194,214,194,.2);}
+.verifai-landing.vr-root .vr-consensus__voice:hover {background:rgba(147,197,151,.085);}
+.verifai-landing.vr-root .vr-consensus__voice > span {color:#B4CFB8;}
+.verifai-landing.vr-root .vr-consensus__voice blockquote {color:#F5F3E9;}
+.verifai-landing.vr-root .vr-consensus__voice svg {color:#A8D5B0;}
+.verifai-landing.vr-root .vr-consensus__decision strong {color:#B4DDBA;}
+.verifai-landing.vr-root .vr-consensus__decision p {color:#C4D2C2;}
+.verifai-landing.vr-root .vr-consensus__evidence {
+  border:1px solid rgba(155,205,163,.42);
+  border-radius:14px;
+  background:rgba(19,45,28,.48);
+  box-shadow:none;
+}
+.verifai-landing.vr-root .vr-consensus__evidence-inner {
+  background:linear-gradient(92deg,rgba(89,161,104,.16),transparent);
+}
+.verifai-landing.vr-root .vr-consensus__evidence-inner > svg {color:#B1DBBC;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner strong {color:#F2F5E9;}
+.verifai-landing.vr-root .vr-consensus__evidence-inner p {color:#C4D3C1;}
+
+/* APPROACH — subtle architectural rhythm, not a white featureless field */
+.verifai-landing.vr-root .vr-approach {
+  background:
+    radial-gradient(ellipse 46% 75% at 97% 55%,rgba(100,136,98,.26),transparent 85%),
+    repeating-linear-gradient(90deg,transparent 0 122px,rgba(192,221,189,.029) 123px,transparent 124px),
+    linear-gradient(155deg,#15231B 0%,#192B22 56%,#15241C 100%);
+  border-top:1px solid rgba(203,232,199,.14);
+}
+.verifai-landing.vr-root .vr-approach__steps {
+  border-color:rgba(183,218,185,.28);
+  border-left:1px solid rgba(175,212,176,.4);
+}
+.verifai-landing.vr-root .vr-approach__steps article {border-color:rgba(184,218,185,.25);}
+.verifai-landing.vr-root .vr-approach__steps article:hover {
+  background:rgba(141,195,148,.075);
+}
+.verifai-landing.vr-root .vr-approach__steps article > span {color:#B7D9B2;}
+.verifai-landing.vr-root .vr-approach__steps h3 {color:#F2F2E7;}
+.verifai-landing.vr-root .vr-approach__steps p {color:#C4D4C5;}
+.verifai-landing.vr-root .vr-approach__steps svg {color:#A8C9AA;}
+.verifai-landing.vr-root .vr-approach__statement {
+  background:linear-gradient(155deg,rgba(42,72,49,.8),rgba(25,49,36,.89));
+  border:1px solid rgba(172,214,175,.24);
+  border-radius:18px;
+  box-shadow:0 26px 55px rgba(0,0,0,.16);
+}
+.verifai-landing.vr-root .vr-approach__statement > svg {color:#A8DDB2;}
+.verifai-landing.vr-root .vr-approach__statement p {color:#F4F0E7;}
+.verifai-landing.vr-root .vr-approach__statement em {color:#A6D8AE;}
+.verifai-landing.vr-root .vr-approach__rule {background:linear-gradient(90deg,#9CD9AF,transparent);}
+
+/* Reduced-motion users receive the same colour system without animation. */
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vr-section::after {animation:none;}
+}
+@media(max-width:640px) {
+  .verifai-landing.vr-root .vr-section__heading h2 {
+    font-size:clamp(46px,11vw,71px);
+  }
+  .verifai-landing.vr-root .vr-forensic__index button.selected {box-shadow:inset 3px 0 0 #B1DEB6;}
+}
+
+
+/* FOOTER — an editorial signature, not a photograph or a card. */
+.verifai-landing.vr-root .vr-finale {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  color:#F5F2E7;
+  min-height:860px;
+  background:
+    radial-gradient(ellipse 58% 63% at 92% 13%,rgba(74,113,72,.29),transparent 85%),
+    radial-gradient(ellipse 52% 45% at 10% 83%,rgba(101,121,79,.17),transparent 80%),
+    linear-gradient(155deg,#131D17 0%,#1B2C20 52%,#141F18 100%);
+  border-top:1px solid rgba(190,226,191,.20);
+  font-family:"Inter",var(--vi-face-body,system-ui),sans-serif;
+  scroll-margin-top:0;
+}
+.verifai-landing.vr-root .vr-finale__atmosphere {
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 77% 11%,rgba(154,190,130,.14),transparent 32%),
+    linear-gradient(90deg,transparent 0%,rgba(241,244,214,.018) 48%,transparent 100%);
+}
+.verifai-landing.vr-root .vr-finale__grain {
+  position:absolute;
+  inset:-80px;
+  z-index:0;
+  opacity:.18;
+  background:url("/cinema/verifai-grain.svg") 0 0/280px 280px repeat;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+  animation:vr-grain-drift 7.5s steps(8,end) infinite;
+}
+.verifai-landing.vr-root .vr-finale__inner {
+  position:relative;
+  z-index:2;
+  width:min(1260px,calc(100% - 96px));
+  margin:0 auto;
+  padding:clamp(125px,11vw,160px) 0 31px;
+}
+.verifai-landing.vr-root .vr-finale__lead {
+  display:grid;
+  grid-template-columns:minmax(0,1.48fr) minmax(330px,.72fr);
+  align-items:end;
+  column-gap:clamp(60px,8vw,130px);
+}
+.verifai-landing.vr-root .vr-finale__overline {
+  display:inline-flex;
+  align-items:center;
+  gap:13px;
+  margin:0 0 26px;
+  color:#A8C7AB;
+  font-size:clamp(13px,.94vw,15px);
+  font-weight:650;
+  letter-spacing:.14em;
+  line-height:1.5;
+}
+.verifai-landing.vr-root .vr-finale__light {
+  flex:none;
+  width:9px;height:9px;
+  border-radius:50%;
+  background:#8CD0A3;
+  box-shadow:0 0 0 5px rgba(115,175,128,.1);
+}
+.verifai-landing.vr-root .vr-finale__lead-title h2 {
+  max-width:760px;
+  margin:0;
+  color:#F4F0E5;
+  font:700 clamp(65px,7.5vw,112px)/.98 "Inter",var(--vi-face-body,system-ui),sans-serif;
+  letter-spacing:-.084em;
+}
+.verifai-landing.vr-root .vr-finale__lead-title h2 em {
+  font-style:normal;
+  font-weight:500;
+  color:#A8CBA8;
+}
+.verifai-landing.vr-root .vr-finale__lead-action {
+  padding-bottom:7px;
+  max-width:450px;
+}
+.verifai-landing.vr-root .vr-finale__lead-action > p {
+  max-width:480px;
+  margin:0 0 32px;
+  color:#C7D4C5;
+  font-size:clamp(18px,1.42vw,21px);
+  font-weight:400;
+  line-height:1.58;
+  letter-spacing:-.028em;
+}
+.verifai-landing.vr-root .vr-finale__cta {
+  display:inline-flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:32px;
+  min-height:61px;
+  min-width:218px;
+  padding:0 21px 0 26px;
+  border-radius:5px;
+  background:#D5E8D0;
+  color:#173B28!important;
+  font-size:16px;
+  font-weight:650;
+  letter-spacing:-.018em;
+  box-shadow:0 12px 34px rgba(0,0,0,.12);
+  transition:background .3s,transform .35s cubic-bezier(.22,1,.36,1),box-shadow .3s;
+}
+.verifai-landing.vr-root .vr-finale__cta:hover {
+  background:#F0F7E7;
+  transform:translateY(-3px);
+  box-shadow:0 16px 40px rgba(0,0,0,.19);
+}
+.verifai-landing.vr-root .vr-finale__cta svg {
+  transition:transform .3s;
+}
+.verifai-landing.vr-root .vr-finale__cta:hover svg {transform:translate(3px,-3px);}
+.verifai-landing.vr-root .vr-finale__directory {
+  display:grid;
+  grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,.77fr));
+  column-gap:clamp(22px,4.5vw,76px);
+  margin-top:clamp(72px,8.4vw,119px);
+  padding:38px 0 42px;
+  border-top:1px solid rgba(209,231,207,.25);
+  border-bottom:1px solid rgba(209,231,207,.19);
+  align-items:start;
+}
+.verifai-landing.vr-root .vr-finale__identity {min-width:0;}
+.verifai-landing.vr-root .vr-finale__logo {
+  display:inline-flex;
+  align-items:center;
+  gap:13px;
+  color:#F3F3E9!important;
+  font-size:29px;
+  font-weight:750;
+  letter-spacing:-.065em;
+  line-height:1.15;
+}
+.verifai-landing.vr-root .vr-finale__logo span:last-child > span {color:#A2D4AA;}
+.verifai-landing.vr-root .vr-finale__logo-mark {
+  width:49px;height:49px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(195,228,198,.36);
+  border-radius:11px;
+  background:rgba(144,194,156,.13);
+  color:#F1F8ED;
+}
+.verifai-landing.vr-root .vr-finale__identity > p {
+  max-width:265px;
+  margin:19px 0 0;
+  color:#AFC4B1;
+  font-size:16px;
+  line-height:1.55;
+  font-weight:400;
+}
+.verifai-landing.vr-root .vr-finale__column {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  align-items:flex-start;
+  gap:17px;
+}
+.verifai-landing.vr-root .vr-finale__column h3 {
+  color:#F6F4E8;
+  margin:0 0 8px;
+  font-size:17px;
+  font-weight:650;
+  letter-spacing:-.023em;
+  line-height:1.4;
+}
+.verifai-landing.vr-root .vr-finale__column a {
+  display:inline-block;
+  color:#BCCEBE;
+  font-size:16px;
+  font-weight:450;
+  line-height:1.42;
+  letter-spacing:-.015em;
+  transition:color .24s,transform .24s;
+}
+.verifai-landing.vr-root .vr-finale__column a:hover {
+  color:#F1F6E9;
+  transform:translateX(3px);
+}
+/* Wordmark reads as a closing signature and shares the content grid.
+   No clipping, detached overlays or letter collisions. */
+.verifai-landing.vr-root .vr-finale__signature {
+  display:block;
+  width:100%;
+  text-align:center;
+  margin:clamp(62px,7vw,96px) 0 35px;
+  padding:0 0 .07em;
+  white-space:nowrap;
+  color:#C1D4BF;
+  font-size:clamp(68px,15.6vw,234px);
+  line-height:.82;
+  font-weight:800;
+  letter-spacing:-.108em;
+  font-family:"Inter",var(--vi-face-body,system-ui),sans-serif;
+  opacity:.82;
+  user-select:none;
+}
+.verifai-landing.vr-root .vr-finale__signature span {
+  color:#8EB59A;
+}
+.verifai-landing.vr-root .vr-finale__closing {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  padding-top:23px;
+  border-top:1px solid rgba(216,234,214,.22);
+  color:#B3C8B4;
+  font-size:14px;
+  font-weight:450;
+  line-height:1.4;
+  letter-spacing:-.01em;
+}
+.verifai-landing.vr-root .vr-finale__motto {
+  display:inline-flex;
+  gap:11px;
+  align-items:center;
+}
+.verifai-landing.vr-root .vr-finale__motto > span {
+  width:7px;height:7px;
+  display:inline-block;
+  border-radius:100%;
+  background:#88CCA1;
+}
+.verifai-landing.vr-root .vr-finale__closing a {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#E0EBDD!important;
+  white-space:nowrap;
+}
+.verifai-landing.vr-root .vr-finale__closing a:hover {color:#FFFFFF!important;}
+@media(max-width:1120px) {
+  .verifai-landing.vr-root .vr-finale__lead {grid-template-columns:minmax(0,1.3fr) minmax(300px,.9fr);gap:55px;}
+  .verifai-landing.vr-root .vr-finale__directory {grid-template-columns:minmax(0,1.25fr) repeat(3,minmax(0,.82fr));gap:29px;}
+  .verifai-landing.vr-root .vr-finale__column a {font-size:15px;}
+}
+@media(max-width:880px) {
+  .verifai-landing.vr-root .vr-finale__inner {width:calc(100% - 64px);}
+  .verifai-landing.vr-root .vr-finale__lead {grid-template-columns:1fr;gap:37px;}
+  .verifai-landing.vr-root .vr-finale__lead-action {max-width:570px;}
+  .verifai-landing.vr-root .vr-finale__directory {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:36px 24px;
+  }
+  .verifai-landing.vr-root .vr-finale__identity {grid-column:1/-1;}
+  .verifai-landing.vr-root .vr-finale__identity > p {max-width:none;}
+  .verifai-landing.vr-root .vr-finale__signature {font-size:clamp(60px,15.6vw,140px);}
+}
+@media(max-width:600px) {
+  .verifai-landing.vr-root .vr-finale__inner {
+    width:calc(100% - 42px);
+    padding-top:115px;
+    padding-bottom:26px;
+  }
+  .verifai-landing.vr-root .vr-finale__lead-title h2 {
+    font-size:clamp(49px,12.6vw,76px);
+    line-height:1.03;
+  }
+  .verifai-landing.vr-root .vr-finale__lead-action > p {
+    font-size:17px;
+    line-height:1.6;
+  }
+  .verifai-landing.vr-root .vr-finale__cta {min-height:55px;width:100%;max-width:360px;}
+  .verifai-landing.vr-root .vr-finale__overline {margin-bottom:20px;font-size:12px;}
+  .verifai-landing.vr-root .vr-finale__directory {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:40px 22px;
+    margin-top:70px;
+    padding:36px 0 40px;
+  }
+  .verifai-landing.vr-root .vr-finale__identity {grid-column:1/-1;}
+  .verifai-landing.vr-root .vr-finale__logo {font-size:27px;}
+  .verifai-landing.vr-root .vr-finale__column h3 {font-size:16px;}
+  .verifai-landing.vr-root .vr-finale__column {gap:16px;}
+  .verifai-landing.vr-root .vr-finale__column a {font-size:15px;}
+  .verifai-landing.vr-root .vr-finale__signature {font-size:15.4vw;margin-top:70px;margin-bottom:29px;}
+  .verifai-landing.vr-root .vr-finale__closing {
+    display:grid;
+    grid-template-columns:1fr;
+    gap:13px;
+    font-size:13px;
+  }
+  .verifai-landing.vr-root .vr-finale__motto {order:1;}
+}
+@media(max-width:360px) {
+  .verifai-landing.vr-root .vr-finale__directory {gap:32px 15px;}
+  .verifai-landing.vr-root .vr-finale__column a {font-size:14px;}
+  .verifai-landing.vr-root .vr-finale__signature {font-size:15vw;letter-spacing:-.11em;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vr-finale__grain {animation:none;}
+  .verifai-landing.vr-root .vr-finale__cta,
+  .verifai-landing.vr-root .vr-finale__cta svg,
+  .verifai-landing.vr-root .vr-finale__column a {transition:none;}
+}
+
+/* 2026-11-09 / Full-bleed footer — no centered 1260px max-width.
+   Preserve readable edge gutters while letting columns and signature use
+   the full viewport rather than sitting in an inset page-width container. */
+.verifai-landing.vr-root .vr-finale {
+  width:100%;
+  min-height:100svh;
+  margin:0;
+}
+.verifai-landing.vr-root .vr-finale__inner {
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:clamp(100px,8vw,122px) clamp(18px,2.8vw,54px) 32px;
+}
+.verifai-landing.vr-root .vr-finale__lead {
+  grid-template-columns:minmax(0,1.45fr) minmax(300px,.7fr);
+  column-gap:clamp(44px,7vw,150px);
+}
+.verifai-landing.vr-root .vr-finale__lead-title h2 {
+  max-width:none;
+  font-size:clamp(68px,7.65vw,132px);
+}
+.verifai-landing.vr-root .vr-finale__directory {
+  grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,.82fr));
+  column-gap:clamp(28px,4vw,90px);
+  margin-top:clamp(55px,5.6vw,94px);
+  padding:35px 0 40px;
+}
+.verifai-landing.vr-root .vr-finale__signature {
+  width:100%;
+  max-width:100%;
+  margin:clamp(35px,3.5vw,60px) 0 clamp(24px,2vw,32px);
+  font-size:clamp(82px,31vw,560px);
+  line-height:.86;
+  letter-spacing:-.105em;
+  text-align:center;
+  overflow:visible;
+}
+@media(max-width:1120px) {
+  .verifai-landing.vr-root .vr-finale__lead {
+    grid-template-columns:minmax(0,1.3fr) minmax(275px,.85fr);
+    gap:clamp(30px,4vw,55px);
+  }
+  .verifai-landing.vr-root .vr-finale__directory {
+    grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,.83fr));
+    column-gap:clamp(16px,2.5vw,36px);
+  }
+}
+@media(max-width:880px) {
+  .verifai-landing.vr-root .vr-finale__inner {
+    width:100%;
+    padding-inline:clamp(18px,3.3vw,32px);
+  }
+  .verifai-landing.vr-root .vr-finale__lead {grid-template-columns:1fr;}
+  .verifai-landing.vr-root .vr-finale__directory {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:34px 22px;
+  }
+}
+@media(max-width:600px) {
+  .verifai-landing.vr-root .vr-finale__inner {
+    width:100%;
+    padding:100px 16px 26px;
+  }
+  .verifai-landing.vr-root .vr-finale__lead-title h2 {
+    font-size:clamp(49px,12.6vw,76px);
+  }
+  .verifai-landing.vr-root .vr-finale__directory {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:36px 18px;
+    margin-top:62px;
+  }
+  .verifai-landing.vr-root .vr-finale__signature {
+    font-size:31vw;
+    margin-top:42px;
+    margin-bottom:25px;
+  }
+}
+@media(max-width:360px) {
+  .verifai-landing.vr-root .vr-finale__signature {font-size:30.5vw;}
+}
+
+/* Keep the oversize signature proportional between 881px and 1280px.
+   Prevent its glyphs exceeding the nearly edge-to-edge footer gutter. */
+@media(min-width:881px) and (max-width:1280px) {
+  .verifai-landing.vr-root .vr-finale__signature {font-size:29.2vw;}
+}

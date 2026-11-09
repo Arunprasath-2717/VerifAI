@@ -1,0 +1,91 @@
+/*
+ * VerifAI | seamless section flow
+ * Uninterrupted environmental colour changes, rather than section borders.
+ * The feature panels and original Benefits cards/orb are deliberately preserved.
+ */
+.verifai-landing.vr-root {
+  --vr-flow-base:#19271f;
+  background:var(--vr-flow-base);
+}
+.verifai-landing.vr-root main {
+  background:var(--vr-flow-base);
+}
+/* Keep sections flush: no separator divs, visible horizontal strokes, or gaps. */
+.verifai-landing.vr-root main > .vr-section,
+.verifai-landing.vr-root main > #benefits.vi-benefits,
+.verifai-landing.vr-root > .vr-finale {
+  border-block:0;
+  border-top:0;
+  border-bottom:0;
+  margin-block:0;
+  box-shadow:none;
+}
+/* Environmental lighting rises and falls *inside* each section. The first and
+   last stop share a colour with the next surface to avoid a hard seam. */
+.verifai-landing.vr-root .vr-difference {
+  background:
+    radial-gradient(ellipse 55% 47% at 91% 48%,rgba(87,134,102,.23) 0%,transparent 76%),
+    radial-gradient(ellipse 49% 40% at 7% 58%,rgba(114,119,84,.12) 0%,transparent 80%),
+    linear-gradient(180deg,#000 0%,#101b16 12%,#1b3025 49%,#1d2e24 73%,#19271f 100%);
+}
+.verifai-landing.vr-root #benefits.vi-benefits {
+  background:
+    radial-gradient(ellipse 51% 44% at 12% 46%,rgba(107,133,102,.20) 0%,transparent 74%),
+    radial-gradient(ellipse 53% 49% at 93% 53%,rgba(58,114,84,.15) 0%,transparent 78%),
+    linear-gradient(180deg,#19271f 0%,#202f25 31%,#1d2c23 72%,#19271f 100%);
+}
+.verifai-landing.vr-root .vr-consensus {
+  background:
+    radial-gradient(ellipse 57% 58% at 87% 46%,rgba(117,137,102,.16) 0%,transparent 77%),
+    radial-gradient(ellipse 40% 50% at 3% 42%,rgba(77,117,91,.20) 0%,transparent 74%),
+    linear-gradient(180deg,#19271f 0%,#202c25 36%,#223129 65%,#19271f 100%);
+}
+.verifai-landing.vr-root .vr-approach {
+  background:
+    radial-gradient(ellipse 49% 54% at 7% 44%,rgba(111,147,109,.17) 0%,transparent 75%),
+    radial-gradient(ellipse 46% 50% at 97% 52%,rgba(78,116,89,.20) 0%,transparent 78%),
+    linear-gradient(180deg,#19271f 0%,#1a2b22 40%,#202f25 64%,#19271f 100%);
+}
+.verifai-landing.vr-root > .vr-finale {
+  background:
+    radial-gradient(ellipse 59% 52% at 91% 28%,rgba(79,122,87,.24) 0%,transparent 76%),
+    radial-gradient(ellipse 52% 47% at 7% 76%,rgba(99,121,90,.16) 0%,transparent 76%),
+    linear-gradient(180deg,#19271f 0%,#18281f 18%,#19291f 49%,#121c16 100%);
+}
+/* Retain intentional internal hierarchy, but remove ornamental horizontal
+   divider strokes framing section headings and the feature showcase. */
+.verifai-landing.vr-root #benefits .vi-benefits-head {
+  border-bottom:0;
+  padding-bottom:0;
+  margin-bottom:clamp(52px,5.8vw,88px);
+}
+.verifai-landing.vr-root #benefits .vi-benefits-intro {
+  border-left:0;
+  border-top:0;
+  padding-left:0;
+  padding-top:0;
+}
+.verifai-landing.vr-root .vr-section__heading {
+  margin-bottom:clamp(66px,7vw,104px);
+}
+/* Soft slow-moving illumination, not animated borders or dividers.
+   Extremely restrained, independent of the original Benefits media. */
+.verifai-landing.vr-root .vr-section > .vr-container,
+.verifai-landing.vr-root #benefits > .vi-container {
+  z-index:2;
+}
+.verifai-landing.vr-root .vr-section {
+  background-attachment:scroll;
+}
+@media(max-width:720px) {
+  .verifai-landing.vr-root #benefits .vi-benefits-head {
+    margin-bottom:42px;
+  }
+  .verifai-landing.vr-root .vr-section__heading {
+    margin-bottom:49px;
+  }
+}
+/* Navbar cadence mirrors physical landing-page order. */
+.verifai-landing.vr-root .vrs-nav__links {
+  grid-template-columns:.82fr 1.04fr 1.34fr 1.12fr 1.04fr;
+}
