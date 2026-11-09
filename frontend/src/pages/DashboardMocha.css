@@ -378,3 +378,20 @@ html:not(.dark) .verifai-olive-shell .mocha-dashboard .mocha-dashboard-hero butt
     pointer-events:none;
   }
 }
+
+/* Deployment-safe hero artwork: a real image behind dashboard content. */
+.mocha-dashboard-hero .mocha-dashboard-hero-art {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:right center;
+  pointer-events:none;
+  z-index:0;
+}
+.mocha-dashboard-hero .mocha-dashboard-hero-art[hidden] {display:none;}
+@media (max-width:767px) {
+  .mocha-dashboard-hero .mocha-dashboard-hero-art {object-position:75% center;}
+}

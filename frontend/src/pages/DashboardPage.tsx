@@ -213,13 +213,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             ? 'bg-[#0B1216] border-[#1C2C30] shadow-2xl shadow-black/50'
             : 'lt-section-card border-[#74C69D] shadow-[0_20px_48px_-24px_rgba(27, 67, 50,0.45)] bg-[#1B4332]'
         }`}
-        style={{
-          backgroundImage: isDark ? `url(${heroCardDarkBg})` : `url(${heroCardLightBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center right',
-          backgroundRepeat: 'no-repeat',
-        }}
       >
+        {/* A real image element decodes consistently across deployments and can be
+            inspected by the browser; the card's solid background is its fallback. */}
+        <img
+          className="mocha-dashboard-hero-art"
+          src={isDark ? heroCardDarkBg : heroCardLightBg}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          onError={event => { event.currentTarget.hidden = true; }}
+        />
         {/* Ambient background glow orbs for dark mode */}
         {isDark && (
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none bg-[#B6FF2E]/10 from-[#B6FF2E]/15 to-transparent" />
