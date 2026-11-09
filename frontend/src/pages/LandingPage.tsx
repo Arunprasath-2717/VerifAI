@@ -73,8 +73,6 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const reducedMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll();
-  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 34, mass: .35 });
   const highlighted = hovered ?? active;
   const launch = isAuthenticated ? '/dashboard' : '/login';
   const items = [
@@ -137,7 +135,6 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
               <span className="vrs-nav__label">{item.text}</span>
             </a>
           ))}
-          {!reducedMotion && <motion.span className="vrs-nav__progress" style={{ scaleX: progress }} aria-hidden="true"/>}
         </nav>
         <a className="vrs-nav__sign-in" href={launch}>{isAuthenticated ? 'Workspace' : 'Sign in'}</a>
         <button className="vrs-nav__burger" type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="vrs-mobile-navigation" onClick={() => setMobileOpen(open => !open)}>
