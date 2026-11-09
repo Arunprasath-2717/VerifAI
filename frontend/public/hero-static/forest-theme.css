@@ -310,3 +310,43 @@ html,body,.page,html.hero-embedded .page {
 @media(prefers-reduced-motion:reduce) {
   .bg-video,.bg.is-ready .bg-video {display:none;opacity:0;transition:none;}
 }
+
+/* Deep forest cinematic hero: keep the original moving contours visible,
+   tint the film itself rather than replacing it with a flat green veil. */
+html,body,.page,html.hero-embedded .page {background:#071D14;}
+.bg {
+  background-color:#071D14;
+  background-image:
+    linear-gradient(180deg,rgba(5,28,18,.08),rgba(5,28,18,.22)),
+    url('assets/monochrome-hero-poster.webp');
+  background-position:center;
+  background-size:cover;
+}
+.bg-video,.bg.is-ready .bg-video {
+  filter:grayscale(1) sepia(.86) hue-rotate(77deg) saturate(1.48) contrast(1.19) brightness(.77);
+  mix-blend-mode:normal;
+}
+.bg.is-ready .bg-video {opacity:1;}
+.bg::after {
+  background:
+    linear-gradient(90deg,rgba(5,25,16,.37),rgba(8,44,27,.13) 48%,rgba(5,25,16,.38)),
+    linear-gradient(180deg,rgba(4,21,13,.27),rgba(8,37,23,.13) 43%,rgba(2,15,9,.78));
+}
+/* An ivory CTA is distinct from the green film and the glass navigation. */
+.cta,.cta:visited {
+  background:#F7F3E9;
+  border:1.5px solid rgba(248,249,240,.88);
+  color:#143B2D;
+  box-shadow:0 12px 32px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.65);
+}
+.cta:hover,.cta:focus-visible {
+  background:#FFFFFF;
+  border-color:#FFFFFF;
+  color:#102D20;
+  box-shadow:0 16px 36px rgba(0,0,0,.25);
+}
+@media(max-width:720px) {
+  .bg::after {
+    background:linear-gradient(180deg,rgba(3,22,14,.34),rgba(6,36,21,.22) 48%,rgba(2,14,9,.78));
+  }
+}
