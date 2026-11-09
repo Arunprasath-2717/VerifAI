@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#F6F2E9" />
+  <meta name="theme-color" content="#101210" />
   <link rel="icon" type="image/svg+xml" href="../brand/owl-favicon.svg" />
   <script>
     if (new URLSearchParams(location.search).get("embedded") === "1")
@@ -17,7 +17,12 @@
 </head>
 <body>
   <div class="page" id="home">
-    <div class="bg" aria-hidden="true"></div>
+    <div class="bg" aria-hidden="true">
+      <video class="bg-video" autoplay muted loop playsinline preload="metadata"
+        poster="assets/monochrome-hero-poster.webp">
+        <source src="assets/monochrome-hero.mp4" type="video/mp4" />
+      </video>
+    </div>
 
     <header class="header" aria-label="Site header">
       <div class="header-inner">

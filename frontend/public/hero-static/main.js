@@ -28,6 +28,26 @@ const menu = document.querySelector(".mobile-menu");
 const overlay = document.querySelector(".menu-overlay");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+// The full-bleed hero uses local, muted film. Keep its matching still as a
+// reliable fallback, and never animate for visitors requesting reduced motion.
+const heroVideo = document.querySelector(".bg-video");
+const heroBackground = document.querySelector(".bg");
+if (heroVideo) {
+  heroVideo.addEventListener("playing", () => heroBackground?.classList.add("is-ready"));
+  heroVideo.addEventListener("error", () => heroBackground?.classList.remove("is-ready"));
+  const syncHeroVideo = () => {
+    if (reducedMotion.matches || document.hidden) {
+      heroVideo.pause();
+      heroBackground?.classList.remove("is-ready");
+    } else {
+      void heroVideo.play().catch(() => heroBackground?.classList.remove("is-ready"));
+    }
+  };
+  reducedMotion.addEventListener("change", syncHeroVideo);
+  document.addEventListener("visibilitychange", syncHeroVideo);
+  syncHeroVideo();
+}
+
 function setMenu(open) {
   if (!burger || !menu || !overlay) return;
   const shouldOpen = Boolean(open);
