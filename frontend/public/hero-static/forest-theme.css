@@ -209,3 +209,63 @@ a:focus-visible,button:focus-visible {outline:2px solid #40916C;outline-offset:4
   .headline span,.headline span:first-child,.headline span:last-child {color:#143B2D;}
   .headline span:last-child {color:#1C4F3D;}
 }
+
+/* Monochrome cinematic cover: the original local film frame is always present.
+   No CDN, autoplay policy, or WebGL is required to show the artwork. */
+html,body,.page,html.hero-embedded .page {
+  background:#0C100D;
+  color:#F7F5ED;
+}
+.page,html.hero-embedded .page {background:#0C100D;}
+.bg {
+  background-color:#0C100D;
+  background-image:url('assets/monochrome-video-poster.webp');
+  background-position:center center;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+.bg::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(9,14,11,.62) 0%,rgba(7,12,9,.52) 36%,rgba(5,9,7,.70) 72%,rgba(4,8,6,.88) 100%),
+    radial-gradient(ellipse 58% 65% at 50% 45%,rgba(12,27,19,.13),transparent 88%);
+}
+.page::after {display:none;}
+.hero,.stats {z-index:2;}
+.headline,
+.headline span,.headline span:first-child,.headline span:last-child {
+  color:#FAF8F1;
+  text-shadow:0 3px 24px rgba(0,0,0,.43);
+}
+.headline span:last-child {color:#E3EAE3;text-shadow:0 3px 24px rgba(0,0,0,.53);}
+.subhead {color:#E9EEE9;text-shadow:0 2px 14px rgba(0,0,0,.46);}
+.trust-pill,.avatar {
+  background:rgba(13,33,24,.80);
+  border:1.5px solid rgba(197,217,203,.72);
+  box-shadow:0 4px 20px rgba(0,0,0,.14);
+}
+.trust-pill {color:#F2F5EE;}
+.avatar-inner,.avatar.a2 .avatar-inner,.avatar.a3 .avatar-inner {
+  background:#F8F6EE;
+  color:#143B2D;
+}
+.cta {background:#1C4F3D;border:1.5px solid #99BDA4;color:#FFFCF5;}
+.cta:hover {background:#286B4E;color:#FFFCF5;border-color:#C2D9C8;}
+.stats {border-top:1.5px solid rgba(216,226,217,.74);}
+.stat {border-right:1px solid rgba(198,213,201,.48);}
+.stat:last-child {border-right:0;}
+.stat-symbol {color:#B7D0BF;}
+.stat-value {color:#FAF9F4;}
+.stat-label {color:#E1E7E0;}
+@media(max-width:720px) {
+  .bg {background-position:50% center;}
+  .bg::after {background:linear-gradient(180deg,rgba(8,13,9,.67),rgba(7,12,9,.58) 48%,rgba(5,9,7,.88));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .headline span,.headline span:first-child,.headline span:last-child {color:#FAF8F1;}
+  .headline span:last-child {color:#E3EAE3;}
+}
