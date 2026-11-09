@@ -20,8 +20,8 @@
   object-fit:contain;
   object-position:center center;
   /* Silver, pale-ivory reflections instead of the stock violet/orange orb. */
-  filter:grayscale(1) sepia(.12) saturate(.40) contrast(1.17) brightness(.92) !important;
-  mix-blend-mode:screen !important;
+  filter:grayscale(1) sepia(.12) saturate(.40) contrast(1.10) brightness(1.16) !important;
+  mix-blend-mode:normal !important;
   transform:scale(.965);
   transform-origin:50% 48%;
   will-change:auto;

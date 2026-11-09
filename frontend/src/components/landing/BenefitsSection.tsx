@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { CheckCircle2, CircleHelp, XCircle } from 'lucide-react';
 
@@ -10,6 +11,7 @@ const reveal = {
 
 export function BenefitsSection() {
   const reduceMotion = useReducedMotion();
+  const [orbVideoFailed, setOrbVideoFailed] = useState(false);
   const entrance = reduceMotion ? {} : reveal;
 
   return (
@@ -38,26 +40,30 @@ export function BenefitsSection() {
 
           <motion.article className="vi-benefit-card vi-benefit-card-center" {...entrance}>
             <div className="vi-benefit-video-wrap">
-              <video
-                className="vi-benefit-video"
-                src="/cinema/benefits-orb.mp4"
-                poster="/cinema/benefits-orb-poster.jpg"
-                autoPlay={!reduceMotion} loop={!reduceMotion} muted playsInline preload="auto"
-                onCanPlay={event => {
-                  // Some deployed browsers need an explicit play call after data
-                  // arrives, despite the muted autoplay attribute.
-                  if (!reduceMotion && event.currentTarget.paused) {
-                    void event.currentTarget.play().catch(() => {
-                      // Browser policy may still block playback; the poster remains visible.
-                    });
-                  }
-                }}
-                onError={event => {
-                  // Keep the matching poster visible if a CDN/proxy blocks MP4 streaming.
-                  event.currentTarget.style.opacity = '0';
-                }}
-                aria-label="Abstract animated evidence visual"
-              />
+              {orbVideoFailed ? (
+                // Replace the video rather than layering a static image behind it.
+                <img
+                  className="vi-benefit-video vi-benefit-fallback"
+                  src="/cinema/benefits-orb-poster.jpg"
+                  alt="Abstract evidence orb"
+                />
+              ) : (
+                <video
+                  className="vi-benefit-video"
+                  src="/cinema/benefits-orb.mp4"
+                  poster="/cinema/benefits-orb-poster.jpg"
+                  autoPlay={!reduceMotion} loop={!reduceMotion} muted playsInline preload="auto"
+                  onCanPlay={event => {
+                    if (!reduceMotion && event.currentTarget.paused) {
+                      void event.currentTarget.play().catch(() => {
+                        // Autoplay blocked: the video's native poster remains visible.
+                      });
+                    }
+                  }}
+                  onError={() => setOrbVideoFailed(true)}
+                  aria-label="Abstract animated evidence visual"
+                />
+              )}
               <div className="vi-benefit-video-fade" aria-hidden="true" />
             </div>
             <div className="vi-benefit-video-copy">

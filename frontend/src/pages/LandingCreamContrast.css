@@ -229,11 +229,8 @@
 }
 
 
-/* Deployment fallback: keep the matching orb still even on slow or failed MP4 requests. */
+/* The video owns its poster; never composite the still underneath playing footage. */
 .verifai-landing.vr-root #benefits .vi-benefit-video-wrap {
   background-color:#1B201C;
-  background-image:url('/cinema/benefits-orb-poster.jpg');
-  background-repeat:no-repeat;
-  background-size:contain;
-  background-position:center;
+  background-image:none;
 }
