@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import Lenis from 'lenis';
 import {
   ArrowUpRight, Check, CheckCircle2, CircleHelp, SearchCheck, XCircle, Menu, X,
@@ -26,6 +26,7 @@ import './LandingPaper.css';
 import './LandingCreamContrast.css';
 import './LandingNavGlass.css';
 import './LandingForestSilver.css';
+import './LandingLiquidMotion.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
@@ -70,6 +71,11 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
   const [overHero, setOverHero] = useState(true);
   const [active, setActive] = useState('#top');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const reducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 34, mass: .35 });
+  const highlighted = hovered ?? active;
   const launch = isAuthenticated ? '/dashboard' : '/login';
   const items = [
     { text: 'Home', href: '#top' },
@@ -109,7 +115,29 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
           <img src="/brand/owl-mark.svg" width="52" height="52" alt=""/>
         </a>
         <nav className="vrs-nav__links" aria-label="Primary navigation">
-          {items.map(item => <a href={item.href} className={active === item.href ? 'active' : ''} aria-current={active === item.href ? 'page' : undefined} key={item.href}>{item.text}</a>)}
+          {items.map(item => (
+            <a
+              href={item.href}
+              className={[active === item.href ? 'active' : '', highlighted === item.href ? 'is-lit' : ''].filter(Boolean).join(' ')}
+              aria-current={active === item.href ? 'page' : undefined}
+              key={item.href}
+              onPointerEnter={event => { if (event.pointerType === 'mouse') setHovered(item.href); }}
+              onPointerLeave={() => setHovered(null)}
+              onFocus={() => setHovered(item.href)}
+              onBlur={() => setHovered(null)}
+            >
+              {highlighted === item.href && (
+                <motion.span
+                  className="vrs-nav__liquid-lens"
+                  layoutId={reducedMotion ? undefined : 'vrs-nav-active-lens'}
+                  transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 32, mass: .55 }}
+                  aria-hidden="true"
+                />
+              )}
+              <span className="vrs-nav__label">{item.text}</span>
+            </a>
+          ))}
+          {!reducedMotion && <motion.span className="vrs-nav__progress" style={{ scaleX: progress }} aria-hidden="true"/>}
         </nav>
         <a className="vrs-nav__sign-in" href={launch}>{isAuthenticated ? 'Workspace' : 'Sign in'}</a>
         <button className="vrs-nav__burger" type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="vrs-mobile-navigation" onClick={() => setMobileOpen(open => !open)}>
@@ -130,8 +158,13 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
 /** The hero is a complete framework-free HTML/CSS/JS document.
  * Its links open the parent app; the rest of VerifAI remains React. */
 function Hero() {
+  const heroRef = useRef<HTMLElement>(null);
+  const reducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const smoothExit = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: .45 });
+  const veilOpacity = useTransform(smoothExit, [0, .12, .35, .58, 1], [0, .42, .90, 1, 1]);
   return (
-    <section className="vr-hero-static" id="top" aria-label="VerifAI — Evidence Before Confidence">
+    <section ref={heroRef} className="vr-hero-static" id="top" aria-label="VerifAI — Evidence Before Confidence">
       <iframe
         className="vr-hero-static__frame"
         title="VerifAI — Evidence Before Confidence"
@@ -139,6 +172,9 @@ function Hero() {
         loading="eager"
         allow="autoplay"
       />
+      {!reducedMotion && (
+        <motion.div className="vr-hero-static__scroll-veil" style={{ opacity: veilOpacity }} aria-hidden="true"/>
+      )}
     </section>
   );
 }
@@ -324,11 +360,12 @@ export function LandingPage({ isAuthenticated }: LandingPageProps) {
     return () => { document.title = title; };
   }, []);
   useEffect(() => {
-    if (reduced) return;
-    const lenis = new Lenis({
-      autoRaf: true, smoothWheel: true,
-      duration: 1.18, anchors: { offset: -92 },
-      easing: t => 1 - Math.pow(1 - t, 4),
+    const lenis = reduced ? null : new Lenis({
+      autoRaf: true,
+      smoothWheel: true,
+      lerp: .095,
+      wheelMultiplier: .95,
+      anchors: { offset: -92 },
     });
     const relay = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
@@ -337,10 +374,11 @@ export function LandingPage({ isAuthenticated }: LandingPageProps) {
       const delta = Number(event.data.delta);
       if (!Number.isFinite(delta) || !delta) return;
       const bounded = Math.max(-400, Math.min(400, delta));
-      lenis.scrollTo(lenis.targetScroll + bounded, { duration: 1.08 });
+      if (lenis) lenis.scrollTo(lenis.targetScroll + bounded, { lerp: .095 });
+      else window.scrollBy({ top: bounded, behavior: 'instant' });
     };
     window.addEventListener('message', relay);
-    return () => { window.removeEventListener('message', relay); lenis.destroy(); };
+    return () => { window.removeEventListener('message', relay); lenis?.destroy(); };
   }, [reduced]);
   return (
     <div className="verifai-landing vr-root">

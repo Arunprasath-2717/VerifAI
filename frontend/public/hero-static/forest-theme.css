@@ -350,3 +350,13 @@ html,body,.page,html.hero-embedded .page {background:#071D14;}
     background:linear-gradient(180deg,rgba(3,22,14,.34),rgba(6,36,21,.22) 48%,rgba(2,14,9,.78));
   }
 }
+
+/* Tree-silver trust marker: distinct from the ivory call-to-action. */
+.trust-pill {
+  background:linear-gradient(125deg,#E3EAE0 0%,#C0D0C5 100%);
+  border:1px solid rgba(243,250,241,.92);
+  color:#163D2C;
+  text-shadow:none;
+  font-weight:650;
+  box-shadow:0 8px 24px rgba(2,16,10,.18),inset 0 1px rgba(255,255,255,.86);
+}

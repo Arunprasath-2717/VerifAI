@@ -1,0 +1,194 @@
+/* VerifAI / liquid-navigation finish. Isolated and removable.
+   A spring-morphed lens, restrained specular highlights, and a quiet scroll
+   dissolve. No constant cursor tracking, WebGL, or perpetual animations. */
+@media (min-width:721px) {
+  .verifai-landing.vr-root .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links {
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    border-radius:999px;
+    background:linear-gradient(136deg,rgba(255,255,255,.14),rgba(255,255,255,.045) 46%,rgba(255,255,255,.12));
+    border:1px solid rgba(255,255,255,.52);
+    outline:1px solid rgba(255,255,255,.085);
+    outline-offset:-3px;
+    box-shadow:0 16px 39px rgba(0,0,0,.16),inset 0 1.5px 1px rgba(255,255,255,.30),inset 0 -1px rgba(255,255,255,.07);
+    backdrop-filter:blur(30px) saturate(125%);
+    -webkit-backdrop-filter:blur(30px) saturate(125%);
+    transition:background .55s cubic-bezier(.22,1,.36,1),border-color .55s,box-shadow .55s,transform .55s cubic-bezier(.22,1,.36,1);
+  }
+  /* The refracted upper edge and one glint make it read as glass, not plastic. */
+  .verifai-landing.vr-root .vrs-nav__links::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    border-radius:inherit;
+    background:linear-gradient(180deg,rgba(255,255,255,.26),transparent 36%,rgba(255,255,255,.055)),radial-gradient(ellipse 52% 135% at 16% -25%,rgba(255,255,255,.25),transparent 74%);
+    opacity:.88;
+  }
+  .verifai-landing.vr-root .vrs-nav__links::after {
+    content:"";
+    position:absolute;
+    z-index:0;
+    pointer-events:none;
+    left:-33%;top:-135%;height:370%;width:23%;
+    border-radius:50%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.21),transparent);
+    transform:rotate(18deg);
+    transition:left 1.05s cubic-bezier(.22,1,.36,1);
+  }
+  .verifai-landing.vr-root .vrs-nav__links:hover::after,
+  .verifai-landing.vr-root .vrs-nav__links:focus-within::after {left:115%;}
+  .verifai-landing.vr-root .vrs-nav__links a,
+  .verifai-landing.vr-root .vrs-nav__links a:hover,
+  .verifai-landing.vr-root .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav__links a.is-lit {
+    position:relative;
+    isolation:isolate;
+    z-index:1;
+    background:transparent;
+    box-shadow:none;
+    transform:none;
+    border-radius:999px;
+    transition:color .28s ease,text-shadow .28s ease;
+  }
+  /* Beat the older over-hero/hover selectors: only the spring lens draws the
+     selected tab surface, avoiding a second static rectangle underneath. */
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a:hover,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.is-lit,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links a:hover,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links a.is-lit {
+    background:transparent;
+    box-shadow:none;
+    transform:none;
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active::after,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links a.active::after,
+  .verifai-landing.vr-root .vrs-nav__links a.active::after {display:none;}
+  .verifai-landing.vr-root .vrs-nav__links a .vrs-nav__label {
+    position:relative;
+    z-index:2;
+    pointer-events:none;
+  }
+  .verifai-landing.vr-root .vrs-nav__liquid-lens {
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    border-radius:999px;
+    background:linear-gradient(156deg,rgba(255,255,255,.29),rgba(255,255,255,.11) 58%,rgba(255,255,255,.21));
+    border:1px solid rgba(255,255,255,.32);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.44),inset 0 -1px rgba(255,255,255,.12),0 2px 8px rgba(0,0,0,.10);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    will-change:transform;
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.is-lit {color:#FFFDF8;text-shadow:0 1px 8px rgba(0,0,0,.40);}
+  .verifai-landing.vr-root .vrs-nav--scrolled:not(.vrs-nav--over-hero) .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links {
+    background:linear-gradient(140deg,rgba(255,253,247,.73),rgba(246,247,241,.51) 47%,rgba(255,253,247,.67));
+    border-color:rgba(80,110,88,.40);
+    outline-color:rgba(255,255,255,.36);
+    box-shadow:0 12px 30px rgba(22,51,35,.105),inset 0 1px rgba(255,255,255,.82);
+    backdrop-filter:blur(29px) saturate(118%);
+    -webkit-backdrop-filter:blur(29px) saturate(118%);
+  }
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a.is-lit {
+    color:#153628;
+    text-shadow:none;
+  }
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__liquid-lens {
+    background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(224,235,221,.69));
+    border-color:rgba(128,155,135,.35);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.96),0 2px 8px rgba(39,67,46,.10);
+  }
+  /* A hairline that quietly follows document progress. */
+  .verifai-landing.vr-root .vrs-nav__progress {
+    position:absolute;
+    z-index:1;
+    bottom:1px;
+    left:21px;
+    right:21px;
+    height:1.5px;
+    border-radius:999px;
+    transform-origin:0 50%;
+    pointer-events:none;
+    background:linear-gradient(90deg,rgba(221,237,222,.45),rgba(248,253,244,.95));
+  }
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__progress {
+    background:linear-gradient(90deg,rgba(74,116,82,.52),#1C4F3D);
+  }
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__inner {
+    transform:translateY(-3px) scale(.99);
+    transition:transform .65s cubic-bezier(.16,1,.3,1);
+  }
+}
+/* From forest film to cream paper without a hard color seam. */
+.verifai-landing.vr-root .vr-hero-static__scroll-veil {
+  position:absolute;
+  z-index:2;
+  pointer-events:none;
+  bottom:-1px;
+  left:0;
+  right:0;
+  height:clamp(60px,8vh,88px);
+  background:linear-gradient(180deg,rgba(246,242,233,0),rgba(246,242,233,.35) 41%,rgba(246,242,233,.86) 78%,#F6F2E9);
+  will-change:opacity;
+}
+@media(max-width:720px) {
+  .verifai-landing.vr-root .vr-hero-static__scroll-veil {height:clamp(42px,6vh,65px);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vrs-nav__liquid-lens,
+  .verifai-landing.vr-root .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav__links::after,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__inner {transition:none!important;animation:none!important;transform:none!important;}
+  .verifai-landing.vr-root .vr-hero-static__scroll-veil {display:none;}
+}
+
+/* Mobile keeps the compact controls, but now they are frost-glass surfaces
+   rather than opaque circles; menu links remain full-sized touch targets. */
+@media(max-width:720px) {
+  .verifai-landing.vr-root .vrs-nav__logo,
+  .verifai-landing.vr-root .vrs-nav__burger {
+    background:rgba(255,253,247,.77);
+    border:1px solid rgba(245,250,241,.72);
+    box-shadow:0 8px 23px rgba(0,0,0,.15),inset 0 1px rgba(255,255,255,.80);
+    backdrop-filter:blur(23px) saturate(130%);
+    -webkit-backdrop-filter:blur(23px) saturate(130%);
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__burger {
+    background:rgba(245,250,244,.16);
+    border-color:rgba(255,255,255,.58);
+    color:#FFFDF7;
+    box-shadow:0 9px 26px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.28);
+  }
+  .verifai-landing.vr-root .vrs-nav--open .vrs-nav__burger {
+    color:#FFFFFF;
+    background:rgba(20,59,45,.72);
+  }
+  .verifai-landing.vr-root .vrs-nav__mobile {
+    background:rgba(255,253,247,.87);
+    border:1px solid rgba(142,164,146,.58);
+    box-shadow:0 24px 60px rgba(12,38,24,.22),inset 0 1px rgba(255,255,255,.82);
+    backdrop-filter:blur(28px) saturate(125%);
+    -webkit-backdrop-filter:blur(28px) saturate(125%);
+  }
+  .verifai-landing.vr-root .vrs-nav__liquid-lens,
+  .verifai-landing.vr-root .vrs-nav__progress {display:none;}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  @media(min-width:721px) {
+    .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links {background:rgba(11,37,23,.92);}
+    .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links {background:rgba(253,251,245,.97);}
+  }
+}
