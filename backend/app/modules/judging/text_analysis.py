@@ -151,6 +151,59 @@ def best_aligned_sentence(claim: str, passage: str) -> tuple[str, int]:
     return best, best_overlap
 
 
+def aligned_polarity_segment(claim: str, passage: str) -> str:
+    """Scope negation to the clause asserting the claim's predicate.
+
+    In "Earth doesn't just rotate, though—it also revolves around the Sun",
+    the negation concerns rotation, not revolution. Comparing a full sentence's
+    negation with the claim incorrectly flags the supported revolution claim.
+    Prefer a proposition-bearing clause only when it shares at least two claim
+    content terms; otherwise retain the whole sentence conservatively.
+    """
+    sentence, _ = best_aligned_sentence(claim, passage)
+    if not sentence:
+        return sentence
+    terms = content_terms(claim) | numbers(claim)
+    clauses = [
+        c.strip()
+        for c in re.split(r"[,;—–]+\s*(?:though|however|but|yet)?\s*", sentence)
+        if c.strip()
+    ]
+    if len(clauses) < 2:
+        return sentence
+    matches = [(len(terms & (content_terms(c) | numbers(c))), c) for c in clauses]
+    match_count, best_clause = max(matches, key=lambda pair: pair[0])
+    return best_clause if match_count >= 2 else sentence
+
+
+def is_attributed_claim(claim: str, snippet: str) -> bool:
+    """Do not treat a reported myth/quotation as an asserted fact.
+
+    Retrieved articles often reproduce the literal claim while describing it as
+    a legend or saying. String overlap with the quotation is not corroboration.
+    This conservative guard means unverified reported claims remain UNKNOWN.
+    """
+    aligned, overlap = best_aligned_sentence(claim, snippet)
+    if overlap < 2:
+        return False
+    context = snippet.lower()[:1200]
+    return any(
+        marker in context
+        for marker in (
+            "fanciful belief",
+            "folklor",
+            "proverb",
+            "trope",
+            "myth",
+            "urban legend",
+            "popular misconception",
+            "fictional",
+            "often said that",
+            "it is said that",
+        )
+    )
+
+
 # ---------------------------------------------------------------------------
 # Number binding
 # ---------------------------------------------------------------------------

@@ -148,9 +148,17 @@ class VerificationOrchestrator:
         _cache_hash = AnalysisCacheService.compute_hash(
             text=request.text,
             query=request.query,
-            options=request.options.model_dump(exclude_none=True),
+            # Refreshing a result should reuse the same cache identity but
+            # bypass the stored response and replace it with new evidence.
+            options=request.options.model_dump(
+                exclude_none=True, exclude={"bypass_cache"}
+            ),
         )
-        cached_response = _cache.get(effective_owner_early, _cache_hash)
+        cached_response = (
+            None
+            if request.options.bypass_cache
+            else _cache.get(effective_owner_early, _cache_hash)
+        )
         if cached_response is not None:
             logger.info(
                 "Cache HIT for owner=%s — returning cached analysis (hash=%s).",
@@ -240,8 +248,12 @@ class VerificationOrchestrator:
 
         # Configure external evidence retriever (live web or local index)
         active_retriever = self.retriever
-        live_search_enabled = (
-            request.options.enable_live_search or self.settings.ENABLE_LIVE_SEARCH
+        # A private-only verification must never leak claim text into an external
+        # retriever, even when the server enables live search by default.
+        live_search_enabled = not request.options.private_kb_only and (
+            self.settings.ENABLE_LIVE_SEARCH
+            if request.options.enable_live_search is None
+            else request.options.enable_live_search
         )
         if live_search_enabled:
             active_retriever = LiveWebRetriever.from_settings()
@@ -352,7 +364,9 @@ class VerificationOrchestrator:
 
                 # Step 3B: External Retrieval (if KB insufficient or corroboration)
                 should_search_external = (
-                    not kb_hit or request.options.force_external_retrieval
+                    not request.options.private_kb_only
+                    and request.options.enable_live_search is not False
+                    and (not kb_hit or request.options.force_external_retrieval)
                 )
 
                 if should_search_external:
@@ -375,6 +389,21 @@ class VerificationOrchestrator:
                             timeout=self.settings.RETRIEVAL_TIMEOUT_SECONDS,
                         )
                         external_evidence = ext_items
+                        if live_search_enabled and not external_evidence:
+                            log_audit(
+                                stage="RETRIEVAL",
+                                event_type="EXTERNAL_EVIDENCE_EMPTY",
+                                status="WARNING",
+                                message=(
+                                    "Web search returned no usable evidence. "
+                                    "Check Tavily configuration, provider credits, "
+                                    "and outbound connectivity before retrying."
+                                ),
+                                details={
+                                    "claim_index": item.index,
+                                    "provider": active_retriever.name,
+                                },
+                            )
                     except Exception as exc:
                         logger.warning(
                             "External retrieval failed for claim %d: %s",
@@ -910,18 +939,28 @@ class VerificationOrchestrator:
             audit_trail=response_audit,
         )
 
-        # Store in tenant-isolated cache so identical future requests are free
-        _cache.set(
-            owner_id=effective_owner,
-            cache_hash=_cache_hash,
-            response=final_response,
-            ttl_seconds=3600,
+        # A zero-evidence UNKNOWN result may represent a transient network or
+        # search-provider failure. Never cache it for an hour: a retry must be
+        # able to fetch newly available evidence.
+        retryable_no_evidence = (
+            final_response.total_claims > 0
+            and final_response.unknown_claims == final_response.total_claims
+            and not any(claim.evidence for claim in final_response.claims)
         )
-        logger.info(
-            "Cache STORE for owner=%s (hash=%s). Budget: %d/%d tokens.",
-            effective_owner,
-            _cache_hash[:12],
-            budget.spent_tokens,
-            budget.budget_limit,
-        )
+        if not retryable_no_evidence:
+            _cache.set(
+                owner_id=effective_owner,
+                cache_hash=_cache_hash,
+                response=final_response,
+                ttl_seconds=3600,
+            )
+            logger.info(
+                "Cache STORE for owner=%s (hash=%s). Budget: %d/%d tokens.",
+                effective_owner,
+                _cache_hash[:12],
+                budget.spent_tokens,
+                budget.budget_limit,
+            )
+        else:
+            logger.info("No evidence for any claim; skip caching to allow retry.")
         return final_response

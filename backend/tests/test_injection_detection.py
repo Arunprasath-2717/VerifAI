@@ -90,7 +90,7 @@ async def test_injection_in_evidence_is_audited_and_recorded() -> None:
     )
     req = VerificationCreateRequest(
         text="The Moon orbits the Earth roughly every 27 days.",
-        options=VerificationOptions(enable_live_search=False, enable_kb_search=False),
+        options=VerificationOptions(enable_live_search=None, enable_kb_search=False),
     )
     res = await _orchestrator(snippet).verify(req)
 
@@ -112,7 +112,7 @@ async def test_injection_text_does_not_override_claim_judgement() -> None:
     )
     req = VerificationCreateRequest(
         text="The Moon is made entirely of green cheese.",
-        options=VerificationOptions(enable_live_search=False, enable_kb_search=False),
+        options=VerificationOptions(enable_live_search=None, enable_kb_search=False),
     )
     res = await _orchestrator(snippet).verify(req)
 
@@ -123,7 +123,7 @@ async def test_injection_text_does_not_override_claim_judgement() -> None:
 async def test_clean_evidence_emits_no_injection_event() -> None:
     req = VerificationCreateRequest(
         text="The Moon orbits the Earth roughly every 27 days.",
-        options=VerificationOptions(enable_live_search=False, enable_kb_search=False),
+        options=VerificationOptions(enable_live_search=None, enable_kb_search=False),
     )
     res = await _orchestrator(
         "The Moon orbits the Earth roughly every 27 days."

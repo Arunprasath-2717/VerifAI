@@ -21,12 +21,12 @@ import { authApi, TokenResponse } from "../api/auth";
 // VerifAI Web Firebase Configuration
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "verifai-819d0.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "verifai-819d0",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "verifai-819d0.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "155971042326",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:155971042326:web:e15c616961f30924670937",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-6NRZE0PG6E",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 export const isFirebaseConfigured = Boolean(
@@ -35,7 +35,11 @@ export const isFirebaseConfigured = Boolean(
   firebaseConfig.apiKey.trim().length > 0 &&
   firebaseConfig.projectId &&
   typeof firebaseConfig.projectId === "string" &&
-  firebaseConfig.projectId.trim().length > 0
+  firebaseConfig.projectId.trim().length > 0 &&
+  typeof firebaseConfig.authDomain === "string" &&
+  firebaseConfig.authDomain.trim().length > 0 &&
+  typeof firebaseConfig.appId === "string" &&
+  firebaseConfig.appId.trim().length > 0
 );
 
 // Singleton Firebase Application instance (only initialized if configuration is present)
@@ -149,7 +153,7 @@ export async function firebaseSignUp(params: {
   termsAccepted?: boolean;
 }): Promise<AuthSuccessResult> {
   if (!isFirebaseConfigured || !auth) {
-    throw new Error("Firebase authentication is not configured in this local environment. Please register using standard username/password.");
+    throw new Error("Firebase sign-in is not configured for this deployment. Contact the site administrator.");
   }
   const cleanEmail = params.email.trim().toLowerCase();
   const cleanName = params.fullName?.trim() || cleanEmail.split("@")[0];
@@ -178,7 +182,8 @@ export async function firebaseSignUp(params: {
       terms_accepted: params.termsAccepted ?? true,
     });
   } catch (backendErr) {
-    console.warn("VerifAI backend session exchange deferred:", backendErr);
+    await fbSignOut(auth);
+    throw backendErr;
   }
 
   return {
@@ -213,7 +218,8 @@ export async function firebaseSignIn(params: {
   try {
     tokenRes = await authApi.firebaseAuth(idToken, user.displayName || undefined);
   } catch (backendErr) {
-    console.warn("VerifAI backend session exchange deferred:", backendErr);
+    await fbSignOut(auth);
+    throw backendErr;
   }
 
   const displayName = user.displayName || cleanEmail.split("@")[0] || "Researcher";
@@ -234,7 +240,7 @@ export async function firebaseSignInWithGoogle(options?: {
   isSignup?: boolean;
 }): Promise<AuthSuccessResult> {
   if (!isFirebaseConfigured || !auth) {
-    throw new Error("Google Sign-In requires Firebase configuration. Please use standard email/username and password.");
+    throw new Error("Google sign-in is not configured for this deployment. Contact the site administrator.");
   }
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
@@ -250,7 +256,8 @@ export async function firebaseSignInWithGoogle(options?: {
       terms_accepted: options?.termsAccepted,
     });
   } catch (backendErr) {
-    console.warn("VerifAI backend session exchange deferred:", backendErr);
+    await fbSignOut(auth);
+    throw backendErr;
   }
 
   const displayName = user.displayName || user.email?.split("@")[0] || "Google User";

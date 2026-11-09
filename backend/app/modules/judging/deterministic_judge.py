@@ -29,7 +29,7 @@ def _rule_support(claim: str, item: RetrievedEvidenceItem) -> lexical.SupportOut
     # A negated claim is only supported by a passage that negates the same
     # proposition; a positive passage about the subject does not support it.
     if ta.has_negation(claim) != ta.has_negation(
-        ta.best_aligned_sentence(claim, snippet)[0], evidence=True
+        ta.aligned_polarity_segment(claim, snippet), evidence=True
     ):
         return lexical.SupportOutcome(False, "polarity differs from passage")
     return lexical.SupportOutcome(

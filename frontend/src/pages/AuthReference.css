@@ -930,3 +930,10 @@
   .auth-studio[data-mode="login"] .auth-studio__google { min-height: 47px; }
   .auth-studio[data-mode="login"] .auth-studio__account-action { min-height: 44px; }
 }
+
+/* Keep the entire verification artwork visible in the deployed auth panel.
+   The original cover crop hides important details on wide desktop viewports. */
+@media (min-width: 701px) {
+  .auth-studio__visual { background: #e8f2ea; }
+  .auth-studio__photo { object-fit: contain; object-position: center; }
+}

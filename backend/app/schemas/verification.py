@@ -70,9 +70,17 @@ class VerificationOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    enable_live_search: bool = Field(
+    private_kb_only: bool = Field(
         default=False,
-        description="Whether to attempt live search (requires network/provider).",
+        description="Use the owner's private KB only; never web or demo index.",
+    )
+
+    enable_live_search: bool | None = Field(
+        default=None,
+        description=(
+            "Explicit true uses live web search, explicit false disables external "
+            "retrieval, and omitted uses the server setting."
+        ),
     )
     max_claims: int = Field(
         default=20,

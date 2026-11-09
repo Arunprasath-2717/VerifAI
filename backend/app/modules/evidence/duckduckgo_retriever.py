@@ -13,6 +13,7 @@ Security controls:
 - Connection and read timeouts enforced.
 """
 
+import importlib
 import logging
 import uuid
 from datetime import UTC, datetime
@@ -30,7 +31,7 @@ _MAX_SNIPPET_LEN = 600
 class DuckDuckGoRetriever(BaseEvidenceRetriever):
     """Evidence retriever backed by DuckDuckGo web search.
 
-    Uses the ``duckduckgo-search`` library (no API key required).
+    Uses ``ddgs`` in production, with a legacy development fallback (no key).
     Returns structured evidence passages with provenance metadata.
 
     When the library is absent or the search fails, returns an empty list
@@ -71,17 +72,15 @@ class DuckDuckGoRetriever(BaseEvidenceRetriever):
             return []
 
         try:
-            import warnings
-
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                from duckduckgo_search import DDGS  # type: ignore[import-untyped]
+            search_lib = importlib.import_module("ddgs")
         except ImportError:
-            logger.warning(
-                "duckduckgo-search package not installed; skipping DDG retrieval. "
-                "Install with: pip install duckduckgo-search"
-            )
-            return []
+            # Legacy local installations can still use the prior package.
+            try:
+                search_lib = importlib.import_module("duckduckgo_search")
+            except ImportError:
+                logger.warning("DuckDuckGo search library is not installed.")
+                return []
+        search_client = search_lib.DDGS
 
         effective_max = min(max_passages, self._max_results)
 
@@ -89,7 +88,7 @@ class DuckDuckGoRetriever(BaseEvidenceRetriever):
             import asyncio
 
             def _run_search() -> list[dict]:
-                with DDGS(timeout=max(int(self._timeout), 5)) as ddgs:
+                with search_client(timeout=max(int(self._timeout), 5)) as ddgs:
                     return list(
                         ddgs.text(
                             claim_text,

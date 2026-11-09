@@ -21,7 +21,7 @@ const tabs: { id: ResultTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'claims', label: 'Claims' },
   { id: 'evidence', label: 'Evidence' },
-  { id: 'judgments', label: 'Model Judgments' },
+  { id: 'judgments', label: 'Judge Assessments' },
   { id: 'audit', label: 'Audit' },
 ];
 
@@ -167,7 +167,7 @@ export const VerificationResultPage: React.FC<VerificationResultPageProps> = ({ 
         {/* Top Right Action Buttons */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate('/verify')}
+            onClick={() => navigate('/verify', { state: { verificationText: record.originalAnswer } })}
             className="px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer bg-[#FFFFFF] border-[#74C69D] text-[#1B4332] hover:bg-[#D8F3DC] dark:bg-[#23262F] dark:border-[#333742] dark:text-white dark:hover:border-[#B6FF2E]/40"
           >
             <RotateCw size={14} />
@@ -195,6 +195,32 @@ export const VerificationResultPage: React.FC<VerificationResultPageProps> = ({ 
           </button>
         </div>
       </div>
+
+      {record.evidenceCount === 0 && (record.claims || []).some(claim => claim.status === 'UNKNOWN') && (
+        <section aria-label="Evidence retrieval unavailable" className="rounded-2xl border border-amber-400/60 bg-amber-50/80 dark:bg-amber-500/10 dark:border-amber-500/30 p-5 space-y-3">
+          <h2 className="text-sm font-extrabold text-amber-950 dark:text-amber-100">No evidence was retrieved</h2>
+          <p className="text-sm text-amber-950/85 dark:text-amber-100/85 leading-relaxed">
+            VerifAI extracted the claims but found no usable evidence to judge them. This can happen when the private knowledge base is empty, web search is off, or search services are unavailable. UNKNOWN is not a false verdict.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => navigate('/verify', { state: { verificationText: record.originalAnswer } })}
+              className="rounded-xl bg-[#1B4332] text-white dark:bg-[#B6FF2E] dark:text-[#181A20] px-4 py-2 text-xs font-bold cursor-pointer"
+            >
+              Verify with Web Evidence
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('audit')}
+              className="rounded-xl border border-amber-600/30 dark:border-amber-300/30 px-4 py-2 text-xs font-bold text-amber-950 dark:text-amber-100 cursor-pointer"
+            >
+              Inspect Retrieval Audit
+            </button>
+          </div>
+          <p className="text-xs text-amber-900/80 dark:text-amber-100/70">Web verification sends claim text to external search providers only after you submit the new request.</p>
+        </section>
+      )}
 
       {/* Navigation Tabs — each button switches an actual related data panel. */}
       <div role="tablist" aria-label="Verification result sections" className="flex items-center gap-2 border-b overflow-x-auto pb-1 border-[#74C69D] dark:border-[#333742]">
