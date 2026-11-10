@@ -128,9 +128,6 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
         >
           <span className="vrs-nav__liquid-bath" aria-hidden="true">
             <span className="vrs-nav__liquid-wave" />
-            <span className="vrs-nav__gel-pocket vrs-nav__gel-pocket--one" />
-            <span className="vrs-nav__gel-pocket vrs-nav__gel-pocket--two" />
-            <span className="vrs-nav__gel-pocket vrs-nav__gel-pocket--three" />
           </span>
           {items.map(item => (
             <a

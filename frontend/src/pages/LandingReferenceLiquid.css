@@ -35,10 +35,11 @@
     border-radius:inherit;
     pointer-events:none;
     opacity:1;
+    /* A single optical volume across all five links. No tile, wave seam,
+       curved pocket boundaries, or separate texture between labels. */
     background:
-      url('/landing/clear-gel-caustics.svg') center 45%/118% 220% no-repeat,
-      radial-gradient(ellipse 31% 68% at var(--vrs-liquid-glint,28%) 12%,rgba(255,255,255,.29),transparent 83%),
-      radial-gradient(ellipse 46% 90% at 88% 104%,rgba(255,255,255,.13),transparent 82%);
+      linear-gradient(175deg,rgba(255,255,255,.18),rgba(255,255,255,.025) 35%,transparent 68%,rgba(255,255,255,.10)),
+      radial-gradient(ellipse 85% 180% at var(--vrs-liquid-glint,48%) -95%,rgba(255,255,255,.23),transparent 85%);
   }
   .verifai-landing.vr-root .vrs-nav__liquid-bath::before {
     content:"";
@@ -47,72 +48,8 @@
     inset:-30% -9%;
     border-radius:inherit;
     pointer-events:none;
-    background:
-      radial-gradient(ellipse 29% 40% at 34% 19%,rgba(255,255,255,.11),transparent 87%),
-      radial-gradient(ellipse 31% 47% at 78% 76%,rgba(255,255,255,.14),transparent 86%);
-    filter:blur(8px);
-  }
-  /* Three free-floating, colorless viscous volumes. Their soft curved
-     boundary and off-centre lensing give the capsule a filled-gel body.
-     They are NOT opaque bubbles or a horizontal waterline. */
-  .verifai-landing.vr-root .vrs-nav__gel-pocket {
-    position:absolute;
-    display:block;
-    pointer-events:none;
-    z-index:0;
-    top:-52%;
-    height:210%;
-    border-radius:55% 45% 64% 36% / 46% 60% 40% 54%;
-    border:1px solid rgba(255,255,255,.22);
-    background:
-      radial-gradient(ellipse 34% 27% at 33% 25%,rgba(255,255,255,.32),transparent 96%),
-      radial-gradient(ellipse 55% 50% at 72% 77%,rgba(255,255,255,.14),transparent 89%),
-      radial-gradient(ellipse 66% 75% at 50% 50%,rgba(255,255,255,.018) 34%,rgba(255,255,255,.085) 74%,rgba(255,255,255,.015));
-    box-shadow:
-      inset 0 3px 6px rgba(255,255,255,.21),
-      inset 4px 0 9px rgba(255,255,255,.12),
-      inset -5px -4px 9px rgba(0,0,0,.045),
-      0 1px 8px rgba(255,255,255,.055);
-    filter:blur(.95px);
-    opacity:.86;
-    will-change:transform,border-radius;
-  }
-  .verifai-landing.vr-root .vrs-nav__gel-pocket--one {
-    left:3%;width:33%;
-    animation:vrs-pocket-a 13s ease-in-out infinite alternate;
-  }
-  .verifai-landing.vr-root .vrs-nav__gel-pocket--two {
-    left:35%;width:37%;top:-62%;height:232%;
-    opacity:.66;
-    animation:vrs-pocket-b 17s ease-in-out infinite alternate;
-  }
-  .verifai-landing.vr-root .vrs-nav__gel-pocket--three {
-    right:-3%;width:34%;top:-48%;
-    opacity:.79;
-    animation:vrs-pocket-c 15s ease-in-out infinite alternate;
-  }
-  @keyframes vrs-pocket-a {
-    from {transform:translate3d(-3%,2%,0) rotate(-6deg) scale(.98);border-radius:55% 45% 64% 36% / 46% 60% 40% 54%;}
-    to {transform:translate3d(11%,-2%,0) rotate(5deg) scale(1.04);border-radius:42% 58% 40% 60% / 53% 47% 58% 42%;}
-  }
-  @keyframes vrs-pocket-b {
-    from {transform:translate3d(8%,-2%,0) rotate(6deg) scale(1.04);border-radius:44% 56% 52% 48% / 60% 44% 56% 40%;}
-    to {transform:translate3d(-9%,3%,0) rotate(-5deg) scale(.95);border-radius:58% 42% 39% 61% / 43% 64% 36% 57%;}
-  }
-  @keyframes vrs-pocket-c {
-    from {transform:translate3d(3%,2%,0) rotate(-5deg) scale(.97);border-radius:50% 50% 42% 58% / 56% 39% 61% 44%;}
-    to {transform:translate3d(-12%,-4%,0) rotate(7deg) scale(1.06);border-radius:37% 63% 64% 36% / 43% 61% 39% 57%;}
-  }
-  /* Over cream, subtle shadowed refraction edges are essential: white-only
-     highlights would disappear on the pale surface and look like empty frost. */
-  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__gel-pocket {
-    border-color:rgba(33,55,41,.20);
-    background:
-      radial-gradient(ellipse 36% 27% at 33% 24%,rgba(255,255,255,.40),transparent 95%),
-      radial-gradient(ellipse 55% 50% at 71% 76%,rgba(53,73,61,.075),transparent 86%),
-      radial-gradient(ellipse 66% 75% at 50% 50%,transparent 34%,rgba(35,64,43,.04) 76%,transparent);
-    box-shadow:inset 0 3px 5px rgba(255,255,255,.55),inset -4px -3px 8px rgba(35,58,42,.14),0 1px 5px rgba(255,255,255,.12);
-    opacity:.56;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.06) 45%,transparent);
+    filter:blur(13px);
   }
   /* Subsurface liquid movement, with no waterline / horizontal border. */
   .verifai-landing.vr-root .vrs-nav__liquid-wave,
@@ -168,9 +105,9 @@
   .verifai-landing.vr-root .vrs-nav__liquid-lens,
   .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__liquid-lens,
   .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__liquid-lens {
-    background:linear-gradient(155deg,rgba(255,255,255,.12),rgba(255,255,255,.006) 54%,rgba(255,255,255,.065));
-    border:1px solid rgba(252,255,253,.60);
-    box-shadow:inset 0 1.7px 1.5px rgba(255,255,255,.78),inset 0 -1.5px 2px rgba(2,20,10,.15),0 3px 8px rgba(0,18,10,.12);
+    background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.018) 52%,rgba(255,255,255,.08));
+    border:1px solid rgba(252,255,253,.48);
+    box-shadow:inset 0 1.5px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(2,20,10,.10),0 2px 7px rgba(0,18,10,.09);
     backdrop-filter:blur(1.5px) saturate(132%);
     -webkit-backdrop-filter:blur(1.5px) saturate(132%);
   }
@@ -256,8 +193,7 @@
   .verifai-landing.vr-root .vrs-nav__mobile-action {background:#1C4F3D!important;color:#fff!important;}
 }
 @media(prefers-reduced-motion:reduce) {
-  .verifai-landing.vr-root .vrs-nav__liquid-wave,
-  .verifai-landing.vr-root .vrs-nav__gel-pocket {animation:none!important;transform:none!important;will-change:auto;}
+  .verifai-landing.vr-root .vrs-nav__liquid-wave {animation:none!important;transform:none!important;will-change:auto;}
   .verifai-landing.vr-root .vrs-nav__links::after {transition:none!important;}
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
@@ -265,4 +201,75 @@
     .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links {background:rgba(28,58,41,.75);}
     .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links {background:rgba(247,249,245,.75);}
   }
+}
+
+/* The owl sits inside its own transparent gel capsule, with the same
+ * continuous optical finish as the navigation. Keep the mark sharp. */
+.verifai-landing.vr-root .vrs-nav__logo {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  width:58px;
+  height:46px;
+  border-radius:999px;
+  background:linear-gradient(135deg,rgba(255,255,255,.20),rgba(255,255,255,.035) 49%,rgba(255,255,255,.11));
+  border:1.5px solid rgba(244,255,248,.78);
+  outline:1px solid rgba(245,255,250,.17);
+  outline-offset:-3px;
+  box-shadow:0 12px 25px rgba(0,20,10,.15),inset 0 2px 1px rgba(255,255,255,.72),inset 0 -2px 2px rgba(213,245,222,.23),inset 2px 0 5px rgba(255,255,255,.18);
+  backdrop-filter:blur(5px) saturate(126%);
+  -webkit-backdrop-filter:blur(5px) saturate(126%);
+  transition:transform .25s ease,background .35s ease,border-color .35s ease;
+}
+.verifai-landing.vr-root .vrs-nav__logo::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:radial-gradient(ellipse 70% 105% at 30% -36%,rgba(255,255,255,.68),transparent 78%),linear-gradient(180deg,rgba(255,255,255,.28),transparent 42%,rgba(255,255,255,.07));
+  z-index:0;
+}
+.verifai-landing.vr-root .vrs-nav__logo::after {
+  content:"";
+  position:absolute;
+  inset:3px;
+  border-radius:inherit;
+  pointer-events:none;
+  border:1px solid rgba(255,255,255,.24);
+  z-index:0;
+}
+.verifai-landing.vr-root .vrs-nav__logo img {
+  position:relative;
+  z-index:1;
+  width:70%;
+  height:81%;
+  object-fit:contain;
+  filter:drop-shadow(0 1px 1px rgba(255,255,255,.2));
+}
+.verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__logo {
+  background:linear-gradient(130deg,rgba(255,255,255,.43),rgba(255,255,255,.11) 55%,rgba(255,255,255,.25));
+  border-color:rgba(250,255,251,.83);
+}
+.verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__logo {
+  background:linear-gradient(132deg,rgba(255,255,255,.29),rgba(255,255,255,.045) 52%,rgba(255,255,255,.15));
+  border-color:rgba(65,108,77,.45);
+  box-shadow:0 9px 22px rgba(25,53,34,.11),inset 0 2px 1px rgba(255,255,255,.85),inset 0 -1px 2px rgba(74,118,83,.12);
+}
+@media(min-width:721px) {
+  .verifai-landing.vr-root .vrs-nav__inner {
+    grid-template-columns:58px minmax(0,1fr) 96px;
+    width:min(100%,760px);
+  }
+}
+@media(max-width:720px) {
+  .verifai-landing.vr-root .vrs-nav__logo {
+    width:52px;
+    height:46px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vrs-nav__logo {transition:none;}
 }
