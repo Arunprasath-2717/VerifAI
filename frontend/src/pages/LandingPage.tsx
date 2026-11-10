@@ -28,6 +28,7 @@ import './LandingNavGlass.css';
 import './LandingForestSilver.css';
 import './LandingLiquidMotion.css';
 import './LandingFullWidth.css';
+import './LandingLiquidFill.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
@@ -113,7 +114,20 @@ function StickyLandingNav({ isAuthenticated }: LandingPageProps) {
         <a className="vrs-nav__logo" href="#top" aria-label="VerifAI home" onClick={() => setMobileOpen(false)}>
           <img src="/brand/owl-mark.svg" width="52" height="52" alt=""/>
         </a>
-        <nav className="vrs-nav__links" aria-label="Primary navigation">
+        <nav
+          className="vrs-nav__links"
+          aria-label="Primary navigation"
+          onPointerMove={event => {
+            if (event.pointerType !== 'mouse') return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const glint = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+            event.currentTarget.style.setProperty('--vrs-liquid-glint', `${glint.toFixed(1)}%`);
+          }}
+          onPointerLeave={event => event.currentTarget.style.removeProperty('--vrs-liquid-glint')}
+        >
+          <span className="vrs-nav__liquid-bath" aria-hidden="true">
+            <span className="vrs-nav__liquid-wave" />
+          </span>
           {items.map(item => (
             <a
               href={item.href}
