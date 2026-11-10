@@ -30,6 +30,7 @@ import './LandingLiquidMotion.css';
 import './LandingFullWidth.css';
 import './LandingLiquidFill.css';
 import './LandingReferenceLiquid.css';
+import './LandingContentBalance.css';
 
 interface LandingPageProps { isAuthenticated: boolean }
 
