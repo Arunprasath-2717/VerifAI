@@ -36,6 +36,10 @@ export function BenefitsSection() {
             <p>
               Break polished responses into testable claims. See what was actually asserted before deciding whether it is trustworthy.
             </p>
+            <div className="vi-benefit-detail">
+              <span className="vi-benefit-detail-label">01 / CLAIM BY CLAIM</span>
+              <span>See the exact statements that need checking, not just a polished answer.</span>
+            </div>
           </motion.article>
 
           <motion.article className="vi-benefit-card vi-benefit-card-center" {...entrance}>
@@ -71,6 +75,10 @@ export function BenefitsSection() {
               <p>
                 A useful verdict should show its basis. Understand the context, reasoning, and supporting material behind the assessment.
               </p>
+              <div className="vi-benefit-detail vi-benefit-detail--center">
+                <span className="vi-benefit-detail-label">02 / FOLLOW THE SOURCE</span>
+                <span>Move from the verdict to the evidence behind it.</span>
+              </div>
             </div>
           </motion.article>
 
@@ -80,9 +88,13 @@ export function BenefitsSection() {
               Responsible verification does not force every answer into a clean yes-or-no. It separates what is supported, contradicted, and unresolved.
             </p>
             <div className="vi-benefit-outcomes" aria-label="Assessment outcomes">
-              <div><CheckCircle2 size={15} strokeWidth={1.7} aria-hidden="true" /><span>Supported</span></div>
-              <div><XCircle size={15} strokeWidth={1.7} aria-hidden="true" /><span>Contradicted</span></div>
-              <div><CircleHelp size={15} strokeWidth={1.7} aria-hidden="true" /><span>Unresolved</span></div>
+              <div><CheckCircle2 size={16} strokeWidth={1.7} aria-hidden="true" /><span>Supported</span><small>Evidence aligns</small></div>
+              <div><XCircle size={16} strokeWidth={1.7} aria-hidden="true" /><span>Contradicted</span><small>Evidence disagrees</small></div>
+              <div><CircleHelp size={16} strokeWidth={1.7} aria-hidden="true" /><span>Unresolved</span><small>Still uncertain</small></div>
+            </div>
+            <div className="vi-benefit-detail vi-benefit-detail--right">
+              <span className="vi-benefit-detail-label">03 / HONEST OUTCOMES</span>
+              <span>No forced certainty when the evidence is incomplete.</span>
             </div>
           </motion.article>
         </div>
