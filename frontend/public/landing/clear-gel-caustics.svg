@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="164" viewBox="0 0 1280 164" preserveAspectRatio="xMidYMid slice">
+  <!-- Clear glass: alpha-only white caustics. No pigment or colored backing. -->
+  <defs>
+    <linearGradient id="light" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".17" stop-color="#fff" stop-opacity=".40"/>
+      <stop offset=".4" stop-color="#fff" stop-opacity=".03"/>
+      <stop offset=".67" stop-color="#fff" stop-opacity=".33"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="11"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+  <g fill="none" stroke-linecap="round">
+    <path d="M-50 130 C103 68 169 -16 329 36 S552 158 711 75 S956 -23 1139 65 S1273 107 1345 54" stroke="url(#light)" stroke-width="24" opacity=".45" filter="url(#blur)"/>
+    <path d="M-69 159 C115 73 221 11 401 69 S644 177 823 74 S1090 7 1365 119" stroke="url(#light)" stroke-width="6" opacity=".35" filter="url(#glow)"/>
+    <path d="M-40 41 C94 -15 187 103 341 71 S616 5 800 57 S1072 138 1337 28" stroke="url(#light)" stroke-width="14" opacity=".33" filter="url(#blur)"/>
+  </g>
+  <ellipse cx="332" cy="-11" rx="245" ry="43" fill="#fff" opacity=".12" filter="url(#blur)"/>
+  <ellipse cx="1028" cy="172" rx="260" ry="42" fill="#fff" opacity=".10" filter="url(#blur)"/>
+</svg>

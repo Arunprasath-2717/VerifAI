@@ -1,0 +1,201 @@
+/* Clear filled GEL glass, not colored / milky frosted glass.
+ * User reference: thick optical capsule with refracted highlights and glossy
+ * dimensional sides. The backing stays transparent so the live hero and cream
+ * sections remain visible through its center. No artificial horizontal line.
+ */
+@media(min-width:721px) {
+  .verifai-landing.vr-root .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__links {
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    border-radius:999px;
+    background:linear-gradient(132deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.025) 27%,rgba(255,255,255,.065) 63%,rgba(255,255,255,.10) 100%);
+    border:1.5px solid rgba(244,255,248,.73);
+    outline:1px solid rgba(242,255,248,.12);
+    outline-offset:-3px;
+    box-shadow:
+      0 14px 30px rgba(0,20,10,.19),
+      inset 0 2px 1.5px rgba(255,255,255,.72),
+      inset 0 -2px 2px rgba(214,244,226,.27),
+      inset 3px 0 7px rgba(255,255,255,.16),
+      inset -3px 0 8px rgba(255,255,255,.14);
+    backdrop-filter:blur(5px) saturate(145%) contrast(1.12);
+    -webkit-backdrop-filter:blur(5px) saturate(145%) contrast(1.12);
+    transition:background .45s ease,border-color .45s ease,box-shadow .45s ease;
+  }
+  .verifai-landing.vr-root .vrs-nav__liquid-bath {
+    position:absolute;
+    z-index:0;
+    inset:0;
+    display:block;
+    overflow:hidden;
+    border-radius:inherit;
+    pointer-events:none;
+    opacity:.90;
+    background:
+      url('/landing/clear-gel-caustics.svg') center 43%/112% 220% no-repeat,
+      radial-gradient(ellipse 31% 68% at var(--vrs-liquid-glint,28%) 12%,rgba(255,255,255,.24),transparent 83%),
+      radial-gradient(ellipse 46% 90% at 88% 104%,rgba(245,255,250,.11),transparent 82%);
+  }
+  .verifai-landing.vr-root .vrs-nav__liquid-bath::before {
+    content:"";
+    position:absolute;
+    z-index:0;
+    inset:-30% -9%;
+    border-radius:inherit;
+    pointer-events:none;
+    background:
+      radial-gradient(ellipse 29% 40% at 34% 19%,rgba(255,255,255,.11),transparent 87%),
+      radial-gradient(ellipse 31% 47% at 78% 76%,rgba(255,255,255,.14),transparent 86%);
+    filter:blur(8px);
+  }
+  /* Subsurface liquid movement, with no waterline / horizontal border. */
+  .verifai-landing.vr-root .vrs-nav__liquid-wave,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__liquid-wave {
+    position:absolute;
+    left:-30%;right:-30%;top:-210%;height:500%;
+    border:0;
+    border-radius:48%;
+    background:conic-gradient(from 14deg at 48% 45%,
+      transparent,rgba(255,255,255,.09) 44deg,
+      transparent 99deg,rgba(255,255,255,.13) 199deg,
+      transparent 280deg,rgba(255,255,255,.07) 325deg,transparent);
+    box-shadow:none;
+    opacity:.83;
+    filter:blur(13px);
+    animation:vrs-clear-gel-drift 13s ease-in-out infinite alternate;
+    will-change:transform;
+    transform-origin:50% 50%;
+  }
+  @keyframes vrs-clear-gel-drift {
+    0%{transform:translate3d(-2%,0,0) rotate(-7deg);}
+    50%{transform:translate3d(1%,1.2%,0) rotate(1deg);}
+    100%{transform:translate3d(2%,-1%,0) rotate(8deg);}
+  }
+  .verifai-landing.vr-root .vrs-nav__links::before {
+    content:"";
+    position:absolute;
+    z-index:1;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    opacity:1;
+    background:
+      radial-gradient(ellipse 25% 116% at var(--vrs-liquid-glint,10%) -30%,rgba(255,255,255,.52),transparent 80%),
+      linear-gradient(180deg,rgba(255,255,255,.32),transparent 32%,transparent 64%,rgba(255,255,255,.09));
+  }
+  .verifai-landing.vr-root .vrs-nav__links::after {
+    content:"";
+    z-index:1;
+    pointer-events:none;
+    position:absolute;
+    top:-120%;left:-31%;height:340%;width:22%;
+    border-radius:50%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.20),transparent);
+    filter:blur(12px);
+    transform:rotate(17deg);
+    opacity:.58;
+    transition:left 1.15s cubic-bezier(.16,1,.3,1);
+  }
+  .verifai-landing.vr-root .vrs-nav__links:hover::after,
+  .verifai-landing.vr-root .vrs-nav__links:focus-within::after {left:119%;}
+  /* Raised transparent selection drop; not an opaque frosted button. */
+  .verifai-landing.vr-root .vrs-nav__liquid-lens,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__liquid-lens,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__liquid-lens {
+    background:linear-gradient(155deg,rgba(255,255,255,.22),rgba(255,255,255,.035) 54%,rgba(255,255,255,.12));
+    border:1px solid rgba(252,255,253,.58);
+    box-shadow:inset 0 1.5px 1.5px rgba(255,255,255,.70),inset 0 -1px 2px rgba(255,255,255,.14),0 3px 8px rgba(0,18,10,.14);
+    backdrop-filter:blur(3px) saturate(125%);
+    -webkit-backdrop-filter:blur(3px) saturate(125%);
+  }
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.is-lit,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a:hover {
+    color:#fff;
+    background:transparent;
+    text-shadow:0 1px 6px rgba(3,20,12,.60);
+  }
+  /* Over cream, glass stays truly clear; dark ink maintains contrast. */
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links,
+  .verifai-landing.vr-root .vrs-nav--scrolled:not(.vrs-nav--over-hero) .vrs-nav__links {
+    background:linear-gradient(132deg,rgba(255,255,255,.12),rgba(255,255,255,.008) 41%,rgba(255,255,255,.055));
+    border-color:rgba(73,110,83,.47);
+    outline-color:rgba(255,255,255,.40);
+    box-shadow:0 12px 29px rgba(25,54,36,.13),inset 0 2px 1px rgba(255,255,255,.88),inset 0 -1.5px rgba(112,165,128,.17),inset 2px 0 6px rgba(255,255,255,.21);
+    backdrop-filter:blur(5px) saturate(125%) contrast(1.10);
+    -webkit-backdrop-filter:blur(5px) saturate(125%) contrast(1.10);
+  }
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a.active,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a.is-lit,
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links a:hover {
+    color:#133C29;
+    background:transparent;
+    text-shadow:0 1px rgba(255,255,255,.40);
+  }
+  .verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__inner {background:transparent;border-color:transparent;box-shadow:none;}
+}
+/* Matching clear-gel sign-in pill. */
+.verifai-landing.vr-root .vrs-nav__sign-in,
+.verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__sign-in,
+.verifai-landing.vr-root .vrs-nav--scrolled .vrs-nav__sign-in {
+  background:linear-gradient(145deg,rgba(255,255,255,.20),rgba(255,255,255,.035) 48%,rgba(255,255,255,.10));
+  border:1.5px solid rgba(247,255,251,.66);
+  color:#fff;
+  box-shadow:0 11px 23px rgba(0,20,11,.17),inset 0 1.5px rgba(255,255,255,.60),inset 0 -1.5px rgba(235,255,239,.14);
+  backdrop-filter:blur(5px) saturate(140%);
+  -webkit-backdrop-filter:blur(5px) saturate(140%);
+  text-shadow:0 1px 6px rgba(1,19,8,.56);
+}
+.verifai-landing.vr-root .vrs-nav__sign-in:hover,
+.verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__sign-in:hover {
+  color:#fff;
+  background:rgba(255,255,255,.23);
+  border-color:#fff;
+}
+.verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__sign-in,
+.verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__sign-in:hover {
+  color:#143628;
+  text-shadow:0 1px rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.025));
+  border-color:rgba(74,115,86,.48);
+}
+@media(max-width:720px) {
+  .verifai-landing.vr-root .vrs-nav__burger,
+  .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__burger {
+    color:#fff;
+    background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.055));
+    border:1.5px solid rgba(252,255,254,.72);
+    box-shadow:0 9px 20px rgba(0,24,12,.21),inset 0 1.5px rgba(255,255,255,.53);
+    backdrop-filter:blur(5px) saturate(140%);
+    -webkit-backdrop-filter:blur(5px) saturate(140%);
+  }
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__burger {color:#143628;border-color:rgba(66,110,76,.52);}
+  .verifai-landing.vr-root .vrs-nav__mobile {
+    color:#143628;
+    background:linear-gradient(139deg,rgba(255,254,250,.89),rgba(243,251,246,.78));
+    border:1px solid rgba(154,181,157,.54);
+    box-shadow:0 23px 57px rgba(12,35,20,.24),inset 0 1.5px rgba(255,255,255,.87);
+    backdrop-filter:blur(11px) saturate(124%);
+    -webkit-backdrop-filter:blur(11px) saturate(124%);
+  }
+  .verifai-landing.vr-root .vrs-nav__mobile a {color:#143628;text-shadow:none;border-color:rgba(80,120,86,.20);}
+  .verifai-landing.vr-root .vrs-nav__mobile a:hover,
+  .verifai-landing.vr-root .vrs-nav__mobile a:focus-visible {background:rgba(188,220,195,.23);color:#143628;}
+  .verifai-landing.vr-root .vrs-nav__mobile-action {background:#1C4F3D!important;color:#fff!important;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .verifai-landing.vr-root .vrs-nav__liquid-wave {animation:none!important;transform:none!important;will-change:auto;}
+  .verifai-landing.vr-root .vrs-nav__links::after {transition:none!important;}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  @media(min-width:721px) {
+    .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links {background:rgba(28,58,41,.75);}
+    .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links {background:rgba(247,249,245,.75);}
+  }
+}
