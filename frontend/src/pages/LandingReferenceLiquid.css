@@ -12,7 +12,7 @@
     isolation:isolate;
     overflow:hidden;
     border-radius:999px;
-    background:linear-gradient(132deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.025) 27%,rgba(255,255,255,.065) 63%,rgba(255,255,255,.10) 100%);
+    background:linear-gradient(124deg,rgba(255,255,255,.075),rgba(255,255,255,.009) 34%,rgba(255,255,255,.035) 68%,rgba(255,255,255,.085));
     border:1.5px solid rgba(244,255,248,.73);
     outline:1px solid rgba(242,255,248,.12);
     outline-offset:-3px;
@@ -22,8 +22,8 @@
       inset 0 -2px 2px rgba(214,244,226,.27),
       inset 3px 0 7px rgba(255,255,255,.16),
       inset -3px 0 8px rgba(255,255,255,.14);
-    backdrop-filter:blur(5px) saturate(145%) contrast(1.12);
-    -webkit-backdrop-filter:blur(5px) saturate(145%) contrast(1.12);
+    backdrop-filter:blur(2.5px) saturate(140%) contrast(1.14);
+    -webkit-backdrop-filter:blur(2.5px) saturate(140%) contrast(1.14);
     transition:background .45s ease,border-color .45s ease,box-shadow .45s ease;
   }
   .verifai-landing.vr-root .vrs-nav__liquid-bath {
@@ -34,11 +34,11 @@
     overflow:hidden;
     border-radius:inherit;
     pointer-events:none;
-    opacity:.90;
+    opacity:1;
     background:
-      url('/landing/clear-gel-caustics.svg') center 43%/112% 220% no-repeat,
-      radial-gradient(ellipse 31% 68% at var(--vrs-liquid-glint,28%) 12%,rgba(255,255,255,.24),transparent 83%),
-      radial-gradient(ellipse 46% 90% at 88% 104%,rgba(245,255,250,.11),transparent 82%);
+      url('/landing/clear-gel-caustics.svg') center 45%/118% 220% no-repeat,
+      radial-gradient(ellipse 31% 68% at var(--vrs-liquid-glint,28%) 12%,rgba(255,255,255,.29),transparent 83%),
+      radial-gradient(ellipse 46% 90% at 88% 104%,rgba(255,255,255,.13),transparent 82%);
   }
   .verifai-landing.vr-root .vrs-nav__liquid-bath::before {
     content:"";
@@ -51,6 +51,68 @@
       radial-gradient(ellipse 29% 40% at 34% 19%,rgba(255,255,255,.11),transparent 87%),
       radial-gradient(ellipse 31% 47% at 78% 76%,rgba(255,255,255,.14),transparent 86%);
     filter:blur(8px);
+  }
+  /* Three free-floating, colorless viscous volumes. Their soft curved
+     boundary and off-centre lensing give the capsule a filled-gel body.
+     They are NOT opaque bubbles or a horizontal waterline. */
+  .verifai-landing.vr-root .vrs-nav__gel-pocket {
+    position:absolute;
+    display:block;
+    pointer-events:none;
+    z-index:0;
+    top:-52%;
+    height:210%;
+    border-radius:55% 45% 64% 36% / 46% 60% 40% 54%;
+    border:1px solid rgba(255,255,255,.22);
+    background:
+      radial-gradient(ellipse 34% 27% at 33% 25%,rgba(255,255,255,.32),transparent 96%),
+      radial-gradient(ellipse 55% 50% at 72% 77%,rgba(255,255,255,.14),transparent 89%),
+      radial-gradient(ellipse 66% 75% at 50% 50%,rgba(255,255,255,.018) 34%,rgba(255,255,255,.085) 74%,rgba(255,255,255,.015));
+    box-shadow:
+      inset 0 3px 6px rgba(255,255,255,.21),
+      inset 4px 0 9px rgba(255,255,255,.12),
+      inset -5px -4px 9px rgba(0,0,0,.045),
+      0 1px 8px rgba(255,255,255,.055);
+    filter:blur(.95px);
+    opacity:.86;
+    will-change:transform,border-radius;
+  }
+  .verifai-landing.vr-root .vrs-nav__gel-pocket--one {
+    left:3%;width:33%;
+    animation:vrs-pocket-a 13s ease-in-out infinite alternate;
+  }
+  .verifai-landing.vr-root .vrs-nav__gel-pocket--two {
+    left:35%;width:37%;top:-62%;height:232%;
+    opacity:.66;
+    animation:vrs-pocket-b 17s ease-in-out infinite alternate;
+  }
+  .verifai-landing.vr-root .vrs-nav__gel-pocket--three {
+    right:-3%;width:34%;top:-48%;
+    opacity:.79;
+    animation:vrs-pocket-c 15s ease-in-out infinite alternate;
+  }
+  @keyframes vrs-pocket-a {
+    from {transform:translate3d(-3%,2%,0) rotate(-6deg) scale(.98);border-radius:55% 45% 64% 36% / 46% 60% 40% 54%;}
+    to {transform:translate3d(11%,-2%,0) rotate(5deg) scale(1.04);border-radius:42% 58% 40% 60% / 53% 47% 58% 42%;}
+  }
+  @keyframes vrs-pocket-b {
+    from {transform:translate3d(8%,-2%,0) rotate(6deg) scale(1.04);border-radius:44% 56% 52% 48% / 60% 44% 56% 40%;}
+    to {transform:translate3d(-9%,3%,0) rotate(-5deg) scale(.95);border-radius:58% 42% 39% 61% / 43% 64% 36% 57%;}
+  }
+  @keyframes vrs-pocket-c {
+    from {transform:translate3d(3%,2%,0) rotate(-5deg) scale(.97);border-radius:50% 50% 42% 58% / 56% 39% 61% 44%;}
+    to {transform:translate3d(-12%,-4%,0) rotate(7deg) scale(1.06);border-radius:37% 63% 64% 36% / 43% 61% 39% 57%;}
+  }
+  /* Over cream, subtle shadowed refraction edges are essential: white-only
+     highlights would disappear on the pale surface and look like empty frost. */
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__gel-pocket {
+    border-color:rgba(33,55,41,.20);
+    background:
+      radial-gradient(ellipse 36% 27% at 33% 24%,rgba(255,255,255,.40),transparent 95%),
+      radial-gradient(ellipse 55% 50% at 71% 76%,rgba(53,73,61,.075),transparent 86%),
+      radial-gradient(ellipse 66% 75% at 50% 50%,transparent 34%,rgba(35,64,43,.04) 76%,transparent);
+    box-shadow:inset 0 3px 5px rgba(255,255,255,.55),inset -4px -3px 8px rgba(35,58,42,.14),0 1px 5px rgba(255,255,255,.12);
+    opacity:.56;
   }
   /* Subsurface liquid movement, with no waterline / horizontal border. */
   .verifai-landing.vr-root .vrs-nav__liquid-wave,
@@ -106,11 +168,11 @@
   .verifai-landing.vr-root .vrs-nav__liquid-lens,
   .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__liquid-lens,
   .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__liquid-lens {
-    background:linear-gradient(155deg,rgba(255,255,255,.22),rgba(255,255,255,.035) 54%,rgba(255,255,255,.12));
-    border:1px solid rgba(252,255,253,.58);
-    box-shadow:inset 0 1.5px 1.5px rgba(255,255,255,.70),inset 0 -1px 2px rgba(255,255,255,.14),0 3px 8px rgba(0,18,10,.14);
-    backdrop-filter:blur(3px) saturate(125%);
-    -webkit-backdrop-filter:blur(3px) saturate(125%);
+    background:linear-gradient(155deg,rgba(255,255,255,.12),rgba(255,255,255,.006) 54%,rgba(255,255,255,.065));
+    border:1px solid rgba(252,255,253,.60);
+    box-shadow:inset 0 1.7px 1.5px rgba(255,255,255,.78),inset 0 -1.5px 2px rgba(2,20,10,.15),0 3px 8px rgba(0,18,10,.12);
+    backdrop-filter:blur(1.5px) saturate(132%);
+    -webkit-backdrop-filter:blur(1.5px) saturate(132%);
   }
   .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a,
   .verifai-landing.vr-root .vrs-nav--over-hero .vrs-nav__links a.active,
@@ -120,10 +182,14 @@
     background:transparent;
     text-shadow:0 1px 6px rgba(3,20,12,.60);
   }
+  .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__liquid-lens {
+    border-color:rgba(56,95,68,.42);
+    box-shadow:inset 0 1.7px 1px rgba(255,255,255,.86),inset 0 -2px 3px rgba(32,68,46,.15),0 3px 8px rgba(24,56,33,.09);
+  }
   /* Over cream, glass stays truly clear; dark ink maintains contrast. */
   .verifai-landing.vr-root .vrs-nav:not(.vrs-nav--over-hero) .vrs-nav__links,
   .verifai-landing.vr-root .vrs-nav--scrolled:not(.vrs-nav--over-hero) .vrs-nav__links {
-    background:linear-gradient(132deg,rgba(255,255,255,.12),rgba(255,255,255,.008) 41%,rgba(255,255,255,.055));
+    background:linear-gradient(132deg,rgba(255,255,255,.095),rgba(255,255,255,.005) 41%,rgba(255,255,255,.04));
     border-color:rgba(73,110,83,.47);
     outline-color:rgba(255,255,255,.40);
     box-shadow:0 12px 29px rgba(25,54,36,.13),inset 0 2px 1px rgba(255,255,255,.88),inset 0 -1.5px rgba(112,165,128,.17),inset 2px 0 6px rgba(255,255,255,.21);
@@ -190,7 +256,8 @@
   .verifai-landing.vr-root .vrs-nav__mobile-action {background:#1C4F3D!important;color:#fff!important;}
 }
 @media(prefers-reduced-motion:reduce) {
-  .verifai-landing.vr-root .vrs-nav__liquid-wave {animation:none!important;transform:none!important;will-change:auto;}
+  .verifai-landing.vr-root .vrs-nav__liquid-wave,
+  .verifai-landing.vr-root .vrs-nav__gel-pocket {animation:none!important;transform:none!important;will-change:auto;}
   .verifai-landing.vr-root .vrs-nav__links::after {transition:none!important;}
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
