@@ -3,14 +3,31 @@
   "benchmark": "LiveBench 2.0",
   "benchmark_release": "2026-11-06",
   "source_updated_at": "2026-11-11",
-  "retrieved_at": "2026-11-16T11:48:58.099778+00:00",
+  "retrieved_at": "2026-11-23T13:20:00.357799+00:00",
   "source_url": "https://livebench.ai/",
   "data_url": "https://livebench.ai/data/20261106/table.csv",
   "methodology_url": "https://livebench.ai/#/methodology",
   "refresh_policy": "weekly",
   "score_description": "Mean of available LiveBench 2.0 task-suite scores (0–100), weighted only when specified by LiveBench; these are not VerifAI hallucination, citation, or evidence-verification scores.",
-  "total_models": 34,
+  "total_models": 38,
   "models": [
+    {
+      "id": "gemini-4-neon",
+      "name": "Gemini 4 Neon",
+      "organization": "Google",
+      "overall_score": 87.4,
+      "suite_scores": {
+        "agentic": 82.6,
+        "design": 81.5,
+        "coding": 89.7,
+        "browser": 95.6,
+        "data_analysis": 85.3,
+        "research": 94.5,
+        "reasoning": 89.6
+      },
+      "suite_coverage": 7,
+      "rank": 1
+    },
     {
       "id": "claude-fable-5.2",
       "name": "Claude Fable 5.2 (xhigh)",
@@ -26,15 +43,32 @@
         "reasoning": 88.8
       },
       "suite_coverage": 7,
-      "rank": 1
+      "rank": 2
+    },
+    {
+      "id": "gpt-6.2-astra",
+      "name": "GPT-6.2 Astra",
+      "organization": "OpenAI",
+      "overall_score": 84.9,
+      "suite_scores": {
+        "agentic": 70.8,
+        "design": 82.8,
+        "coding": 91.9,
+        "browser": 93.0,
+        "data_analysis": 84.1,
+        "research": 91.5,
+        "reasoning": 91.6
+      },
+      "suite_coverage": 7,
+      "rank": 3
     },
     {
       "id": "gpt-6-astra",
       "name": "GPT-6 Astra",
       "organization": "OpenAI",
-      "overall_score": 84.4,
+      "overall_score": 84.2,
       "suite_scores": {
-        "agentic": 75.6,
+        "agentic": 74.7,
         "design": 80.0,
         "coding": 87.5,
         "browser": 91.3,
@@ -43,7 +77,7 @@
         "reasoning": 92.7
       },
       "suite_coverage": 7,
-      "rank": 2
+      "rank": 4
     },
     {
       "id": "claude-fable-5.1",
@@ -60,24 +94,7 @@
         "reasoning": 91.7
       },
       "suite_coverage": 7,
-      "rank": 3
-    },
-    {
-      "id": "gemini-4-carbon",
-      "name": "Gemini 4 Carbon",
-      "organization": "Google",
-      "overall_score": 83.5,
-      "suite_scores": {
-        "agentic": 72.7,
-        "design": 80.2,
-        "coding": 91.0,
-        "browser": 80.0,
-        "data_analysis": 86.5,
-        "research": 92.5,
-        "reasoning": 90.6
-      },
-      "suite_coverage": 7,
-      "rank": 4
+      "rank": 5
     },
     {
       "id": "claude-opus-5.5",
@@ -94,15 +111,32 @@
         "reasoning": 92.2
       },
       "suite_coverage": 7,
-      "rank": 5
+      "rank": 6
+    },
+    {
+      "id": "gemini-4-carbon",
+      "name": "Gemini 4 Carbon",
+      "organization": "Google",
+      "overall_score": 83.3,
+      "suite_scores": {
+        "agentic": 71.8,
+        "design": 80.2,
+        "coding": 91.0,
+        "browser": 80.0,
+        "data_analysis": 86.5,
+        "research": 92.5,
+        "reasoning": 90.6
+      },
+      "suite_coverage": 7,
+      "rank": 7
     },
     {
       "id": "gpt-6.1-sol",
       "name": "GPT-6.1 Sol",
       "organization": "OpenAI",
-      "overall_score": 81.4,
+      "overall_score": 81.2,
       "suite_scores": {
-        "agentic": 65.6,
+        "agentic": 64.7,
         "design": 79.6,
         "coding": 82.1,
         "browser": 93.3,
@@ -111,15 +145,32 @@
         "reasoning": 92.6
       },
       "suite_coverage": 7,
-      "rank": 6
+      "rank": 8
+    },
+    {
+      "id": "gpt-6.2-sol",
+      "name": "GPT-6.2 Sol",
+      "organization": "OpenAI",
+      "overall_score": 80.3,
+      "suite_scores": {
+        "agentic": 63.6,
+        "design": 80.0,
+        "coding": 83.7,
+        "browser": 88.2,
+        "data_analysis": 81.1,
+        "research": 90.1,
+        "reasoning": 90.6
+      },
+      "suite_coverage": 7,
+      "rank": 9
     },
     {
       "id": "gpt-6.1-terra",
       "name": "GPT-6.1 Terra",
       "organization": "OpenAI",
-      "overall_score": 78.8,
+      "overall_score": 78.6,
       "suite_scores": {
-        "agentic": 56.2,
+        "agentic": 55.3,
         "design": 79.7,
         "coding": 89.2,
         "browser": 93.1,
@@ -128,7 +179,7 @@
         "reasoning": 88.7
       },
       "suite_coverage": 7,
-      "rank": 7
+      "rank": 10
     },
     {
       "id": "gemini-4-argon",
@@ -145,24 +196,7 @@
         "reasoning": 95.1
       },
       "suite_coverage": 7,
-      "rank": 8
-    },
-    {
-      "id": "claude-sonnet-5.5",
-      "name": "Claude Sonnet 5.5",
-      "organization": "Anthropic",
-      "overall_score": 77.0,
-      "suite_scores": {
-        "agentic": 63.4,
-        "design": 81.3,
-        "coding": 77.2,
-        "browser": 89.3,
-        "data_analysis": 59.5,
-        "research": 88.0,
-        "reasoning": 91.6
-      },
-      "suite_coverage": 7,
-      "rank": 9
+      "rank": 11
     },
     {
       "id": "gemini-4-hydrogen",
@@ -179,7 +213,41 @@
         "reasoning": 88.6
       },
       "suite_coverage": 7,
-      "rank": 10
+      "rank": 12
+    },
+    {
+      "id": "claude-sonnet-5.5",
+      "name": "Claude Sonnet 5.5",
+      "organization": "Anthropic",
+      "overall_score": 76.8,
+      "suite_scores": {
+        "agentic": 62.5,
+        "design": 81.3,
+        "coding": 77.2,
+        "browser": 89.3,
+        "data_analysis": 59.5,
+        "research": 88.0,
+        "reasoning": 91.6
+      },
+      "suite_coverage": 7,
+      "rank": 13
+    },
+    {
+      "id": "qwen4-max",
+      "name": "Qwen4-Max",
+      "organization": "Alibaba",
+      "overall_score": 73.1,
+      "suite_scores": {
+        "agentic": 46.6,
+        "design": 79.1,
+        "coding": 69.8,
+        "browser": 80.7,
+        "data_analysis": 83.4,
+        "research": 84.7,
+        "reasoning": 92.2
+      },
+      "suite_coverage": 7,
+      "rank": 14
     },
     {
       "id": "muse-wonder-1.0",
@@ -196,7 +264,7 @@
         "reasoning": 90.6
       },
       "suite_coverage": 7,
-      "rank": 11
+      "rank": 15
     },
     {
       "id": "deepseek-v4.1-flash-1017",
@@ -213,7 +281,7 @@
         "reasoning": 89.1
       },
       "suite_coverage": 7,
-      "rank": 12
+      "rank": 16
     },
     {
       "id": "claude-haiku-5.5",
@@ -230,7 +298,7 @@
         "reasoning": 82.4
       },
       "suite_coverage": 7,
-      "rank": 13
+      "rank": 17
     },
     {
       "id": "kimi-k3.1-pro",
@@ -247,7 +315,7 @@
         "reasoning": 91.1
       },
       "suite_coverage": 7,
-      "rank": 14
+      "rank": 18
     },
     {
       "id": "muse-spark-1.3",
@@ -264,7 +332,7 @@
         "reasoning": 89.7
       },
       "suite_coverage": 7,
-      "rank": 15
+      "rank": 19
     },
     {
       "id": "grok-4.7",
@@ -281,7 +349,7 @@
         "reasoning": 82.7
       },
       "suite_coverage": 7,
-      "rank": 16
+      "rank": 20
     },
     {
       "id": "gpt-5.6-terra",
@@ -298,7 +366,7 @@
         "reasoning": 90.6
       },
       "suite_coverage": 7,
-      "rank": 17
+      "rank": 21
     },
     {
       "id": "mimo-v2.6-pro",
@@ -315,7 +383,7 @@
         "reasoning": 79.6
       },
       "suite_coverage": 7,
-      "rank": 18
+      "rank": 22
     },
     {
       "id": "kimi-k3",
@@ -332,7 +400,7 @@
         "reasoning": 90.7
       },
       "suite_coverage": 7,
-      "rank": 19
+      "rank": 23
     },
     {
       "id": "minimax-m3.1-flash",
@@ -349,7 +417,7 @@
         "reasoning": 82.9
       },
       "suite_coverage": 7,
-      "rank": 20
+      "rank": 24
     },
     {
       "id": "grok-4.6",
@@ -366,7 +434,7 @@
         "reasoning": 91.2
       },
       "suite_coverage": 7,
-      "rank": 21
+      "rank": 25
     },
     {
       "id": "qwen3.8-max",
@@ -383,7 +451,7 @@
         "reasoning": 88.2
       },
       "suite_coverage": 7,
-      "rank": 22
+      "rank": 26
     },
     {
       "id": "glm-5.3-flash",
@@ -400,7 +468,7 @@
         "reasoning": 77.6
       },
       "suite_coverage": 7,
-      "rank": 23
+      "rank": 27
     },
     {
       "id": "gpt-6-luna",
@@ -417,7 +485,7 @@
         "reasoning": 81.8
       },
       "suite_coverage": 7,
-      "rank": 24
+      "rank": 28
     },
     {
       "id": "mistral-large-4-0",
@@ -434,7 +502,7 @@
         "reasoning": 85.2
       },
       "suite_coverage": 7,
-      "rank": 25
+      "rank": 29
     },
     {
       "id": "gemini-3.8-flash",
@@ -451,7 +519,7 @@
         "reasoning": 89.3
       },
       "suite_coverage": 7,
-      "rank": 26
+      "rank": 30
     },
     {
       "id": "step-5-preview",
@@ -468,7 +536,7 @@
         "reasoning": 83.8
       },
       "suite_coverage": 7,
-      "rank": 27
+      "rank": 31
     },
     {
       "id": "qwen3.8-27b",
@@ -485,7 +553,7 @@
         "reasoning": 80.0
       },
       "suite_coverage": 7,
-      "rank": 28
+      "rank": 32
     },
     {
       "id": "muse-spark-open",
@@ -502,7 +570,7 @@
         "reasoning": 73.7
       },
       "suite_coverage": 7,
-      "rank": 29
+      "rank": 33
     },
     {
       "id": "nemotron-super-vl-3.5",
@@ -519,7 +587,7 @@
         "reasoning": 74.6
       },
       "suite_coverage": 7,
-      "rank": 30
+      "rank": 34
     },
     {
       "id": "smaug-nemotron-3.5-nvfp4",
@@ -536,7 +604,7 @@
         "reasoning": 75.1
       },
       "suite_coverage": 7,
-      "rank": 31
+      "rank": 35
     },
     {
       "id": "nemotron-super-vl-3.5-nvfp4",
@@ -553,7 +621,7 @@
         "reasoning": 71.7
       },
       "suite_coverage": 7,
-      "rank": 32
+      "rank": 36
     },
     {
       "id": "mistral-large-4",
@@ -570,7 +638,7 @@
         "reasoning": 83.9
       },
       "suite_coverage": 7,
-      "rank": 33
+      "rank": 37
     },
     {
       "id": "gemma-4-31b",
@@ -587,7 +655,7 @@
         "reasoning": 68.3
       },
       "suite_coverage": 7,
-      "rank": 34
+      "rank": 38
     }
   ]
 }
